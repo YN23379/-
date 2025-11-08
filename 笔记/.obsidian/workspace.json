@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "961d4b8d4dba3c87",
+        "id": "c13f0dd4a61a9d37",
         "type": "tabs",
         "children": [
           {
-            "id": "0bce6a5dd58682a0",
+            "id": "d3b7cf2866e815a3",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "项目/智能安防报警.md",
+                "file": "C/C知识体系/库函数.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "智能安防报警"
+              "title": "库函数"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "tag:#运算符",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -142,13 +142,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "项目/智能安防报警.md",
+                "file": "C/C知识体系/库函数.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "智能安防报警 的大纲"
+              "title": "库函数 的大纲"
             }
           }
         ],
@@ -156,7 +156,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300.5
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -169,41 +169,51 @@
       "bases:创建新数据库": false
     }
   },
-  "active": "0bce6a5dd58682a0",
+  "active": "d3b7cf2866e815a3",
   "lastOpenFiles": [
+    "C/C知识体系/数据结构.md",
+    "C/算法/算法.md",
+    "C/C知识体系/库函数.md",
+    "C/C知识体系/数据类型.md",
+    "题目/leetcode.md",
+    "C/算法/LCA.md",
+    "题目.md",
+    "C/C知识体系/词法结构.md",
     "Linux/Linux系统编程/多线程编程.md",
+    "Linux/Linux系统编程/内存管理.md",
+    "C/C知识体系/C基础.md",
     "Linux/Linux系统编程/进程控制.md",
+    "知识库/嵌入式/原码.md",
+    "其他/API.md",
+    "知识库/C语言/注意.md",
+    "Linux/Linux系统编程/网络编程.md",
+    "知识库/C语言/指针（指针运算、数组关系、函数指针）.md",
+    "C/C知识体系/指针.md",
+    "Linux/Linux系统编程/信号处理.md",
     "Linux/Linux系统编程/Linux基础与开发环境.md",
-    "C/C知识体系/字符串.md",
-    "C/C知识体系/C基础语法.md",
-    "C/C知识体系/编译与链接.md",
     "项目/智能安防报警.md",
     "项目/系统健康监测平台.md",
-    "题目/算法.md",
     "面试/流程（待完善）.md",
-    "模版/问题模版.md",
-    "C/C知识体系/数据类型.md",
-    "Linux/Linux系统编程/信号处理.md",
+    "未命名.canvas",
+    "().md",
+    "208..md",
+    "[208..md",
+    "Trie存储模型.png",
+    "case.png",
+    "知识库/Linux",
+    "知识库/嵌入式",
+    "知识库/C语言",
+    "知识库",
+    "i",
+    "数学块常用表达式.png",
+    "其他",
+    "C/算法",
     "操作系统要求.png",
     "命令行控制.png",
     "数据结构域算法要求.png",
-    "未命名.canvas",
-    "API.md",
     "题目",
-    "C/C知识体系/词法结构.md",
-    "C/C知识体系/库函数.md",
-    "疑问/开发工具/MobaXterm.md",
-    "开发工具/MobaXterm.md",
     "for循环.png",
     "虚拟地址.png",
-    "Linux/Linux系统编程/内存管理.md",
-    "Linux/Linux系统编程/网络编程.md",
-    "C/C知识体系/指针.md",
-    "C/C知识体系/文件.md",
-    "C/C知识体系/数据结构.md",
-    "C/C知识体系/结构体.md",
-    "C/注意类知识点/文件.md",
-    "临时笔记.md",
     "内存区域.png"
   ]
 }
