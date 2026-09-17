@@ -55,4 +55,4 @@ updated: 2026-09-17
 - 端口：`FreeRTOS/FreeRTOS-Kernel-1/portable/GCC/ARM_AARCH64`、`ARM_CA53_64_BIT`
 - Jailhouse：`board_firmware/firmware/jailhouse.bin`
 - SDK 只有 M 核例程：`SDK_26_06_00_IMX95LPD5EVK-19/boards/imx95lpd5evk19`（cm7/cm33）
-- 项目档案：[方向调整：FreeRTOS 从 M7 转到 A55](../../10-项目/FRDM-IMX95-PRO/方向调整-A55运行FreeRTOS.md)
+- 项目档案：[方向调整：FreeRTOS 从 M7 转到 A55](../../10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md)

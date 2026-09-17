@@ -14,28 +14,22 @@ updated: 2026-09-17
 
 ## 10-项目
 
-### FRDM-IMX95-PRO（20 篇）
+### FRDM-IMX95-PRO（14 篇）
 
-- [[10-项目/FRDM-IMX95-PRO/2026-09-15-SD启动GPIO权限问题最终结论.md|2026-09-15-SD启动GPIO权限问题最终结论]] `原理`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-理解-03-外设归属与权限矩阵.md|2026-09-17-理解-03-外设归属与权限矩阵]] `原理`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-理解-启动逻辑与资源隔离.md|2026-09-17-理解-启动逻辑与资源隔离]] `原理`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-Harpoon全过程与复现步骤.md|2026-09-17-Harpoon全过程与复现步骤]] `怎么做`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-理解-02-上电启动全流程超详细.md|2026-09-17-理解-02-上电启动全流程超详细]] `怎么做`
+- [[10-项目/FRDM-IMX95-PRO/SD启动GPIO权限问题结论.md|SD启动GPIO权限问题结论]] `原理`
+- [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md|理解-i.MX95启动与资源隔离]] `原理`
 - [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]] `怎么做`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-14-FRDM-IMX95-PRO开发日志.md|2026-09-14-FRDM-IMX95-PRO开发日志]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-15-FRDM-IMX95-PRO开发日志.md|2026-09-15-FRDM-IMX95-PRO开发日志]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-16-FRDM-IMX95-PRO开发日志.md|2026-09-16-FRDM-IMX95-PRO开发日志]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-A55-FreeRTOS-新要求与时间安排.md|2026-09-17-A55-FreeRTOS-新要求与时间安排]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-FRDM-IMX95-PRO开发日志.md|2026-09-17-FRDM-IMX95-PRO开发日志]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-Harpoon可用性验证.md|2026-09-17-Harpoon可用性验证]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-JTAG-SWD接口调研.md|2026-09-17-JTAG-SWD接口调研]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-待向NXP确认的问题清单.md|2026-09-17-待向NXP确认的问题清单]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/2026-09-17-资料清单表.md|2026-09-17-资料清单表]] `未分类`
+- [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md|Harpoon验证与复现]] `怎么做`
+- [[10-项目/FRDM-IMX95-PRO/开发日志.md|开发日志]] `怎么做`
+- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]] `未分类`
+- [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md|A55运行FreeRTOS的方向调整]] `未分类`
 - [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]] `未分类`
 - [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md|FRDM-IMX95-PRO开发记录]] `未分类`
+- [[10-项目/FRDM-IMX95-PRO/JTAG与SWD接口调研.md|JTAG与SWD接口调研]] `未分类`
 - [[10-项目/FRDM-IMX95-PRO/MCUXpresso-SDK获取.md|MCUXpresso-SDK获取]] `未分类`
 - [[10-项目/FRDM-IMX95-PRO/README.md|README]] `未分类`
-- [[10-项目/FRDM-IMX95-PRO/方向调整-A55运行FreeRTOS.md|方向调整-A55运行FreeRTOS]] `未分类`
+- [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向NXP确认的问题清单]] `未分类`
+- [[10-项目/FRDM-IMX95-PRO/资料清单表.md|资料清单表]] `未分类`
 
 ### PLC-微波炉（4 篇）
 
