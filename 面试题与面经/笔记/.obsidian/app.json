@@ -1,0 +1,9 @@
+{
+  "readableLineLength": true,
+  "tabSize": 3,
+  "alwaysUpdateLinks": true,
+  "rightToLeft": false,
+  "showLineNumber": false,
+  "foldIndent": true,
+  "promptDelete": false
+}
