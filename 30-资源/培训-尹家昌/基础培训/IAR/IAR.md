@@ -971,3 +971,7 @@ Next Statement 是 IAR 中的 "运行到下一个语句"，将程序运行到当
 
 <!-- related-generated -->
 ## 相关
+
+- [[30-资源/培训-尹家昌/基础培训/SourceInsight/SourceInsight.md|Source Insight]]
+- [[30-资源/培训-尹家昌/基础培训/UnitTest/UnitTest.md|单元测试]]
+- [[20-领域/工具与环境/编译构建工具.md|编译构建工具]]

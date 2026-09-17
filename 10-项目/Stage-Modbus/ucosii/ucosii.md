@@ -568,3 +568,6 @@ uC/OS-II内核主体与CPU关系较弱，但任务切换、栈初始化、中断
 
 <!-- related-generated -->
 ## 相关
+
+- [[20-领域/RTOS/uC-OS-II.md|uC/OS-II（内核 API + 学习笔记）]]
+- [[20-领域/RTOS/FreeRTOS.md|FreeRTOS]]
