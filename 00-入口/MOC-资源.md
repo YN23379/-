@@ -14,7 +14,7 @@ updated: 2026-09-17
 
 ## 30-资源
 
-### 培训-尹家昌（7 篇）
+### 培训-尹家昌（8 篇）
 
 - [[30-资源/培训-尹家昌/基础培训/IAR/IAR.md|IAR]] `教程`
 - [[30-资源/培训-尹家昌/基础培训/Library/Library.md|Library]] `教程`
@@ -23,6 +23,7 @@ updated: 2026-09-17
 - [[30-资源/培训-尹家昌/基础培训/Sourcetree/SourceTree.md|SourceTree]] `教程`
 - [[30-资源/培训-尹家昌/基础培训/UnitTest/UnitTest.md|UnitTest]] `教程`
 - [[30-资源/培训-尹家昌/基础培训/VisualStudio/VisualStudio.md|VisualStudio]] `教程`
+- [[30-资源/培训-尹家昌/训练营学习笔记.md|训练营学习笔记]] `未分类`
 
 ### 面试题库（14 篇）
 
