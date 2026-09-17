@@ -2,8 +2,8 @@
 type: 知识库
 scope: 工具与环境
 doc_type: 参考
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -17,5 +17,13 @@ API是软件组件之间交互的约定和接口。
     
 - **抽象**：调用者无需关心功能是如何实现的，只需知道如何使用接口
 
+<!-- related-generated -->
+## 相关
 
+**同目录**
 
+- [[20-领域/工具与环境/MobaXterm使用.md|MobaXterm使用]]
+- [[20-领域/工具与环境/Obsidian数学公式.md|Obsidian数学公式]]
+- [[20-领域/工具与环境/SSH与文件传输.md|SSH与文件传输]]
+
+**导航**：[[20-领域/工具与环境/README.md|工具与环境]]

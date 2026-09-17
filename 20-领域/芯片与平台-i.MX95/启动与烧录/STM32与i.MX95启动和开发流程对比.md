@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 怎么做
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: []
 updated: 2026-09-17
 ---
@@ -186,3 +186,15 @@ J-Link通过JTAG或SWD直接访问M7调试接口，适合断点和单步。当�
 ## 八、当前工作结论
 
 当前电脑上使用SDK编译的`freertos_hello.bin`和板载系统中的官方`rpmsg_lite_*_rtos*`固件都属于M7 FreeRTOS应用。前者用于学习和修改，后者用于验证厂家已经提供的官方示例。当前最合理的顺序是先用官方FreeRTOS ELF验证remoteproc，记录LMM权限失败结果；再使用官方FreeRTOS BIN和Pro板启动组件生成完整启动容器，通过UUU临时启动；临时启动成功后，再研究使用UUU写入eMMC或SD卡。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md|i.MX95官方启动配置与ELE文件]]
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/SDK、BSP与调试下载接口.md|SDK、BSP与调试下载接口]]
+
+**相关主题**
+
+- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]

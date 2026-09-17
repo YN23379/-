@@ -2,8 +2,8 @@
 type: 知识库
 scope: RTOS
 doc_type: 原理
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 实机验证
 tags: [FreeRTOS,RTOS]
 updated: 2026-09-17
 ---
@@ -2233,3 +2233,10 @@ J15-8  GPIO2_IO14输出 -> J15-10 GPIO2_IO15输入
 当前已完成的是功能级第一阶段：M7 FreeRTOS能运行，串口收发和GPIO输入输出通过。实时性尚未验收，尤其还没有得到中断响应最大值、端到端响应最大值、WCET、deadline miss、栈/堆余量和压力条件下的抖动数据。
 
 下一步先做一个不打印串口的固定周期GPIO测试任务，用硬件计时器和逻辑分析仪测实际周期；然后加入GPIO输入中断和响应标记。测试过程中继续保留COM18作为低频状态日志，但不能把串口输出间隔作为实时性证据。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/RTOS/uC-OS-II.md|uC-OS-II]]

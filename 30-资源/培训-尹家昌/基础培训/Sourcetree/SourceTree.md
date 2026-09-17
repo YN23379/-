@@ -2,8 +2,8 @@
 type: 参考
 scope: 培训-尹家昌
 doc_type: 教程
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---

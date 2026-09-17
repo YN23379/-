@@ -1,1 +1,18 @@
-{}
+{
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "90-附件",
+  "newFileLocation": "current",
+  "newLinkFormat": "absolute",
+  "useMarkdownLinks": false,
+  "showLineNumber": true,
+  "readableLineLength": true,
+  "promptDelete": true,
+  "trashOption": "system",
+  "defaultViewMode": "source",
+  "livePreview": true,
+  "strictLineBreaks": false,
+  "foldHeading": true,
+  "foldIndent": true,
+  "showFrontmatter": true,
+  "showUnsupportedFiles": false
+}

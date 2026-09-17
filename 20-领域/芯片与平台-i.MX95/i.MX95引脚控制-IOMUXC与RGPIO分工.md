@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: []
 updated: 2026-09-17
 ---
@@ -111,3 +111,16 @@ i.MX95引脚多、可复用功能多，而且多数功能不是GPIO（LPUART/SPI
   - `components/sm/pinctrl/sm_pinctrl.c`：SM版，经SCMI发请求
   - `components/pinctrl/porting/platform/imx95/hal_pinctrl_platform.h`：pad功能宏
 - 项目证据：[FRDM-IMX95-PRO FreeRTOS任务创建与LED代码理解](../../10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md)
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md|i.MX95在A55上运行FreeRTOS的路径]]
+
+**相关主题**
+
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md|i.MX95官方启动配置与ELE文件]]

@@ -2,8 +2,8 @@
 type: 参考
 scope: 培训-尹家昌
 doc_type: 教程
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: []
 updated: 2026-09-17
 ---
@@ -969,4 +969,5 @@ Next Statement 是 IAR 中的 "运行到下一个语句"，将程序运行到当
 
 12. **高优化等级的影响**：高优化等级会加快执行速度，但可能增加编译时间、改变代码执行顺序。高优化不一定导致代码体积增大——`Size` 方向的高优化实际上会减小代码体积。
 
-
+<!-- related-generated -->
+## 相关

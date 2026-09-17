@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -137,3 +137,12 @@ Cortex-A 上跑 inmate 时，**inmate 很可能占用调试串口（甚至抢走
 - `github.com/NXP/meta-nxp-harpoon` `recipes-bsp/harpoon-apps/harpoon-apps-freertos.inc`（机器映射表）（`源码可以确认`）
 - `github.com/nxp-imx/imx-jailhouse` `configs/arm64/imx95.c`（`源码可以确认`）
 - 项目实测：容器内 U-Boot 环境变量、DTB `model`/`compatible`、rootfs manifest、板载 `/lib/firmware/jailhouse.bin`（`实机/镜像确认`，见项目档案）
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md|i.MX95在A55上运行FreeRTOS的路径]]

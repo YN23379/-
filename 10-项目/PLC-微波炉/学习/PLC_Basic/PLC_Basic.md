@@ -2,8 +2,8 @@
 type: 项目档案
 scope: PLC-微波炉
 doc_type: 教程
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 官方资料
 tags: []
 updated: 2026-09-17
 ---

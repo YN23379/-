@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 怎么做
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -538,3 +538,11 @@ Linux选择firmware文件
 ```
 
 当前流程停在最后两步之间，不是FreeRTOS调度器没有运行，而是System Manager没有允许Linux控制M7。要继续研究remoteproc，需要取得一个允许Linux控制M7的System Manager启动配置，或者修改现有LMM配置后重新生成启动镜像。修改后应先使用SD卡或USB RAM启动验证，确认Linux中的`remoteproc`状态能够从`offline`变为`running`，再考虑写入eMMC。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/STM32与i.MX95启动和开发流程对比.md|STM32与i.MX95启动和开发流程对比]]
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md|i.MX95官方启动配置与ELE文件]]

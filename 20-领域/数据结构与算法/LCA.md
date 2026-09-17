@@ -2,8 +2,8 @@
 type: 知识库
 scope: 数据结构与算法
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -88,3 +88,14 @@ struct TreeNode* lowestCommonAncestor(struct TreeNode* root, struct TreeNode* p,
 3. **多次查询优化**：使用Tarjan离线算法或倍增法
     
 4. **BST中的LCA**：利用BST性质，O(h)时间解决
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/数据结构与算法/排序算法.md|排序算法]]
+- [[20-领域/数据结构与算法/数据结构与算法总览.md|数据结构与算法总览]]
+- [[20-领域/数据结构与算法/算法.md|算法]]
+
+**导航**：[[20-领域/数据结构与算法/README.md|数据结构与算法]]

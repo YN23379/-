@@ -2,8 +2,8 @@
 type: 项目档案
 scope: Stage-PLSR
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -673,3 +673,10 @@ OSSemPend等待完整帧
 | 启动命令有应答但不动作 | 段表参数、起始段、脉冲数是否为0、运动状态是否正在运行 |
 | 清累计后又出现旧值 | 是否仍有脉冲中断继续累加，清零和停止命令顺序是否合理 |
 | 修改参数但执行没有变化 | 参数是否只写入结构体，实际执行流程是否读取并使用该字段 |
+
+<!-- related-generated -->
+## 相关
+
+**相关主题**
+
+- [[10-项目/Stage-PLSR/PLSR/PLSR.md|PLSR]]

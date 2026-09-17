@@ -2,8 +2,8 @@
 type: 知识库
 scope: 工具与环境
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -32,3 +32,14 @@ stty cols 120 rows 80
 
 **可以自己设置IP，也就是静态IP配置。**
 可以在虚拟机的网络设置里，手动填写IP、子网掩码、网关和DNS，而不是选择“自动获取(DHCP)”。这样做的好处是IP地址固定不变，对于SSH连接非常方便。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/工具与环境/API概念.md|API概念]]
+- [[20-领域/工具与环境/Obsidian数学公式.md|Obsidian数学公式]]
+- [[20-领域/工具与环境/SSH与文件传输.md|SSH与文件传输]]
+
+**导航**：[[20-领域/工具与环境/README.md|工具与环境]]

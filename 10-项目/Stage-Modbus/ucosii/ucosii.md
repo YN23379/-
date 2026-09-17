@@ -2,8 +2,8 @@
 type: 项目档案
 scope: Stage-Modbus
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -565,3 +565,6 @@ uC/OS-II内核主体与CPU关系较弱，但任务切换、栈初始化、中断
 | 栈溢出 | 栈太小、局部对象过大、函数调用过深、浮点现场未考虑 |
 | 优先级反转 | 低优先级任务持有资源，高优先级任务等待，中优先级任务抢占 |
 | 死锁 | 多个任务以不同顺序等待多个资源 |
+
+<!-- related-generated -->
+## 相关

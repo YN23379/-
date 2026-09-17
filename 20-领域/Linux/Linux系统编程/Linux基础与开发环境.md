@@ -2,8 +2,8 @@
 type: 知识库
 scope: Linux
 doc_type: 教程
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: []
 updated: 2026-09-17
 ---

@@ -2,8 +2,8 @@
 type: 知识库
 scope: Linux
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 不适用
 tags: []
 updated: 2026-09-17
 ---
@@ -54,3 +54,18 @@ updated: 2026-09-17
 
 
 ## 串口编程
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/Linux/Linux内核.md|Linux内核]]
+- [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]]
+- [[20-领域/Linux/Android系统架构.md|Android系统架构]]
+
+**相关主题**
+
+- [[20-领域/Linux/Linux系统编程/Linux基础与开发环境.md|Linux基础与开发环境]]
+
+**导航**：[[20-领域/Linux/README.md|Linux]]

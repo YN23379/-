@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 源码确认
 tags: []
 updated: 2026-09-17
 ---
@@ -56,3 +56,12 @@ updated: 2026-09-17
 - Jailhouse：`board_firmware/firmware/jailhouse.bin`
 - SDK 只有 M 核例程：`SDK_26_06_00_IMX95LPD5EVK-19/boards/imx95lpd5evk19`（cm7/cm33）
 - 项目档案：[方向调整：FreeRTOS 从 M7 转到 A55](../../10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md)
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|i.MX95上Jailhouse与Harpoon的分层与判定方法]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]

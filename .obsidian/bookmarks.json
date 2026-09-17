@@ -1,0 +1,147 @@
+{
+  "items": [
+    {
+      "type": "group",
+      "ctime": 1789651305713,
+      "title": "每天要看",
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/README.md",
+          "title": "库总入口"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/看板-待整理.base",
+          "title": "看板：待整理"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/看板-全部笔记.base",
+          "title": "看板：全部笔记"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "ctime": 1789651305713,
+      "title": "索引",
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/MOC-领域.md",
+          "title": "MOC 领域"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/MOC-项目.md",
+          "title": "MOC 项目"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/MOC-资源.md",
+          "title": "MOC 资源"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "ctime": 1789651305713,
+      "title": "规矩与记录",
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/维护说明.md",
+          "title": "维护说明"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651381847,
+          "path": "00-入口/Obsidian使用与插件建议.md",
+          "title": "Obsidian 使用与插件建议"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/AGENTS-笔记规则.md",
+          "title": "笔记规则"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "00-入口/重构记录-2026-09-17.md",
+          "title": "重构记录"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "ctime": 1789651305713,
+      "title": "当前项目",
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "10-项目/FRDM-IMX95-PRO/README.md",
+          "title": "FRDM-IMX95-PRO 项目档案"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md",
+          "title": "理解：启动与资源隔离"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "10-项目/FRDM-IMX95-PRO/开发日志.md",
+          "title": "开发日志"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md",
+          "title": "A55 FreeRTOS 安排"
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "ctime": 1789651305713,
+      "title": "常查知识",
+      "items": [
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "20-领域/RTOS/FreeRTOS.md",
+          "title": "FreeRTOS"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "20-领域/Linux/Linux内核.md",
+          "title": "Linux 内核"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md",
+          "title": "i.MX95 多核与启动"
+        },
+        {
+          "type": "file",
+          "ctime": 1789651305713,
+          "path": "20-领域/C与C++/C语言/指针.md",
+          "title": "C 指针"
+        }
+      ]
+    }
+  ]
+}

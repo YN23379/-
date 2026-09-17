@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 怎么做
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -116,3 +116,16 @@ LMM_1               ALL
 6. 最后根据项目需要决定是否写入eMMC。
 
 只有项目明确要求Linux运行后反复停止、切换和启动不同M7 ELF时，才需要继续研究remoteproc和LMM控制权限。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/STM32与i.MX95启动和开发流程对比.md|STM32与i.MX95启动和开发流程对比]]
+- [[20-领域/芯片与平台-i.MX95/启动与烧录/SDK、BSP与调试下载接口.md|SDK、BSP与调试下载接口]]
+
+**相关主题**
+
+- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]
+- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]

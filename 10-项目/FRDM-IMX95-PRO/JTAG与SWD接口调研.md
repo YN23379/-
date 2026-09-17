@@ -2,8 +2,8 @@
 type: 项目档案
 scope: FRDM-IMX95-PRO
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -89,3 +89,12 @@ SWDIO  ────────────────► JTAG_TMS_TP
 
 - 资料清单：`2026-09-17-资料清单表.md`（AN14120 §4「为调试器准备电路板」、UM12022 §2.21.2 JTAG）
 - 提问：`2026-09-17-待向NXP确认的问题清单.md` 问题 2
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]
+- [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md|A55运行FreeRTOS的方向调整]]
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]

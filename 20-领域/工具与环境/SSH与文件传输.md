@@ -2,8 +2,8 @@
 type: 知识库
 scope: 工具与环境
 doc_type: 怎么做
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: [SSH,SCP,SFTP]
 updated: 2026-09-17
 ---
@@ -203,3 +203,14 @@ set ff=unix
 - **转换**为 Unix 行尾符 `\n` (LF)
     
 - **一次性修复**了整个文件
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/工具与环境/API概念.md|API概念]]
+- [[20-领域/工具与环境/MobaXterm使用.md|MobaXterm使用]]
+- [[20-领域/工具与环境/Obsidian数学公式.md|Obsidian数学公式]]
+
+**导航**：[[20-领域/工具与环境/README.md|工具与环境]]

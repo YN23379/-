@@ -2,8 +2,8 @@
 type: 项目档案
 scope: FRDM-IMX95-PRO
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -1332,3 +1332,12 @@ FB: Done
 断电后将SW4设置为`ON、OFF、ON、ON`并从SD重新启动，不再运行UUU。COM18自动输出`M7 FreeRTOS UART echo ready`和GPIO任务；COM19正常完成DDR OEI并启动SM；COM17的A55 SPL和U-Boot正常运行。由此确认自定义启动容器已经写入SD，并能在掉电后自动启动M7 FreeRTOS、M33 SM和A55 U-Boot链。
 
 最终写入SD启动区的文件为`flash-m7-gpio-reclaim.bin`，SHA256为`1BCBA278F852169332DD7BFF24571C143A933FDF7FE8C3D435B9B3119ACC4D08`。SD重启后`PCNS=PCNP=FFFF3FFF`，`PDOR`在`0/00004000`之间翻转；J15-8与J15-10连接后，`IN`在`0/1`之间与`OUT`同步，逻辑分析仪确认GPIO14有波形。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]]
+- [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md|理解-i.MX95启动与资源隔离]]

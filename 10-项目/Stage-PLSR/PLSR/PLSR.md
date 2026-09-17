@@ -2,8 +2,8 @@
 type: 项目档案
 scope: Stage-PLSR
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -475,3 +475,9 @@ Backup SRAM由VBAT保持，访问接近普通RAM，不需要擦除，没有Flash
 
 =
 
+<!-- related-generated -->
+## 相关
+
+**相关主题**
+
+- [[10-项目/Stage-PLSR/PLSR_Project/PLSR_Project_Learning.md|PLSR_Project_Learning]]

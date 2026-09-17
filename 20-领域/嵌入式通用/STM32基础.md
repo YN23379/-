@@ -2,8 +2,8 @@
 type: 知识库
 scope: 嵌入式通用
 doc_type: 教程
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 实机验证
 tags: []
 updated: 2026-09-17
 ---
@@ -382,3 +382,12 @@ uC/OS 的任务调度依赖 SysTick 定时器，SysTick 的时钟来自 AHB（72
 4. 工程选项 → C/C++ → Include Paths 内声明所有包含头文件的文件夹。
 5. 工程选项 → C/C++ → Define 内定义 `USE_STDPERIPH_DRIVER`。
 6. 工程选项 → Debug，下拉列表选择对应调试器 → Settings → Flash Download，勾选 `Reset and Run`。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/嵌入式通用/嵌入式系统基础.md|嵌入式系统基础]]
+- [[20-领域/嵌入式通用/原理图基础与阅读方法.md|原理图基础与阅读方法]]
+- [[20-领域/嵌入式通用/ARM架构.md|ARM架构]]

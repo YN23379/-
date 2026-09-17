@@ -2,8 +2,8 @@
 type: 项目档案
 scope: Stage-Modbus
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -396,3 +396,9 @@ TCP是面向字节流的协议，接收方不能假设一次`recv`就得到一�
 | 把TCP包边界当Modbus边界 | TCP要按MBAP Length字段拆包 |
 | 混用RTU、ASCII、TCP封装 | 三者PDU思想相近，但ADU、帧边界和校验不同 |
 
+<!-- related-generated -->
+## 相关
+
+**相关主题**
+
+- [[10-项目/Stage-Modbus/Modbus_Project/Modbus_Project_Learning.md|Modbus_Project_Learning]]

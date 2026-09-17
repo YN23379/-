@@ -2,8 +2,8 @@
 type: 项目档案
 scope: PLC-微波炉
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---

@@ -2,8 +2,8 @@
 type: 项目档案
 scope: FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）
 doc_type: 怎么做
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 实机验证
 tags: [Harpoon,Jailhouse]
 updated: 2026-09-17
 ---
@@ -685,3 +685,12 @@ SD 卡挂载点            : /run/media/mmcblk1p1
 
 - 同日：`2026-09-17-Harpoon可用性验证.md`（判定证据）、`2026-09-17-FRDM-IMX95-PRO开发日志.md`（现场流水）
 - 知识库：`i.MX95上Jailhouse与Harpoon的分层与判定方法.md`
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]]
+- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]
+- [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md|A55运行FreeRTOS的方向调整]]

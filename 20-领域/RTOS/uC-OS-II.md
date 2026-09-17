@@ -2,8 +2,8 @@
 type: 知识库
 scope: RTOS
 doc_type: 原理
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: [uC-OS-II,RTOS]
 updated: 2026-09-17
 ---
@@ -1150,3 +1150,10 @@ MSP (主栈):              ~1.0 KB
 
 > **工程地址**: `F:\project\ucos2\`
 > **最后更新**: 2026-06-29
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/RTOS/FreeRTOS.md|FreeRTOS]]

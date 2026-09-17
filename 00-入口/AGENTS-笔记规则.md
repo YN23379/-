@@ -2,8 +2,8 @@
 type: 索引
 scope: 全库
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 不适用
 tags: []
 updated: 2026-09-17
 ---

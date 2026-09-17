@@ -2,8 +2,8 @@
 type: 知识库
 scope: 芯片与平台-i.MX95
 doc_type: 原理
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 不适用
 tags: []
 updated: 2026-09-17
 ---

@@ -2,8 +2,8 @@
 type: 知识库
 scope: Linux
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -78,3 +78,18 @@ Linux内核是操作系统的核心，采用宏内核架构，但通过模块化
 3. **文件系统**：VFS提供了统一视图，底层如ext4等具体文件系统通过inode和dentry来组织文件和目录。
 4. **设备管理**：遵循‘一切皆文件’的思想，通过字符设备和块设备驱动来抽象硬件。
 5. **网络栈**：实现了TCP/IP等协议，通过套接字接口提供服务。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]]
+- [[20-领域/Linux/Linux学习路线与视频清单.md|Linux学习路线与视频清单]]
+- [[20-领域/Linux/Android系统架构.md|Android系统架构]]
+
+**相关主题**
+
+- [[20-领域/Linux/Linux系统编程/Linux基础与开发环境.md|Linux基础与开发环境]]
+
+**导航**：[[20-领域/Linux/README.md|Linux]]

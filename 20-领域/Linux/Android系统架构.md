@@ -2,8 +2,8 @@
 type: 知识库
 scope: Linux
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 教材课程
 tags: []
 updated: 2026-09-17
 ---
@@ -19,3 +19,14 @@ Android启动是个完整的链式过程。从硬件上电开始，Bootloader加
 
 
 在 Linux 下，驱动一般会注册为字符设备，通过 `/dev/xxx` 暴露给用户态，用户态用 `open/read/write` 或 `ioctl` 调用，或者通过 sysfs 节点去配置参数。
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[20-领域/Linux/Linux内核.md|Linux内核]]
+- [[20-领域/Linux/Linux学习路线与视频清单.md|Linux学习路线与视频清单]]
+- [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]]
+
+**导航**：[[20-领域/Linux/README.md|Linux]]

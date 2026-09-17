@@ -2,8 +2,8 @@
 type: 项目档案
 scope: FRDM-IMX95-PRO
 doc_type: 未分类
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 不适用
 tags: []
 updated: 2026-09-17
 ---
@@ -65,3 +65,12 @@ updated: 2026-09-17
 | 上电启动顺序 | AON **M33 先跑 Boot ROM → 加载 SM**；SM 写 TRDC/RDC 隔离后再按 `boot[]` 拉起 M7、A55；**A55 集群只由 SM 释放 CPU0**，C1–C5 由 OS/固件用 PSCI 启动 | SM 官方 README + `arch.md` + `config_lmm.h` 启动表 |
 | 串口归属 | COM17=LPUART1→A55；COM18=LPUART7→M7；COM19=LPUART2→SM(M33) | `mx95frdm-pro.cfg` + 实机应答 |
 | Pro 板能否用 Jailhouse | 能，已实机跑通 Harpoon 的 FreeRTOS inmate（A55 CPU5） | `jailhouse cell list` / `cell stats` |
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[10-项目/FRDM-IMX95-PRO/资料清单表.md|资料清单表]]
+- [[10-项目/FRDM-IMX95-PRO/SD启动GPIO权限问题结论.md|SD启动GPIO权限问题结论]]
+- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]

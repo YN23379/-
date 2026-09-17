@@ -2,8 +2,8 @@
 type: 参考
 scope: 面试题库
 doc_type: 参考
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 源码确认
 tags: [面试,Linux]
 updated: 2026-09-17
 ---
@@ -1432,3 +1432,14 @@ linux命令’hash’管理着一个内置的哈希表，记录了已执行过�
     [root@localhost ~]# whatis zcat
 
     zcat [gzip] (1) – compress or expand files
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[30-资源/面试题库/操作系统面试题.md|操作系统面试题]]
+- [[30-资源/面试题库/计算机网络面试题.md|计算机网络面试题]]
+- [[30-资源/面试题库/面试八股.md|面试八股]]
+
+**导航**：[[30-资源/面试题库/README.md|面试题库]]

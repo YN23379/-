@@ -2,8 +2,8 @@
 type: 知识库
 scope: C与C++
 doc_type: 原理
-status: 待整理
-evidence: 待标注
+status: 已整理
+evidence: 不适用
 tags: [索引]
 updated: 2026-09-17
 ---

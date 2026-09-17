@@ -2,8 +2,8 @@
 type: 项目档案
 scope: FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）
 doc_type: 原理
-status: 待整理
-evidence: 待标注
+status: 待验证
+evidence: 实机验证
 tags: [i.MX95,启动,资源隔离,TRDC]
 updated: 2026-09-17
 ---
@@ -1611,3 +1611,12 @@ SM_LM_DEFAULT  = 2U          /* 调试监视器默认选中 LM2(AP) */
 
 - `2026-09-17-理解-启动逻辑与资源隔离.md`（四层权限模型、串口归属）
 - `2026-09-17-理解-02-上电启动全流程超详细.md`（启动顺序与启动命令表）
+
+<!-- related-generated -->
+## 相关
+
+**同目录**
+
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md|FRDM-IMX95-PRO开发记录]]
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]
+- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]]
