@@ -1,0 +1,11 @@
+views:
+  - type: table
+    name: 全部笔记
+    order:
+      - file.name
+      - type
+      - scope
+      - doc_type
+      - status
+      - evidence
+      - updated

@@ -1,0 +1,388 @@
+---
+type: 索引
+scope: 全库
+doc_type: 未分类
+status: 待整理
+evidence: 待标注
+tags: []
+updated: 2026-09-17
+---
+
+# 嵌入式软件研发训练营 — 学习笔记
+
+> **培训周期**：2 个月  
+> **核心内容**：μC/OS-II 理解与移植 · 梯形图编程 · Modbus 协议 · EtherCAT(ECAT)协议  
+
+---
+
+## 目录
+
+- [一、μC/OS-II：理解与移植](#一ucos-ii理解与移植)
+- [二、梯形图编程（Ladder Diagram）](#二梯形图编程ladder-diagram)
+- [三、Modbus 协议](#三modbus-协议)
+- [四、EtherCAT（ECAT）协议](#四ethercatecat-协议)
+
+---
+
+## 一、μC/OS-II：理解与移植
+
+### 1.1 什么是 RTOS？为什么需要它？
+
+在"裸机"程序中，所有功能都在一个 `while(1)` 大循环里轮询。某个任务的 `delay()` 会阻塞全部其他任务。
+**RTOS** 让多个任务**看起来同时在运行**——每个任务写自己的循环，延时自动让出 CPU，调度器按优先级分配时间。
+
+| 特性 | 裸机 | RTOS |
+|------|------|------|
+| 任务独立性 | 低（互相等待） | 高（各写各的） |
+| 实时响应 | 差（最长 = 所有任务执行一轮） | 好（只要 ISR 就绪，立刻抢占） |
+| 代码复杂度增长 | 指数级（任务多了嵌套复杂度爆炸） | 线性（加任务 = 加函数） |
+| ROM/RAM 开销 | 极低 | 中等（μC/OS-II 约 3KB） |
+
+### 1.2 μC/OS-II 设计哲学
+
+μC/OS-II 由 Jean J. Labrosse 于 1992 年发布，是整个嵌入式 RTOS 领域的经典教材。它的核心优势不是功能最全，而是**代码可读性最高**：
+
+- **约 5,500 行 C 代码** — 一个人一周可以通读
+- **优先级位图调度** — O(1) 时间复杂度，极其简洁
+- **统一的 ECB（事件控制块）** — 信号量/邮箱/队列底层共享同一数据结构
+
+### 1.3 内核核心机制
+
+#### 任务与调度
+
+- 共 64 个优先级（0~63），每个优先级最多 1 个任务
+- **抢占式**：高优先级就绪立刻打断低优先级
+- **位图算法**：`OSRdyGrp`（8 位）+ `OSRdyTbl[8]`（8×8）= 64 位就绪表，`OSUnMapTbl[256]` 查表实现 O(1) 调度
+
+#### IPC（任务间通信）
+
+| 机制 | 容量 | 用途 |
+|------|------|------|
+| **信号量** | 0~65535 | 任务同步（"你做完了，我才能继续"） |
+| **邮箱** | 1 个指针 | ISR → 任务安全传数据 |
+| **队列** | N 个指针 | 多数据缓冲（生产者→消费者） |
+| **互斥量** | 二值 | 共享资源保护 + 优先级反转保护 |
+
+#### 系统心跳（Tick）
+
+```c
+OSTimeDly(n)      // 任务主动延时 n 个 tick
+OSTimeDlyHMSM()   // 按 时:分:秒:毫秒 延时
+OSTimeTick()      // SysTick ISR 每 tick 调用一次, 递减所有延时计数器
+```
+
+### 1.4 移植要点（μC/OS-II → 新平台）
+
+移植 μC/OS-II 到新 CPU 只需修改 3 个文件：
+
+| 文件 | 内容 | 工作量 |
+|------|------|--------|
+| `os_cpu.h` | 数据类型定义、临界区方式、栈增长方向 | ~10 行 |
+| `os_cpu_c.c` | `OSTaskStkInit()` — 按 CPU 架构初始化栈帧 | ~50 行 |
+| `os_cpu_a.asm` | 开关中断、PendSV 上下文切换 | ~100 行 |
+
+**核心难点**：`OSTaskStkInit()` 模拟 CPU 的异常栈帧。必须匹配该 CPU 的自动压栈顺序
+（xPSR, PC, LR, R12, R3, R2, R1, R0）+ 手动保存的寄存器（R4-R11）。
+
+> **学习资源**：
+> - 📖 [μC/OS-II 官方书籍 by Labrosse (Micrium)](https://www.micrium.com/rtos/ucos-ii/)
+> - 📖 [邵贝贝 译《嵌入式实时操作系统 μC/OS-II》(中文权威译本)](https://wenku.csdn.net/doc/1q6xm4duda)
+> - 📖 [任哲《嵌入式实时操作系统 μCOS-II 原理与应用》(入门友好)](https://wenku.csdn.net/doc/2wi9acpb9f)
+> - 📖 [μC/OS-II 源码分析系列 (程序员宅基地)](https://programmersought.com/article/40936023064/)
+> - 🎥 [RTOS 基础概念介绍 (DigiKey)](https://www.digikey.com/en/maker/projects/what-is-a-realtime-operating-system-rtos/4d6e8e6f7fb84b6a9b1c6a9c0c8e9b1a)
+> - 📄 [Cortex-M3 移植官方应用笔记 AN1018 (Micrium)](https://www.micrium.com/an1018/)
+
+---
+
+## 二、梯形图编程（Ladder Diagram）
+
+### 2.1 什么是梯形图？
+
+梯形图（LD, Ladder Diagram）是 **IEC 61131-3 标准** 定义的 5 种 PLC 编程语言之一，
+也是使用最广的一种。它的语法模仿电气继电器控制电路图：
+
+```
+   X0        X1         Y0
+  ─┤├───────┤/├────────(  )──    ← Y0 = X0 AND (NOT X1)
+```
+
+- `┤├` 常开触点（NO） — 对应的位为 1 时导通
+- `┤/├` 常闭触点（NC） — 对应的位为 0 时导通
+- `(  )` 线圈（输出） — 该"行"导通时输出 1
+
+### 2.2 梯形图 vs C 语言
+
+| 梯形图 | C 语言 |
+|--------|--------|
+| 图形化，电气工程师可直接阅读 | 文本化，程序员阅读 |
+| 天然并行 — 每个扫描周期所有行都执行 | 顺序执行 |
+| 变量映射到 I/O 点（X0, Y0…） | 变量映射到内存地址 |
+| 适合**逻辑控制** | 适合**算法计算** |
+
+**PLC 扫描周期**：
+```
+读取输入 → 执行梯形图 (从上到下, 从左到右) → 更新输出 → 重复
+```
+这个循环通常耗时 1~20ms。
+
+### 2.3 核心指令
+
+| 指令 | 符号 | 说明 |
+|------|------|------|
+| XIC (常开) | `┤├` | 位=1 时导通 |
+| XIO (常闭) | `┤/├` | 位=0 时导通 |
+| OTE (输出) | `(  )` | 导通时输出 1 |
+| OTL/OTU | `(L)` `(U)` | 锁存/解锁（保持） |
+| TON | 定时器 | 导通后延时 N 秒输出 |
+| CTU | 计数器 | 上升沿计数 |
+
+### 2.4 经典实例：电机启停自锁
+
+```
+   START      STOP       MOTOR
+  ─┤├────────┤/├────────(  )──    ← 按 START: 电机启动
+     │
+   MOTOR                         ← 自锁: 松手后电机保持运行
+  ─┤├────
+```
+
+### 2.5 IEC 61131-3 五种语言
+
+| 语言 | 缩写 | 适用场景 |
+|------|------|---------|
+| 梯形图 | LD | 位逻辑、顺序控制 |
+| 功能块图 | FBD | 信号处理、PID 控制 |
+| 结构化文本 | ST | 复杂计算、循环、条件 |
+| 指令表 | IL | 底层优化（已被新版标准弃用） |
+| 顺序功能图 | SFC | 分步流程控制 |
+
+> **学习资源**：
+> - 📖 [PLC 梯形图入门教程 (GitCode Blog)](https://blog.gitcode.com/6c679eb23e407ef239305092cda46ea9.html) — 零基础中文入门
+> - 📖 [梯形图电机启停教程 (PLC 技术网)](http://bbs.plcjs.com/thread-635689-1-1.html) — 跟着画第一个梯形图
+> - 📖 [一步一步学 PLC 编程 (西门子 STEP7) 双色版 PDF](https://www.wendang.net/zl/380128.html)
+> - 🛠️ [OpenPLC Editor — 开源免费 PLC 平台](https://github.com/virajdesai0309/OpenPLC_Tutorials) — 无需硬件, 电脑上仿真梯形图
+> - 🎥 [Beginner's Free PLC Training Part 4: Ladder Logic (英文)](https://www.myplctraining.com/blog/beginners-free-plc-training-part-4)
+> - 📄 [IEC 61131-3 标准概述 (Wikipedia)](https://en.wikipedia.org/wiki/IEC_61131-3)
+
+---
+
+## 三、Modbus 协议
+
+### 3.1 什么是 Modbus？
+
+Modbus 是 1979 年 Modicon（现施耐德电气）发布的**应用层通信协议**，是最广泛使用的工业串行通信标准。
+它的核心设计是**主从架构**：一个 Master 轮询多个 Slave。
+
+```
+┌──────────┐  请求 (Request)    ┌──────────┐
+│  MASTER  │───────────────────►│ SLAVE 1  │
+│  (PLC)   │◄───────────────────│ (传感器)  │
+└──────────┘  响应 (Response)   └──────────┘
+     │
+     ├──────────────────────────┬──────────
+     ▼                          ▼
+┌──────────┐              ┌──────────┐
+│ SLAVE 2  │              │ SLAVE N  │
+└──────────┘              └──────────┘
+```
+
+### 3.2 三种变体
+
+| 特性 | Modbus RTU | Modbus ASCII | Modbus TCP |
+|------|-----------|-------------|-----------|
+| 物理层 | RS-485 串口 | RS-485 串口 | 以太网 (TCP/IP) |
+| 编码 | 二进制 | ASCII 十六进制 | 二进制 |
+| 帧间隔 | 3.5 字符静默 | 起始 `:` 结束 CR/LF | TCP 流 |
+| 检错 | CRC-16 | LRC | TCP 校验和 |
+| 端口 | — | — | 502 |
+| 典型速率 | 9600~115200 bps | 同 RTU | 100 Mbps+ |
+
+### 3.3 数据模型（4 张表）
+
+| 编号前缀 | 名称 | 数据类型 | 访问 |
+|----------|------|---------|------|
+| **0xxxx** | Coils（线圈） | 1-bit | 读/写 |
+| **1xxxx** | Discrete Inputs（离散输入） | 1-bit | 只读 |
+| **3xxxx** | Input Registers（输入寄存器） | 16-bit | 只读 |
+| **4xxxx** | Holding Registers（保持寄存器） | 16-bit | 读/写 |
+
+**注意**：地址有 0-based 和 1-based 两种惯例，不同厂商可能偏移 1，这是最常遇到的陷阱！
+
+### 3.4 常用功能码
+
+| 功能码 | 名称 | 操作 |
+|--------|------|------|
+| 01 | Read Coils | 读线圈 |
+| 02 | Read Discrete Inputs | 读离散输入 |
+| 03 | Read Holding Registers | 读保持寄存器 ← **最常用** |
+| 04 | Read Input Registers | 读输入寄存器 |
+| 05 | Write Single Coil | 写单个线圈 |
+| 06 | Write Single Register | 写单个寄存器 |
+| 15 | Write Multiple Coils | 写多个线圈 |
+| 16 | Write Multiple Registers | 写多个寄存器 |
+
+### 3.5 RTU 帧结构示例
+
+```
+请求 (Master → Slave, 读保持寄存器):
+┌──────┬──────┬──────┬──────┬───────┬───────┐
+│ Addr │ 0x03 │ 0x00 │ 0x00 │ 0x00  │ 0x01  │
+│  1B  │  1B  │  起始地址  │ 寄存器数 │
+│      │      │  (2B)    │  (2B)  │
+└──────┴──────┴──────────┴────────┴───────┘
+                                    │
+                              ┌─────┴──────┐
+                              │ CRC-16 (2B)│
+                              └────────────┘
+
+响应 (Slave → Master):
+┌──────┬──────┬──────┬─────────┬────────┐
+│ Addr │ 0x03 │ 0x02 │ 数据(2B)│ CRC-16 │
+└──────┴──────┴──────┴─────────┴────────┘
+```
+
+### 3.6 RS-485 硬件要点
+
+- **双绞线**：A(+), B(-), GND 三线，差分信号抗干扰
+- **终端电阻**：总线两端各 120Ω 终端电阻，消除信号反射
+- **偏置电阻**：主站端加 680Ω 上拉/下拉，保证总线空闲时状态确定
+- **菊花链拓扑**：设备串联，禁止星形分支
+
+> **学习资源**：
+> - 📄 [SANS Modbus 海报 (免费 PDF, 帧格式速查)](https://www.sans.org/posters/modbus-rtu-tcp)
+> - 📖 [Modbus 协议实战基础 (CONTEC, 英文)](https://www.contec.com/support/blog/2026/26030900_modbus/) — 绝对零基础友好
+> - 📖 [Modbus RTU/TCP 帧格式详解 (rfwireless-world)](https://www.rfwireless-world.com/tutorials/modbus-protocol-tutorial-frame-formats)
+> - 🎥 [ICP DAS Modbus 免费视频教程系列](https://www.icpdas-usa.com/modbuswebtraining.html)
+> - 🛠️ [QModMaster — 免费 Modbus 调试工具](https://sourceforge.net/projects/qmodmaster/)
+> - 🛠️ [pymodbus — Python Modbus 库 (GitHub)](https://github.com/pymodbus-dev/pymodbus)
+> - 📖 [Modbus 协议详解与开发实践 (Boardor, 83MB 完整 PDF)](https://boardor.com/blog/practical-guide-to-modbus-software-development-pdf-83mb)
+
+---
+
+## 四、EtherCAT（ECAT）协议
+
+### 4.1 什么是 EtherCAT？
+
+EtherCAT（Ethernet for Control Automation Technology）是 Beckhoff 于 2003 年发布的**实时工业以太网**协议。
+它是目前运动控制领域最快的现场总线之一。
+
+**核心创新**："飞读飞写"（Processing on the Fly）—— 数据帧在通过从站时，从站**不存储整个帧**，
+而是**在线**从帧中抽取/插入自己的数据，延迟仅**几百纳秒**。
+
+```
+传统以太网:            
+ Master → [Slave 1: 收→存→处理→发] → [Slave 2: 收→存→处理→发] → ...
+ 每个从站: ~100μs 延迟, 级联后延迟极大
+
+EtherCAT:
+ Master → ┬─Slave1(抽数据+插数据, ~500ns)─┬─Slave2─┬─... → 末端 → 原路返回
+           ↑___ 数据帧一直在"移动", 不停止 ___↑
+ 整个网络: μs 级延迟
+```
+
+### 4.2 主从架构
+
+```
+┌──────────────┐
+│ EtherCAT     │  标准以太网口
+│   Master     │  (无需专用硬件)
+└──────┬───────┘
+       │ 以太网帧 (EtherType=0x88A4)
+       ▼
+┌──────────┐  ┌──────────┐  ┌──────────┐
+│ Slave 1  │──│ Slave 2  │──│ Slave N  │  ← 菊花链
+│ (ESC芯片) │  │ (ESC芯片) │  │ (ESC芯片) │
+└──────────┘  └──────────┘  └──────────┘
+  ESC = EtherCAT Slave Controller (专用 ASIC 或 FPGA IP)
+```
+
+- **Master**：标准以太网 MAC，无需专用硬件，软件协议栈即可
+- **Slave**：需要 **ESC 芯片**（如 Beckhoff ET1100、TI AM335x 内置 PRU-ICSS）
+
+### 4.3 从站状态机（State Machine）
+
+每个从站在启动时必须经历状态转换：
+
+```
+INIT → PREOP → SAFEOP → OP
+  │               │        │
+  │  无通信        │ SDO    │ PDO + SDO
+  │               │  可用   │ 全部可用
+  ▼               ▼        ▼
+只能访问寄存器  参数配置  正常运行
+```
+
+| 状态 | 含义 | 允许的操作 |
+|------|------|-----------|
+| **Init** | 初始化 | 只能访问 ESC 寄存器 |
+| **Pre-Op** | 预运行 | Mailbox 通信（SDO）可用 |
+| **Safe-Op** | 安全运行 | PDO 只读，电机可抱闸 |
+| **Op** | 正常运行 | PDO 读写全开，全速运行 |
+
+### 4.4 SDO vs PDO
+
+| | SDO (Service Data Object) | PDO (Process Data Object) |
+|------|------|------|
+| 用途 | 参数配置（偶尔） | 实时数据交换（每周期） |
+| 速度 | 慢（分帧） | 快（直接映射） |
+| 对象字典 | 通过 Index/SubIndex 访问 | 预先通过 SDO 映射好 |
+| 类比 | 写信问参数 | 订阅推送 |
+
+### 4.5 分布式时钟（DC, Distributed Clocks）
+
+EtherCAT 的最大亮点之一。主站从所有从站中选一个作为**参考时钟**，
+其他从站通过硬件补偿将自己的时钟同步到参考时钟。同步精度可达 **< 1μs**。
+
+这是**高精度多轴运动控制**（如 CNC、机器人）的关键技术。
+
+### 4.6 EtherCAT 对比其他工业以太网
+
+| 协议 | 实时原理 | 同步精度 | 主站硬件 | 开放程度 |
+|------|---------|---------|---------|---------|
+| **EtherCAT** | 飞读飞写 | < 1μs | 标准以太网卡 | ETG 开放 |
+| Profinet IRT | 时分复用 | ~1μs | 专用 ASIC | PI 组织 |
+| Ethernet/IP | CIP Sync (IEEE 1588) | ~10μs | 标准以太网卡 | ODVA 开放 |
+| POWERLINK | 时隙轮询 | ~1μs | 标准以太网卡 | EPSG 开源 |
+| SERCOS III | 时分复用 | < 1μs | 专用 FPGA | 开放 |
+
+### 4.7 学习路线建议
+
+```
+第1天: 理解"飞读飞写"原理 → 看 ETG 官方视频 "EtherCAT in 20 Minutes"
+第2天: 掌握状态机 Init→PreOp→SafeOp→Op
+第3天: 理解 PDO vs SDO 区别, 对象字典结构
+第4天: 了解分布式时钟 DC
+第5天: 搭 TwinCAT (Beckhoff 免费 PLC 软件) 做仿真实验
+```
+
+> **学习资源**：
+> - 🏭 [EtherCAT Technology Group (ETG) 官网](https://www.ethercat.org/) — 官方标准
+> - 📖 [EtherCAT Training PDF (68 页完整培训教材)](https://idoc.pub/documents/ethercat-trainingpdf-vylyedxqed4m)
+> - 🎥 [TI EtherCAT 技术介绍视频](https://www.ti.com/video/5168612161001) — 物理层+协议详解
+> - 📄 [TI EtherCAT 技术文章 (SSZTC63)](https://www.ti.com/document-viewer/lit/html/SSZTC63) — 如何选择工业以太网标准
+> - 📖 [EtherCAT 详细架构 (LIRMM, 英文)](https://ethercatcpp.lirmm.net/ethercatcpp-framework/pages/ethercat_details.html) — ESC/PDI/FMMU/SyncManager 详解
+> - 📖 [EtherCAT 通用指南 (softMC)](http://softmc.servotronix.com/index.php?title=Category:EtherCAT:ECAT_GENERAL_GUIDE) — 实践配置
+> - 🛠️ [TwinCAT 3 (Beckhoff) — 免费下载](https://www.beckhoff.com/en-en/products/automation/twincat/) — 功能完整的 EtherCAT 开发环境
+> - 🛠️ [SOEM (Simple Open EtherCAT Master) — GitHub 开源](https://github.com/OpenEtherCATsociety/SOEM) — 学习主站协议栈的最佳 C 源码
+> - 📄 [EtherCAT EAP 协议幻灯片 (ETG 官方 PDF)](https://www.ethercat.org/download/documents/EtherCAT_EAP_EN.pdf)
+
+---
+
+## 学习路线总图
+
+```
+Week 1-2:    μC/OS-II 理解 → 源码阅读 → 任务调度 / IPC / 中断处理
+Week 3-4:    STM32 移植实战 → os_cpu_a.asm 上下文切换 → PendSV
+Week 5-6:    梯形图编程 → 基本指令 → OpenPLC 仿真 → 简单控制逻辑
+Week 7:      Modbus 协议 → RTU/TCP 帧格式 → RS-485 硬件 → 调试
+Week 8:      EtherCAT 概述 → 飞读飞写 → 状态机 → TwinCAT 体验
+```
+
+---
+
+> **笔记作者按**：这四个主题串起了从"芯片级 RTOS"到"设备级现场总线"的完整技术栈。
+> μC/OS-II 让你理解操作系统怎么调度 CPU，Modbus 让你理解设备间怎么传数，
+> 梯形图让你理解 PLC 怎么控制产线，EtherCAT 让你理解高速运动控制怎么实现。
+> 它们不是孤立的知识点，而是一层一层向上构建的工业自动化金字塔。
+
+> **最后更新**: 2026-06-29

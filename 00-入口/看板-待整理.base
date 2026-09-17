@@ -1,0 +1,13 @@
+filters:
+  or:
+    - status == "待整理"
+    - evidence == "待标注"
+views:
+  - type: table
+    name: 待整理 / 待标注证据
+    order:
+      - file.name
+      - type
+      - doc_type
+      - status
+      - evidence
