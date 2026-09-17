@@ -1,7 +1,7 @@
 ---
 type: 知识库
 scope: RTOS
-doc_type: 未分类
+doc_type: 操作系统/RTOS
 status: 待整理
 evidence: 待标注
 tags: []
