@@ -4,7 +4,7 @@ scope: 芯片与平台-i.MX95
 doc_type: 原理
 status: 待验证
 evidence: 实机验证
-tags: []
+tags: [启动, 多核与异构, 安全与隔离]
 updated: 2026-09-17
 ---
 

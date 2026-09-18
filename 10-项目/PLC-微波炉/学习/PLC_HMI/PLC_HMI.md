@@ -4,7 +4,7 @@ scope: PLC-微波炉
 doc_type: 教程
 status: 已整理
 evidence: 官方资料
-tags: []
+tags: [协议, 电源, 存储, 安全与隔离]
 updated: 2026-09-17
 ---
 

@@ -4,7 +4,7 @@ scope: 芯片与平台-i.MX95
 doc_type: 怎么做
 status: 已整理
 evidence: 源码确认
-tags: []
+tags: [启动, 多核与异构, 存储]
 updated: 2026-09-17
 ---
 

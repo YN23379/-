@@ -4,7 +4,7 @@ scope: 芯片与平台-i.MX95
 doc_type: 怎么做
 status: 已整理
 evidence: 实机验证
-tags: []
+tags: [多核与异构, 编译构建, 存储]
 updated: 2026-09-17
 ---
 

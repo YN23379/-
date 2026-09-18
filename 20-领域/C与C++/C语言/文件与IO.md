@@ -4,7 +4,7 @@ scope: C与C++
 doc_type: 原理
 status: 已整理
 evidence: 教材课程
-tags: [C语言,文件,IO]
+tags: [C语言, 文件系统, 进程与线程, 内存管理]
 updated: 2026-09-17
 ---
 

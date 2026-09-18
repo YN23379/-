@@ -4,7 +4,7 @@ scope: 面试题库
 doc_type: 参考
 status: 已整理
 evidence: 源码确认
-tags: [面试,Linux]
+tags: [面试, Linux, 同步与IPC, 内存管理, 进程与线程]
 updated: 2026-09-17
 ---
 

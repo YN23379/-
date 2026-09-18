@@ -4,7 +4,7 @@ scope: 面试题库
 doc_type: 参考
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航]
+tags: [索引, 导航, 进程与线程, 网络, 编译构建]
 updated: 2026-09-17
 ---
 

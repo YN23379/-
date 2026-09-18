@@ -4,7 +4,7 @@ scope: 芯片与平台-i.MX95
 doc_type: 未分类
 status: 已整理
 evidence: 源码确认
-tags: []
+tags: [协议, 多核与异构, 安全与隔离, 驱动]
 updated: 2026-09-17
 ---
 

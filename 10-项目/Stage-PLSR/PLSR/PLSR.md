@@ -4,7 +4,7 @@ scope: Stage-PLSR
 doc_type: 未分类
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [协议, 存储, 时钟, 同步与IPC]
 updated: 2026-09-17
 ---
 

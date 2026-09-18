@@ -4,7 +4,7 @@ scope: RTOS
 doc_type: 原理
 status: 已整理
 evidence: 源码确认
-tags: [uC-OS-II,RTOS]
+tags: [uC-OS-II, RTOS, 中断, 同步与IPC, 编译构建]
 updated: 2026-09-17
 ---
 

@@ -1,25 +1,38 @@
 ---
 type: 索引
 scope: Linux
-doc_type: 参考
+doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航]
-updated: 2026-09-17
+tags: [索引, 导航, Linux]
+updated: 2026-09-18
 ---
 
-<!-- nav-generated -->
-# Linux
+# Linux 导览
 
-> 本页由脚本生成（`add_nav.py`），列出本目录笔记；重新运行会刷新。
+> 一句话：从"内核长什么样"到"怎么在上层写程序"，Linux 主题分三层。
 
-| 笔记 | 讲什么 |
-|---|---|
-| [[20-领域/Linux/Android系统架构.md|Android系统架构]] | Android采用经典的分层架构。应用层通过Framework提供的API服务访问硬件功能，Framework服务通过B |
-| [[20-领域/Linux/Linux内核.md|Linux内核]] | 1. 宏内核 |
-| [[20-领域/Linux/Linux学习路线与视频清单.md|Linux学习路线与视频清单]] | 表格 |
-| [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]] | 嵌入式 Linux 是物联网、智能设备、工业控制等领域的核心技术之一。本层重点掌握从 Bootloader 到驱动的开发 |
+## 装什么 / 不装什么
 
-上级：[[20-领域/README.md|20-领域]]
+- **装**：Linux 内核原理、内核数据结构、系统编程（进程/线程/网络/内存/信号）、嵌入式 Linux 全景。
+- **不装**：某块板子的 rootfs 构建脚本、具体烧录日志 → 在 `10-项目/`。
 
-库总入口：[[00-入口/README.md|README]]　领域索引：[[00-入口/MOC-领域.md|MOC-领域]]　项目索引：[[00-入口/MOC-项目.md|MOC-项目]]　资源索引：[[00-入口/MOC-资源.md|MOC-资源]]
+## 结构（先建立这张图，再进子目录）
+
+| 层 | 目录 | 内容 |
+|---|---|---|
+| 概览 | 本目录 | `Linux内核`（内核长什么样）、`嵌入式Linux`（Linux 在设备上的全景）、`Android系统架构`（Android 分层） |
+| 编程 | `Linux系统编程/` | fork/线程/socket/信号/内存/文件/系统调用 —— 用户态怎么写程序 |
+| 驱动 | `Linux驱动基础/` | 内核模块、字符/块设备、ioctl |
+
+## 建议阅读顺序
+
+1. 先读 [[20-领域/Linux/Linux内核.md|Linux内核]] —— 建立"内核五大管理 + 关键数据结构"的心智模型。
+2. 再读 [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]] —— 看 Bootloader→内核→设备树→rootfs 全链路。
+3. 然后进 [[20-领域/Linux/Linux系统编程/README.md|Linux系统编程]] 按那边给的顺序学用户态编程。
+4. `Android系统架构` 可最后看——它依赖内核概念，但本身是独立主题。
+
+## 相邻主题
+
+- 内存布局：[[20-领域/计算机系统/地址与内存.md|地址与内存]]
+- 内核如何用 C 实现：可回 [[20-领域/C与C++/C语言/README.md|C语言]]

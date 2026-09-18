@@ -4,7 +4,7 @@ scope: Stage-Modbus
 doc_type: 未分类
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [同步与IPC, 调度, 中断]
 updated: 2026-09-17
 ---
 

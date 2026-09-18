@@ -4,7 +4,7 @@ scope: Linux
 doc_type: 教程
 status: 已整理
 evidence: 源码确认
-tags: []
+tags: [编译构建, 文件系统, 调试]
 updated: 2026-09-17
 ---
 

@@ -4,7 +4,7 @@ scope: 数据结构与算法
 doc_type: 未分类
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [算法与数据结构, 文件系统, 编译构建]
 updated: 2026-09-17
 ---
 

@@ -1,26 +1,24 @@
 ---
-type: 知识库
-scope: 芯片与平台-i.MX95
-doc_type: 原理
+type: 索引
+scope: i.MX95
+doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: []
-updated: 2026-09-17
+tags: [索引, 导航, 启动, 烧录]
+updated: 2026-09-18
 ---
 
-# 启动与烧录
+# 启动与烧录 导览
 
-计划整理的主题：
+> 一句话：代码是怎么从"一个 bin 文件"变成"上电能跑"的。
 
-- 程序从非易失性存储到CPU执行的完整过程；
-- ELF、BIN、启动容器和`flash.bin`的区别；
-- Boot ROM、ELE、DDR OEI、System Manager和M7固件的启动顺序；
-- UUU的USB临时启动与SD/eMMC持久化烧录；
-- JTAG/SWD、USB SDP/SDPS和Linux remoteproc的适用场景；
-- 如何根据启动模式、串口日志和镜像组成排查启动失败。
+## 建议阅读顺序
 
-项目中的实证材料：
+1. [[20-领域/芯片与平台-i.MX95/启动与烧录/STM32与i.MX95启动和开发流程对比.md|STM32 vs i.MX95 对比]] —— 先建立"单片机能直接烧、SoC 不行"这个根本区别。
+2. [[20-领域/芯片与平台-i.MX95/启动与烧录/SDK、BSP与调试下载接口.md|SDK/BSP/调试接口]] —— SDK 是啥、J-Link/JTAG/SWD 关系、flash.bin 是啥。
+3. [[20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md|官方启动配置与 ELE]] —— ELE/AHAB、启动主线的官方依据。
 
-- [FRDM-IMX95-PRO从上手到FreeRTOS外设验证](../../../10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md)
-- [SDK、BSP与调试下载接口](SDK、BSP与调试下载接口.md)
-- [STM32与i.MX95启动和开发流程对比](STM32与i.MX95启动和开发流程对比.md)
+## 相邻主题
+
+- 启动时的多核分工 → [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|多核与启动]]
+- 上电全流程的逐步骤 → [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md|理解：启动与资源隔离]]

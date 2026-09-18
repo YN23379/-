@@ -4,7 +4,7 @@ scope: PLC-微波炉
 doc_type: 教程
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [启动, 电源, 网络]
 updated: 2026-09-17
 ---
 

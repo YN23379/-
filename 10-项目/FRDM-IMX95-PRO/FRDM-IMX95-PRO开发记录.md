@@ -4,7 +4,7 @@ scope: FRDM-IMX95-PRO
 doc_type: 未分类
 status: 待验证
 evidence: 实机验证
-tags: []
+tags: [协议, 启动, 存储, 多核与异构]
 updated: 2026-09-17
 ---
 

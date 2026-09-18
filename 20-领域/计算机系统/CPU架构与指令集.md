@@ -4,7 +4,7 @@ scope: 计算机系统
 doc_type: 未分类
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [体系结构, 电源, 网络]
 updated: 2026-09-17
 ---
 

@@ -4,7 +4,7 @@ scope: 培训-尹家昌
 doc_type: 教程
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [安全与隔离, 存储, 算法与数据结构]
 updated: 2026-09-17
 ---
 

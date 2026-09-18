@@ -4,7 +4,7 @@ scope: FRDM-IMX95-PRO
 doc_type: 原理
 status: 已整理
 evidence: 实机验证
-tags: []
+tags: [启动, 多核与异构, 编译构建]
 updated: 2026-09-17
 ---
 

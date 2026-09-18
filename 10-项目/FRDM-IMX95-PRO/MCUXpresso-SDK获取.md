@@ -4,7 +4,7 @@ scope: 工具与环境
 doc_type: 未分类
 status: 已整理
 evidence: 源码确认
-tags: []
+tags: [协议, 编译构建, 多核与异构, 启动]
 updated: 2026-09-17
 ---
 

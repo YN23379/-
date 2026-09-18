@@ -4,7 +4,7 @@ scope: 培训-尹家昌
 doc_type: 教程
 status: 已整理
 evidence: 源码确认
-tags: []
+tags: [编译构建, 调试, 体系结构]
 updated: 2026-09-17
 ---
 

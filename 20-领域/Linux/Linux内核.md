@@ -4,7 +4,7 @@ scope: Linux
 doc_type: 未分类
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [文件系统, 内存管理, 进程与线程]
 updated: 2026-09-17
 ---
 

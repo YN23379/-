@@ -4,7 +4,7 @@ scope: 全库
 doc_type: 怎么做
 status: 已整理
 evidence: 官方资料
-tags: [Obsidian, 配置]
+tags: [编译构建, 启动]
 updated: 2026-09-17
 ---
 

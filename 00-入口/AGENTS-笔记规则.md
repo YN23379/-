@@ -4,7 +4,7 @@ scope: 全库
 doc_type: 未分类
 status: 待验证
 evidence: 不适用
-tags: []
+tags: [启动, 编译构建, 存储]
 updated: 2026-09-17
 ---
 

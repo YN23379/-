@@ -4,7 +4,7 @@ scope: FRDM-IMX95-PRO
 doc_type: 怎么做
 status: 待验证
 evidence: 实机验证
-tags: []
+tags: [编译构建, 启动, 存储]
 updated: 2026-09-17
 ---
 

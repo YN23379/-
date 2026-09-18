@@ -4,7 +4,7 @@ scope: Stage-Modbus
 doc_type: 未分类
 status: 已整理
 evidence: 教材课程
-tags: []
+tags: [协议, 网络, 安全与隔离, 体系结构]
 updated: 2026-09-17
 ---
 

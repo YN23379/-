@@ -4,7 +4,7 @@ scope: FRDM-IMX95-PRO
 doc_type: 未分类
 status: 待验证
 evidence: 不适用
-tags: []
+tags: [调试, 启动, 安全与隔离]
 updated: 2026-09-17
 ---
 

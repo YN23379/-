@@ -4,7 +4,7 @@ scope: 工具与环境
 doc_type: 怎么做
 status: 已整理
 evidence: 源码确认
-tags: [SSH,SCP,SFTP]
+tags: [启动, 文件系统, 多核与异构]
 updated: 2026-09-17
 ---
 

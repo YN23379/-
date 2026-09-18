@@ -4,7 +4,7 @@ scope: FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）
 doc_type: 原理
 status: 待验证
 evidence: 实机验证
-tags: [i.MX95,启动,资源隔离,TRDC]
+tags: [i.MX95, 协议, 启动, 安全与隔离, 存储]
 updated: 2026-09-17
 ---
 

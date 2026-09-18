@@ -4,7 +4,7 @@ scope: 面试项目
 doc_type: 参考
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航]
+tags: [索引, 导航, 项目, 进程与线程, 调试]
 updated: 2026-09-17
 ---
 

@@ -4,7 +4,7 @@ scope: Linux
 doc_type: 未分类
 status: 已整理
 evidence: 实机验证
-tags: []
+tags: [驱动, 启动, 编译构建]
 updated: 2026-09-17
 ---
 

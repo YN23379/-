@@ -4,7 +4,7 @@ scope: 面试项目
 doc_type: 未分类
 status: 已整理
 evidence: 实机验证
-tags: []
+tags: [协议, 存储, 启动, 时钟]
 updated: 2026-09-17
 ---
 

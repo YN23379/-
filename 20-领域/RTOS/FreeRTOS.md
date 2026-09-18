@@ -4,7 +4,7 @@ scope: RTOS
 doc_type: 原理
 status: 待验证
 evidence: 实机验证
-tags: [FreeRTOS,RTOS]
+tags: [FreeRTOS, RTOS, 启动, 编译构建, 同步与IPC]
 updated: 2026-09-17
 ---
 

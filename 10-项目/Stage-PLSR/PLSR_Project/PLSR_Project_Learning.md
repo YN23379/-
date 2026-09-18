@@ -4,7 +4,7 @@ scope: Stage-PLSR
 doc_type: 未分类
 status: 已整理
 evidence: 实机验证
-tags: []
+tags: [协议, 时钟, 同步与IPC, 体系结构]
 updated: 2026-09-17
 ---
 

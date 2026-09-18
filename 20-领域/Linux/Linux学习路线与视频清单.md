@@ -4,7 +4,7 @@ scope: Linux
 doc_type: 未分类
 status: 已整理
 evidence: 不适用
-tags: []
+tags: [协议, 网络, 进程与线程, 驱动]
 updated: 2026-09-17
 ---
 

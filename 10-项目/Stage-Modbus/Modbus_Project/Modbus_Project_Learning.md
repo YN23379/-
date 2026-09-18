@@ -4,7 +4,7 @@ scope: Stage-Modbus
 doc_type: 未分类
 status: 已整理
 evidence: 实机验证
-tags: []
+tags: [协议, 时钟, 中断, 同步与IPC]
 updated: 2026-09-17
 ---
 
