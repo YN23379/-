@@ -146,7 +146,7 @@ git init
 git clone <远程仓库地址>
 ```
 
-![](pictures\克隆.png)
+![](pictures/克隆.png)
 
 
 
@@ -160,7 +160,7 @@ git clone <远程仓库地址>
 git fetch origin
 ```
 
-![获取](pictures\获取.png)
+![获取](pictures/获取.png)
 
 获取Fetch和拉取Pull的区别：
 
@@ -174,7 +174,7 @@ git fetch origin
 
 点击 `仓库 `——>`仓库设置`——>`远程仓库`的设置里选择`添加`，在`远端名称` 填入 `origin`，URL 填写远程仓库地址，点击 `OK` 保存。
 
-![](pictures\远程仓库.png)
+![](pictures/远程仓库.png)
 
 ```
 git remote add origin <远程仓库地址>
@@ -208,7 +208,7 @@ git add .                # 添加所有变更到暂存区
 git commit -m "提交说明"  # 提交到本地仓库
 ```
 
-![](pictures\提交.png)
+![](pictures/提交.png)
 
 
 
@@ -218,7 +218,7 @@ git commit -m "提交说明"  # 提交到本地仓库
 
 **重置就是将当前分支的指针（HEAD）强制移动到指定的某个历史节点上。**
 
-![](pictures\重置.png)
+![](pictures/重置.png)
 
 `Soft` 仅移动指针保留所有变更；`Mixed` 移动指针并清空暂存区；`Hard` 丢弃目标节点后的所有变更（谨慎使用）。
 
@@ -244,7 +244,7 @@ git revert <节点哈希>
 
 回滚提交是创建新的节点，这一次的提交操作相当于加上了要回滚的提交节点的反代码，使得要回滚的提交节点对应的那次提交相当于被撤回了，并且此次回滚提交会记录回滚信息。
 
-![](pictures\回滚提交.png)
+![](pictures/回滚提交.png)
 
 **回滚算的是从目标节点到HEAD节点的差值并反向打补丁，重置算的是目标节点到当前节点的差值并决定是保留（--soft/--mixed）还是丢弃（--hard）。**
 
@@ -263,7 +263,7 @@ git branch <分支名>         # 创建分支
 git checkout -b <分支名>    # 创建并切换到新分支
 ```
 
-![](pictures\分支.png)
+![](pictures/分支.png)
 
 
 
@@ -275,7 +275,7 @@ git checkout -b <分支名>    # 创建并切换到新分支
 git merge <分支名>
 ```
 
-![](pictures\合并分支.png)
+![](pictures/合并分支.png)
 
 
 
@@ -346,7 +346,7 @@ git checkout <分支名>
 
 在两个不同的分支上修改同一文件的同一区域，然后尝试将后修改的分支合并到先修改的分支，此时 Git 无法自动合并，产生冲突。
 
-![](pictures\冲突.png)
+![](pictures/冲突.png)
 
 如图，在develop分支下对text文档的第一行做修改并提交，切换到main分支也对text文档的第一行做修改并提交，在合并develop分支到main分支时就产生了冲突。
 
@@ -415,7 +415,7 @@ git commit -m "合并并解决冲突"
   - 使用他们的版本
   - 标记为已解决
 
-![](pictures\解决冲突1.png)
+![](pictures/解决冲突1.png)
 
 
 
@@ -426,7 +426,7 @@ git commit -m "合并并解决冲突"
   - 标记为已解决
   - （部分版本还支持 **“全部标记为已解决”**）
 
-![](pictures\解决冲突.png)
+![](pictures/解决冲突.png)
 
 
 
@@ -450,7 +450,7 @@ git commit -m "合并并解决冲突"
 git pull origin <分支名>
 ```
 
-![](pictures\拉取.png)
+![](pictures/拉取.png)
 
 拉取会尝试把本地的提交历史和远程的提交历史拼接到一起。
 
@@ -474,7 +474,7 @@ git push origin <分支名>
 
 **如果推不上去，定是远程有更新，拉下来合并完再推。**
 
-![](pictures\推送.png)
+![](pictures/推送.png)
 
 
 
@@ -552,7 +552,7 @@ git rm --cached <文件名>
 
 对文件进行停止跟踪就是把它**从 Git 的追踪列表中移除**。它会将文件从暂存区（Index）中删除，但保留硬盘上的物理文件。
 
-![](pictures\停止跟踪.png)
+![](pictures/停止跟踪.png)
 
 
 
@@ -564,7 +564,7 @@ git rm --cached <文件名>
 git format-patch -1 <节点哈希>
 ```
 
-![](pictures\创建补丁.png)
+![](pictures/创建补丁.png)
 
 2. 在提交历史中按住 `Ctrl` 选中多个连续或不连续的提交节点，右键选择 `Create Patch`，SourceTree 会为每个选中的提交分别生成独立的补丁文件。
 
@@ -580,7 +580,7 @@ git format-patch <起始哈希>..<结束哈希>
 git diff HEAD > patch.diff
 ```
 
-![](pictures\创建补丁1.png)
+![](pictures/创建补丁1.png)
 
 
 
@@ -594,7 +594,7 @@ git diff HEAD > patch.diff
 git apply <补丁文件.patch>
 ```
 
-![](pictures\应用补丁.png)
+![](pictures/应用补丁.png)
 
 2. 使用 `git am` 应用由 `git format-patch` 生成的 `.patch` 文件，应用后会产生新的提交节点，保留原提交的提交说明和作者信息。
 
@@ -627,7 +627,7 @@ git checkout feature-login
 git rebase master
 ```
 
-![](pictures\变基.png)
+![](pictures/变基.png)
 
 - **合并（Merge）** = 把两条路汇合，产生一个新的交叉路口（合并提交 M）。
 - **变基（Rebase）** = 把其中一条路的起点拿起来，**转接到另一条路的最新位置**，让历史变成一条直线。

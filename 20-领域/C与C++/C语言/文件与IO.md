@@ -116,7 +116,7 @@ int rename(char * oldname, char * newname);
 - 对于newname和oldname两个目录，调用进程必须有写权限。
 - 重命名目录时，newname不能包含oldname作为其路径前缀。例如，不能将/usr更名为/usr/foo/testdir，因为老名字（ /usr/foo）是新名字的路径前缀，因而不能将其删除。
 ### stat
-![[stat结构体.png|1000]]
+![[90-附件/stat结构体.png|1000]]
 ```c
 #include <sys/types.h> 
 #include <sys/stat.h> 

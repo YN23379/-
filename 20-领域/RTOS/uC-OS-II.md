@@ -136,7 +136,7 @@ uC/OS-ll的任务有5种状态
 运行态（RUNNING）：正在使用CPU的状态称运行态
 等待态（WAITING)：等待某事件发生的状态.
 中断服务态（ISR）：正在运行的任务被中断时进入的状态
-![[ucosii任务状态.png]]
+![[90-附件/RTOS/ucosii任务状态.png]]
 
 #### 任务管理函数
 ##### `OSTaskCreate()`

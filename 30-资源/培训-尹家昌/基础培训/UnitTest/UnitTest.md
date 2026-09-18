@@ -334,7 +334,7 @@ TEST_METHOD(AllocBuffer_ZeroSize_ReturnsNull)
 
 运行后，`测试资源管理器` 窗口自动打开，显示测试结果：
 
-![](pictures\测试完毕.png)
+![](pictures/测试完毕.png)
 
 | 状态 | 图标 | 含义 |
 | :--- | :--- | :--- |
@@ -351,13 +351,13 @@ TEST_METHOD(AllocBuffer_ZeroSize_ReturnsNull)
 
 **`Alt+F2`** 是启动性能探查器的默认快捷键（前提是焦点在解决方案或代码编辑器中）
 
-![](pictures\性能分析.png)
+![](pictures/性能分析.png)
 
 使用性能分析工具分析CPU使用率的具体官方文档链接：[度量应用中的 CPU 使用率 - Visual Studio (Windows) | Microsoft Learn](https://learn.microsoft.com/zh-cn/visualstudio/profiling/beginners-guide-to-performance-profiling?view=visualstudio)
 
 也可以在`调试下拉栏`里选择`性能探查器`
 
-![](pictures\性能探查器.png)
+![](pictures/性能探查器.png)
 
 性能分析的可用工具
 
@@ -383,7 +383,7 @@ TEST_METHOD(AllocBuffer_ZeroSize_ReturnsNull)
    `"D:\MyProject\UnitTest1\Debug\UnitTest1.dll"`
 5. **点击“开始”**。此时，VS 会启动 `vstest.console.exe`，这个 EXE 会加载DLL并自动运行所有测试，性能探查器就会开始记录 DLL 里的性能数据了。
 
-![](pictures\性能探查器分析结果.png)
+![](pictures/性能探查器分析结果.png)
 
 
 
@@ -427,7 +427,7 @@ TEST_METHOD(AllocBuffer_ZeroSize_ReturnsNull)
 
 1. 在测试资源管理器中 点击`运行测试` 
 
-![](pictures\测试资源管理器.png)
+![](pictures/测试资源管理器.png)
 
 
 
@@ -437,13 +437,13 @@ TEST_METHOD(AllocBuffer_ZeroSize_ReturnsNull)
 
 如果没有Fine Code Coverage显示窗口，则在`视图`下拉栏里选择`其他`，点击Fine Code Coverage即可
 
-![](pictures\FCC窗口.png)
+![](pictures/FCC窗口.png)
 
 
 
 覆盖度窗口显示：
 
-![](pictures\FCC覆盖率.png)
+![](pictures/FCC覆盖率.png)
 
 
 
@@ -510,7 +510,7 @@ TEST_METHOD(AllocBuffer_ZeroSize_ReturnsNull)
    - 按 `F11` 逐语句执行，跟踪每条语句的执行路径
    - 观察中间变量的变化，确认哪个步骤引入错误
 
-![](pictures\单元测试调试.png)
+![](pictures/单元测试调试.png)
 
 测试代码和被测试代码在同一个调试会话中运行，所以：
 

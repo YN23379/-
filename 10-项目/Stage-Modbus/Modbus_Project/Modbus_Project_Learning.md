@@ -42,7 +42,7 @@ ST-Link只负责下载和调试，不参与Modbus数据传输。触摸屏下载�
 
 芯片型号决定启动文件、中断向量表、外设寄存器定义、Flash/RAM容量和引脚资源。型号选择错误时，后续生成的可能出现启动文件不匹配、外设不存在、引脚对不上等问题。
 
-![](pictures\cubeMX新建任务.png)
+![](pictures/cubeMX新建任务.png)
 
 需要确认的内容：
 
@@ -56,7 +56,7 @@ ST-Link只负责下载和调试，不参与Modbus数据传输。触摸屏下载�
 
 SWD用于ST-Link下载和在线调试，只需要`SWDIO`、`SWCLK`和`GND`。如果没有打开SWD，程序下载后可能把调试引脚当作普通GPIO使用，导致后续无法再次连接芯片。
 
-![](pictures\cubeMXSYS配置.png)
+![](pictures/cubeMXSYS配置.png)
 
 注意事项：
 
@@ -95,7 +95,7 @@ HAL和uCOS-II可以共用SysTick，前提是中断入口只有一个，并且两
 
 XDM板载外部晶振为`12 MHz`。外部晶振比内部RC振荡器稳定，适合作为系统时钟和串口波特率的基础。串口通信对时钟误差敏感，时钟不准时容易出现乱码、CRC错误和主站超时。
 
-![](pictures\cubeMX配置HSE.png)
+![](pictures/cubeMX配置HSE.png)
 
 
 
@@ -131,7 +131,7 @@ STM32F407系统时钟最高为`168 MHz`。AHB供给内核、存储器和DMA等�
 
 APB1和APB2供给外设，两条总线有各自的频率上限，不能都直接使用168 MHz。
 
-![](pictures\cubeMX时钟配置.png)
+![](pictures/cubeMX时钟配置.png)
 
 - `System Clock Mux`选择`PLLCLK`
 - `PLLM=12`用于把12 MHz降到1 MHz
@@ -149,7 +149,7 @@ APB1和APB2供给外设，两条总线有各自的频率上限，不能都直接
 
 点灯验证不依赖uC/OS-II和Modbus。基础刚生成时，先让一个GPIO按固定周期翻转，可以快速确认程序已经下载、系统时钟已经运行、HAL延时可用。
 
-![](pictures\cubeMX配置PF6引脚.png)
+![](pictures/cubeMX配置PF6引脚.png)
 
 GPIO常见工作模式如下：
 
@@ -186,7 +186,7 @@ GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
 进入`Connectivity -> USART1`，模式选择`Asynchronous`。PA9作为发送引脚，PA10作为接收引脚。
 
-![](pictures\cubeMX配置UART1.png)
+![](pictures/cubeMX配置UART1.png)
 
 | 配置项 | 数值 |
 |---|---|
@@ -198,7 +198,7 @@ GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
 USART1负责STM32侧的字节收发。Modbus RTU只规定报文格式，底层仍然要通过串口把每个字节发出去。主站和从站的波特率、数据位、校验位、停止位必须一致。
 
-![](pictures\cubeMX配置串口.png)
+![](pictures/cubeMX配置串口.png)
 
 实现时需要先指定串口外设，对应配置串口的波特率，数据位长度，停止位，校验位，以及通信模式，如单工、半双工等。
 
@@ -227,7 +227,7 @@ USART1负责STM32侧的字节收发。Modbus RTU只规定报文格式，底层�
 
 `EWARM`会生成IAR可打开的`.eww`和`.ewp`文件。外设初始化拆分为独立文件后，GPIO、USART和时钟配置更容易查找。固件库复制到目录后，迁移和离线编译更稳定。
 
-![](pictures\cubeMX输出配置.png)
+![](pictures/cubeMX输出配置.png)
 
 
 

@@ -30,7 +30,7 @@ Source Insight（简称 SI）是一个面向代码阅读的静态分析工具，
    - **Project Directory**：工程配置文件（`.SI`）存放位置——**不是源码目录**，建议放在源码根目录同级或专门的 `SourceInsight` 文件夹
 3. 点击 `OK`
 
-![](pictures\新建项目.png)
+![](pictures/新建项目.png)
 
 > 工程目录和源码目录要分开。工程目录只存 SI 的配置文件，源码目录保持整洁。
 >
@@ -134,7 +134,7 @@ SI 主要用于**阅读**代码，不推荐用它新建源文件（会缺少工�
 
 > 新建源文件建议在 IDE（如 IAR、Keil）中做，SI 专注于阅读和搜索。
 
-![](pictures\新建文件.png)
+![](pictures/新建文件.png)
 
 
 
@@ -148,7 +148,7 @@ SI 主要用于**阅读**代码，不推荐用它新建源文件（会缺少工�
 
 如不需要更改路径，则只需点击`Project` → `Rebuild Project`进行重载
 
-![](pictures\重载工程.png)
+![](pictures/重载工程.png)
 
 
 
@@ -200,7 +200,7 @@ Project` → `Synchronize Files` → 保持默认选项  → `OK
 Project` → `Rebuild Project` → 勾选 `Re-parse all Source files` → `OK
 ```
 
-![](pictures\重载工程.png)
+![](pictures/重载工程.png)
 
 | 方式     | 菜单路径                        | 耗时 | 适用场景                 |
 | -------- | ------------------------------- | ---- | ------------------------ |
@@ -232,7 +232,7 @@ Project` → `Rebuild Project` → 勾选 `Re-parse all Source files` → `OK
 
 红框圈出的 `Arrange Windows`（**排列窗口**）以及子菜单，是 SI 4.0 用来管理多文件显示布局的核心功能。
 
-![](pictures\多窗口.png)
+![](pictures/多窗口.png)
 
 | 菜单选项（Arrange Windows 子项） | 实际作用与效果                                               |
 | :------------------------------- | :----------------------------------------------------------- |
@@ -276,7 +276,7 @@ Project` → `Rebuild Project` → 勾选 `Re-parse all Source files` → `OK
 
 Source Insight 的窗口通过 `View` 菜单下的 `Panels` 和 `Toolbars` 控制：
 
-![](pictures\窗口视图.png)
+![](pictures/窗口视图.png)
 
 | 窗口             | 打开方式                                        | 快捷键        | 作用                         |
 | ---------------- | ----------------------------------------------- | ------------- | ---------------------------- |
@@ -305,7 +305,7 @@ Source Insight 的窗口通过 `View` 菜单下的 `Panels` 和 `Toolbars` 控�
 
 **查看当前文件结构，按下 `Alt+F8`。看不见符号就需要Rebuild Project。**
 
-![](pictures\符号窗口.png)
+![](pictures/符号窗口.png)
 
 1. 符号窗口展示的是**当前打开文件**中的所有符号列表
 
@@ -343,7 +343,7 @@ Source Insight 的窗口通过 `View` 菜单下的 `Panels` 和 `Toolbars` 控�
 
 `View` → `Panels` → `Context Window`，或直接按下快捷键 **`Alt+F11`**。通过菜单相同路径可将其关闭。
 
-![](pictures\上下文窗口.png)
+![](pictures/上下文窗口.png)
 
 上下文窗口用于在**不离开当前编辑位置**的情况下预览光标所在符号的定义内容。当光标停在某个函数名上时，上下文窗口自动显示该函数的定义代码。
 

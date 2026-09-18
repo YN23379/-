@@ -110,7 +110,7 @@ C/C++ 程序从源码到可执行文件经历的四个阶段:
 
 新建后项目中会看到 `framework.h`、`pch.h`、`pch.cpp`。全选 → 右键 → `移除` → `删除`。
 
-![](pictures\删除模版文件.png)
+![](pictures/删除模版文件.png)
 
 **（3）关闭预编译头**（可选,在清理模版文件后必须执行）
 
@@ -298,7 +298,7 @@ MYDLL_API int Subtract(int a, int b);
 2. **声明导出**：函数前加上 `__declspec(dllexport)`，如 `__declspec(dllexport) void MyFunc();`。
 3. **编译生成**：直接编译项目，编译器根据声明将函数导出到 `.dll` 和 `.lib` 文件中。
 
-![](pictures\动态库语句导出.png)
+![](pictures/动态库语句导出.png)
 
 
 
@@ -321,7 +321,7 @@ EXPORTS
 3. **配置应用**：在项目属性的 `链接器` -> `输入` -> `模块定义文件` 中，填入该 `.def` 文件名。
 4. **编译生成**：编译项目，链接器会忽略代码中的导出声明，严格按照 `.def` 文件指定的名称和序号进行导出。
 
-![](pictures\动态库模块导出.png)
+![](pictures/动态库模块导出.png)
 
 
 
@@ -551,7 +551,7 @@ FreeLibrary(hDll);
 
 新建后项目中会看到 `framework.h`、`pch.h`、`pch.cpp`。全选 → 右键 → `移除` → `删除`。
 
-![](pictures\预编译头文件.png)
+![](pictures/预编译头文件.png)
 
 **（3）关闭预编译头**
 
@@ -601,7 +601,7 @@ int Add(int a, int b)
 
 右键解决方案 → `添加` → `新建项目` → 选 `动态链接库(DLL)`。名称填 `DllSub`，位置保持 `Library_test`。创建后删除模板文件（`framework.h`、`pch.h`、`pch.cpp`、`dllmain.cpp`），关闭预编译头。
 
-![](pictures\动态库创建.png)
+![](pictures/动态库创建.png)
 
 **（2）添加源文件**
 
@@ -691,7 +691,7 @@ EXPORTS
 
 右键项目 → `属性` → `链接器` → `输入` → `模块定义文件`，填入 `DllMul.def`。点击 `确定`。
 
-![](pictures\动态库模块导出.png)
+![](pictures/动态库模块导出.png)
 
 > 注意：`.def` 方式不需要在头文件中加 `__declspec(dllexport)`，函数签名保持纯粹即可。也不需要预处理器定义。
 
@@ -908,7 +908,7 @@ xcopy /y /d "$(SolutionDir)DllMul\Debug\DllMul.dll" "$(OutDir)"
 
 右键解决方案 → `添加` → `新建项目` → 搜索 `本机单元测试项目`。名称填 `TestDiv`。VS 自动生成 `pch.h`、`pch.cpp`、`UnitTest1.cpp`。测试项目**不要删除** pch 文件——测试框架依赖预编译头。单元测试项目的配置类型默认为 `DynamicLibrary`——它不是可独立运行的程序，由 VS 测试运行器加载执行。不要将其改为 `.exe`。
 
-![](pictures\单元测试项目创建.png)
+![](pictures/单元测试项目创建.png)
 
 **（3）添加被测项目引用**
 

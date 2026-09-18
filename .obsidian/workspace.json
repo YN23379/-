@@ -4,20 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "e5796a21b81b8b14",
+        "id": "6c4c3080ea420591",
         "type": "tabs",
         "children": [
           {
-            "id": "28619a66a6e5fc37",
+            "id": "6b0baf922ee7cafd",
             "type": "leaf",
             "state": {
-              "type": "bases",
+              "type": "markdown",
               "state": {
-                "file": "00-入口/看板-待整理.base",
-                "viewName": "待整理 / 待标注证据"
+                "file": "30-资源/培训-尹家昌/基础培训/Sourcetree/SourceTree.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-table",
-              "title": "看板-待整理"
+              "icon": "lucide-file",
+              "title": "SourceTree"
             }
           }
         ]
@@ -157,7 +158,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "00-入口/看板-待整理.base",
+                "file": "30-资源/培训-尹家昌/基础培训/Sourcetree/SourceTree.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -178,43 +179,44 @@
       "switcher:打开快速切换": false,
       "graph:查看关系图谱": false,
       "canvas:新建白板": false,
-      "daily-notes:打开/创建今天的日记": false,
       "templates:插入模板": false,
       "command-palette:打开命令面板": false,
       "bases:新建数据库": false
     }
   },
-  "active": "28619a66a6e5fc37",
+  "active": "6b0baf922ee7cafd",
   "lastOpenFiles": [
+    "00-入口/MOC-项目.md",
+    "00-入口/MOC-领域.md",
     "00-入口/Obsidian使用与插件建议.md",
+    "00-入口/README.md",
+    "20-领域/Linux/README.md",
+    "20-领域/README.md",
+    "20-领域/Linux/Linux学习路线与视频清单.md",
+    "20-领域/Linux/Linux内核.md",
+    "20-领域/Linux/Android系统架构.md",
+    "20-领域/Linux/嵌入式Linux.md",
+    "20-领域/RTOS/uC-OS-II.md",
+    "20-领域/RTOS/README.md",
+    "20-领域/RTOS/FreeRTOS.md",
+    "10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md",
+    "20-领域/嵌入式通用/原码反码补码.md",
+    "20-领域/嵌入式通用/ARM架构.md",
+    "20-领域/嵌入式通用/嵌入式系统基础.md",
+    "20-领域/计算机系统/地址与内存.md",
+    "20-领域/计算机系统/README.md",
+    "20-领域/计算机系统/CPU架构与指令集.md",
+    "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
+    "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png",
+    "30-资源/培训-尹家昌/训练营学习笔记.md",
+    "10-项目/FRDM-IMX95-PRO/MCUXpresso-SDK获取.md",
+    "00-入口/重构记录-2026-09-17.md",
+    "00-入口/能力要求清单.md",
+    "00-入口/看板-待整理.base",
     "30-资源/面试题库/README.md",
     "30-资源/培训-尹家昌/基础培训/VisualStudio/README.md",
-    "30-资源/培训-尹家昌/基础培训/UnitTest/README.md",
-    "30-资源/培训-尹家昌/基础培训/Sourcetree/README.md",
-    "30-资源/培训-尹家昌/基础培训/SourceInsight/README.md",
-    "30-资源/培训-尹家昌/基础培训/Markdown/README.md",
-    "30-资源/培训-尹家昌/基础培训/Library/README.md",
-    "30-资源/培训-尹家昌/基础培训/IAR/README.md",
-    "30-资源/培训-尹家昌/README.md",
-    "20-领域/通信协议/README.md",
-    "20-领域/计算机系统/README.md",
-    "20-领域/数据结构与算法/README.md",
-    "20-领域/工具与环境/README.md",
-    "20-领域/Linux/Linux驱动基础/README.md",
-    "20-领域/Linux/Linux系统编程/README.md",
-    "20-领域/Linux/README.md",
-    "20-领域/C与C++/C语言/README.md",
-    "20-领域/C与C++/C++/README.md",
-    "10-项目/面试项目/README.md",
-    "10-项目/Stage-PLSR/PLSR_Project/README.md",
-    "10-项目/Stage-PLSR/PLSR/README.md",
-    "10-项目/Stage-Modbus/ucosii/README.md",
-    "10-项目/Stage-Modbus/Modbus_Project/README.md",
-    "10-项目/Stage-Modbus/Modbus/README.md",
-    "10-项目/PLC-微波炉/设计/README.md",
     "40-归档/C与C++重构前.zip",
     "40-归档/空笔记",
-    "00-入口/看板-待整理.base",
     "00-入口/看板-全部笔记.base",
     "stm32",
     "面试题与面经/笔记.zip"

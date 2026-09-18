@@ -21,7 +21,7 @@ Obsidian 的数学块完全基于 **LaTeX** 语法，这是一种学术界广�
         
 2. **块公式**：单独成行、居中的公式，用**两个美元符号** `$$` 包裹。
 
-![[数学块常用表达式.png]]
+![[90-附件/数学块常用表达式.png]]
 向下取整`$\lfloor x \rfloor$`$\lfloor x \rfloor$
 向上取整`$\lceil x \rceil$` $\lceil x \rceil$
 
