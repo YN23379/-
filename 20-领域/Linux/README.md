@@ -4,7 +4,7 @@ scope: Linux
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, Linux]
+tags: [索引, 导航, Linux, 驱动, 进程与线程]
 updated: 2026-09-18
 ---
 

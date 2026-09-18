@@ -4,7 +4,7 @@ scope: RTOS
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, RTOS]
+tags: [索引, 导航, RTOS, 中断, 调度]
 updated: 2026-09-18
 ---
 

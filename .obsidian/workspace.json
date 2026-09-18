@@ -11,14 +11,12 @@
             "id": "6b0baf922ee7cafd",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "pdf",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
-                "mode": "source",
-                "source": false
+                "file": "30-资源/参考资料/Linux BSP工程师面试常问问题汇集..pdf"
               },
-              "icon": "lucide-file",
-              "title": "Harpoon验证与复现"
+              "icon": "lucide-file-text",
+              "title": "Linux BSP工程师面试常问问题汇集."
             }
           }
         ]
@@ -83,7 +81,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 256.70001220703125
   },
   "right": {
     "id": "59724f4aa0ab7603",
@@ -161,7 +159,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
+                "file": "30-资源/参考资料/Linux BSP工程师面试常问问题汇集..pdf",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -189,6 +187,24 @@
   },
   "active": "6b0baf922ee7cafd",
   "lastOpenFiles": [
+    "20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md",
+    "30-资源/参考资料/嵌入式资料整合第二辑.pdf",
+    "30-资源/参考资料/ARM嵌入式系统基础教程.PDF",
+    "10-项目/FRDM-IMX95-PRO/JTAG与SWD接口调研.md",
+    "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
+    "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md",
+    "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md",
+    "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md",
+    "10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md",
+    "10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md",
+    "10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md",
+    "10-项目/FRDM-IMX95-PRO/资料清单表.md",
+    "10-项目/FRDM-IMX95-PRO/开发日志.md",
+    "10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md",
+    "20-领域/通信协议/通信协议.md",
+    "20-领域/嵌入式通用/原理图基础与阅读方法.md",
+    "20-领域/计算机系统/CPU架构与指令集.md",
+    "20-领域/计算机系统/地址与内存.md",
     "40-归档/合并前原件/字符串.md",
     "40-归档/合并前原件/内存与对齐.md",
     "40-归档/合并前原件/字长与类型大小.md",
@@ -197,27 +213,11 @@
     "20-领域/芯片与平台-i.MX95/启动与烧录/SDK、BSP与调试下载接口.md",
     "20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md",
     "20-领域/通信协议/README.md",
-    "20-领域/通信协议/通信协议.md",
     "20-领域/工具与环境/Obsidian数学公式.md",
     "20-领域/工具与环境/README.md",
-    "20-领域/工具与环境/MobaXterm使用.md",
-    "20-领域/工具与环境/API概念.md",
     "90-附件/RTOS/ucosii任务状态.png",
-    "40-归档/空笔记/投递.md",
-    "30-资源/培训-尹家昌/训练营学习笔记.md",
-    "40-归档/合并前原件/05-内存管理.md",
-    "40-归档/合并前原件/基础与进阶总览.md",
-    "00-入口/MOC-资源.md",
     "00-入口/看板-待整理.base",
     "00-入口/看板-全部笔记.base",
-    "00-入口/重构记录-2026-09-17.md",
-    "00-入口/README.md",
-    "00-入口/MOC-领域.md",
-    "30-资源/培训-尹家昌/基础培训/Sourcetree/SourceTree.md",
-    "20-领域/C与C++/C语言/内存与对齐.md",
-    "20-领域/数据结构与算法/学习方法与解题技巧.md",
-    "00-入口/MOC-项目.md",
-    "00-入口/Obsidian使用与插件建议.md",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png",
     "40-归档/C与C++重构前.zip",

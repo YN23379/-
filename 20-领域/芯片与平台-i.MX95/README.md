@@ -4,7 +4,7 @@ scope: i.MX95
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, i.MX95]
+tags: [索引, 导航, i.MX95, 多核与异构, 启动]
 updated: 2026-09-18
 ---
 

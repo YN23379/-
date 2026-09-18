@@ -4,7 +4,7 @@ scope: 全库
 doc_type: 参考
 status: 已整理
 evidence: 官方资料
-tags: [索引]
+tags: [索引, 编译构建, 多核与异构, 体系结构]
 updated: 2026-09-17
 ---
 

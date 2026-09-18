@@ -4,7 +4,7 @@ scope: 嵌入式通用
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, 嵌入式]
+tags: [索引, 导航, 嵌入式, 体系结构, 中断]
 updated: 2026-09-18
 ---
 

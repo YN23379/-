@@ -4,7 +4,7 @@ scope: 数据结构与算法
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, 算法]
+tags: [索引, 导航, 算法, 算法与数据结构]
 updated: 2026-09-18
 ---
 

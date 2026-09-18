@@ -4,7 +4,7 @@ scope: 计算机系统
 doc_type: 原理
 status: 已整理
 evidence: 教材课程
-tags: [体系结构]
+tags: [体系结构, 编译构建, 多核与异构]
 updated: 2026-09-18
 ---
 

@@ -294,6 +294,72 @@ FreeRTOS 任务的 4 个核心状态（实际还包括 Running / Deleted）：
   - 方法 2：检查栈末尾的 magic 值（`0xA5A5A5A5`）是否被改写。
 - 用 `uxTaskGetStackHighWaterMark()` 查**历史最小剩余**。
 
+### 5b. FreeRTOS 到底支持多少个任务？（深度）
+
+**结论先说：FreeRTOS 内核不设任务数上限，上限 = 你的 RAM。**（官方原话：*"FreeRTOS does not
+impose a limit, so the only limit is the amount of RAM your system has."*）
+
+这是很多人 misconceive 的地方——以为 `configMAX_PRIORITIES` 限制任务数。它不限制**数量**，
+只限制**优先级档位**。两个是独立的两件事。
+
+#### 上限由什么决定
+
+一个任务占的内存 = **栈 + TCB**，都从 FreeRTOS 堆（`configTOTAL_HEAP_SIZE`）里出：
+
+```text
+每个任务开销 ≈ usStackDepth × sizeof(StackType_t)   ← 栈（你在 xTaskCreate 里给的）
+             + sizeof(TCB_t)                         ← 任务控制块（几十到一百多字节）
+             + 队列/信号量等内核对象（如果任务用了）
+```
+
+所以理论上限的推导是：
+
+```text
+最大任务数 ≈ configTOTAL_HEAP_SIZE / (每任务栈字数 × 4 + sizeof(TCB_t) 对齐)
+```
+
+**举例**：堆 32KB、每任务栈 128 字（512 字节）、TCB 约 92 字节 → 每任务约 604 字节 →
+理论上限约 54 个任务。**真正的限制是你给堆留了多少 RAM，以及你愿意给每个任务多大栈。**
+
+> 注意还有"隐性玩家"：调度器启动时会**自动创建空闲任务**（idle），
+> `configUSE_TIMERS=1` 还会创建定时器服务任务——它们也吃堆。所以实际可用比理论少一点。
+
+#### 为什么这么设计（对比 uC/OS）
+
+| | FreeRTOS | uC/OS-II |
+|---|---|---|
+| 任务数上限 | **无硬限制**，只受 RAM | `OS_MAX_TASKS` **编译期定死** |
+| 优先级 | 0 ~ `configMAX_PRIORITIES-1`（数值大=高） | 0 ~ 63 固定 |
+| 任务控制块 | 动态从堆分配，或 `xTaskCreateStatic` 静态 | 预分配数组 `OSTCBTbl[]` |
+| 就绪表 | `pxReadyTasksLists[prio]` 每优先级一个链表 | 8×8 位图 + 就绪组 |
+
+为什么 FreeRTOS 不学 uC/OS 预分配数组？——**因为数组方案浪费且不灵活**：
+`OS_MAX_TASKS=10` 就永远最多 10 个，哪怕你只用到 3 个，那 7 份 TCB+栈也一直占着 RAM；
+而嵌入式 RAM 恰恰是最稀缺资源。FreeRTOS 选择"用多少占多少"，把上限交给开发者自己权衡。
+
+#### 代价：这个设计把"确定性"换成了"灵活性"
+
+动态分配意味着 `xTaskCreate` **可能失败**（堆满了），返回 `pdFAIL`。所以：
+
+1. **必须检查返回值**，或实现 `vApplicationMallocFailedHook()`；
+2. 若要**运行期完全无碎片、无失败**（安全关键场景），改用 `xTaskCreateStatic()`——
+   TCB 和栈由你静态定义，内核零堆依赖；
+3. **创建完就不再删**的话（大多数产品如此），堆碎片风险很低；频繁 `vTaskDelete`+`Create`
+   才需要担心碎片（heap_4 的合并算法能缓解但不杜绝）。
+
+#### 顺带：优先级数量和任务数量为什么无关
+
+`configMAX_PRIORITIES` 决定**就绪表的桶数**：内核为每个优先级维护一条就绪链表
+`pxReadyTasksLists[prio]`。同一优先级挂多少个任务都行（时间片轮转或先来先服务）。
+所以"优先级 5 上挂 20 个任务"完全合法——这 20 个任务轮流用 CPU。
+代价：`configMAX_PRIORITIES` 越大，就绪表数组越大、调度扫描越费时（`configUSE_PORT_OPTIMISED_TASK_SELECTION`
+用硬件前导零指令可把扫描降到 O(1)，但上限通常 32 位）。
+
+#### 一句话总结
+
+**任务数没有魔法数字，它 = `堆大小 / (栈 + TCB)`，本质是"你有多少 RAM、愿意给每个任务多少栈"。**
+`configMAX_PRIORITIES` 只管优先级档位。要"绝对不失败"就用 `xTaskCreateStatic`。
+
 ### 6. 常用任务 API
 
 | API | 作用 |

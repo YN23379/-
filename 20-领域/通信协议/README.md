@@ -4,7 +4,7 @@ scope: 通信协议
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, 协议]
+tags: [索引, 导航, 协议, 网络, 时钟]
 updated: 2026-09-18
 ---
 

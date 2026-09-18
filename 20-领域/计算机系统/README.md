@@ -4,7 +4,7 @@ scope: 计算机系统
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, 计算机系统]
+tags: [索引, 导航, 计算机系统, 体系结构, 进程与线程]
 updated: 2026-09-18
 ---
 

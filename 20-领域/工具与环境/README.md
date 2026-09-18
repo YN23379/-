@@ -4,7 +4,7 @@ scope: 工具与环境
 doc_type: 教程
 status: 已整理
 evidence: 不适用
-tags: [索引, 导航, 工具]
+tags: [索引, 导航, 工具, 编译构建]
 updated: 2026-09-18
 ---
 
