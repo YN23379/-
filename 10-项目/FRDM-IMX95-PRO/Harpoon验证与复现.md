@@ -21,7 +21,7 @@ updated: 2026-09-17
 
 ## 一、Harpoon（Real-Time Edge 3.3 / HS v3.5）能否用于 FRDM-IMX95-PRO —— 纸面验证记录
 
-## Harpoon（Real-Time Edge 3.3 / HS v3.5）能否用于 FRDM-IMX95-PRO —— 纸面验证记录
+
 
 > 类型：项目档案。板型：NXP FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）。
 > 记录时间：2026-09-17。记录人：开发。
@@ -245,7 +245,6 @@ UUU               : F:\project\Learning\RTOS\tools\uuu-1.5.243\uuu.exe
 
 ## 二、Harpoon 全过程记录与复现步骤（FRDM-IMX95-PRO）
 
-## Harpoon 全过程记录与复现步骤（FRDM-IMX95-PRO）
 
 > 类型：项目档案 / 复现手册。板型：NXP FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）。
 > 日期：2026-09-17。目的：把"下载的 Harpoon 能不能用"这件事从下载、核查、上板、验证到复现，一次说清。
