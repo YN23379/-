@@ -63,7 +63,52 @@ updated: 2026-09-17
 - 处理网络协议（TCP/IP）的实现。
 - **套接字**：是网络通信的端点，为应用程序提供网络编程接口。
 
-#### 常见数据结构
+#### 6. 中断与时间管理（下半部机制）
+
+**为什么中断处理要分上下两半？** 中断服务程序在**关中断**条件下执行（避免嵌套使中断控制复杂化），
+但中断是随机事件——关中断太久会丢中断。所以内核的目标是**尽快处理完中断、把更多工作往后推**：
+上半部（ISR）只做最紧急的（确认硬件、搬数据），其余留给下半部稍后做。
+
+> **上半部 vs 下半部的本质区别：上半部运行时关中断，下半部运行时开中断。**
+
+下半部四种机制对比：
+
+| 机制 | 上下文 | 能否睡眠 | 并发/实时特性 | 适用场景 |
+|---|---|---|---|---|
+| **softirq（软中断）** | 中断上下文 | ❌ 不能 | 优先级高于进程；同一种 softirq 可在多 CPU 并发（要自己加锁） | 网络收发、块设备、定时器等内核核心路径 |
+| **tasklet** | 中断上下文 | ❌ 不能 | 同一 tasklet 不会在多 CPU 同时跑（无需加锁）；基于 softirq 实现 | 多数硬件设备的下半部（最常用） |
+| **workqueue（工作队列）** | **进程上下文**（内核线程 kworker） | ✅ **能** | 普通 SCHED_NORMAL 线程池 | 需要睡眠/分配大量内存/拿信号量/阻塞 IO 时**唯一选择** |
+| **threaded irq（中断线程化）** | 进程上下文（专用内核线程） | ✅ 能 | **每个中断一个线程**（SCHED_FIFO 实时），多中断可分散到多核并行 | 处理耗时且重要的中断，实时性要求比 workqueue 高 |
+
+**选型口诀**：下半部需要睡眠 → workqueue；不需要睡眠、要快 → tasklet；
+单个中断的处理很重、要求实时优先级 → threaded irq（`request_threaded_irq()`，上半部返回
+`IRQ_WAKE_THREAD` 唤醒下半部线程）。
+
+**时间管理**：内核靠**时钟中断**（jiffies 计数，每秒 HZ 次，通常 HZ=100/250/1000）驱动时间片轮转、
+延时和定时器。`jiffies` 回绕比较必须用 `time_before/time_after` 宏（直接比大小会在回绕时出错）。
+高精度场景用 hrtimer（纳秒级）。
+
+#### 7. 内核模块（可加载的宏内核组件）
+
+Linux 是宏内核，但通过**模块**吸收微内核的灵活性：
+
+- 模块 = 按需加载进内核的 `.ko` 文件，不重编内核就能扩展功能。
+- 命令：`insmod`（直接加载，不解决依赖）/ `modprobe`（智能加载，处理依赖）/ `rmmod`（卸载）。
+- 模块骨架：
+
+```c
+#include <linux/module.h>
+static int __init my_init(void)  { pr_info("loaded\n");  return 0; }
+static void __exit my_exit(void) { pr_info("unloaded\n"); }
+module_init(my_init);
+module_exit(my_exit);
+MODULE_LICENSE("GPL");
+```
+
+- 模块跑在**内核态**，没有 libc、不能崩溃回退——模块崩溃就是内核崩溃（Oops/panic）。
+  这也解释了为什么驱动 bug 是 Linux 上最危险的 bug 类别。
+
+#### 8. 常见数据结构
 
 1. **`task_struct`**：**进程描述符**，内核用它来代表一个进程/线程，包含了进程的所有信息（状态、PID、优先级、内存映射、打开文件等）。
 2. **`mm_struct`**：描述一个进程的**整个虚拟地址空间**。
@@ -78,6 +123,16 @@ Linux内核是操作系统的核心，采用宏内核架构，但通过模块化
 3. **文件系统**：VFS提供了统一视图，底层如ext4等具体文件系统通过inode和dentry来组织文件和目录。
 4. **设备管理**：遵循‘一切皆文件’的思想，通过字符设备和块设备驱动来抽象硬件。
 5. **网络栈**：实现了TCP/IP等协议，通过套接字接口提供服务。
+
+
+## 来源
+
+- 中断上半部/下半部原理、四种下半部机制（softirq/tasklet/workqueue/threaded irq）的对比与选型整理自
+  [《Linux 的中断下半部机制的对比》- 腾讯云开发者社区 灯珑LoGin](https://cloud.tencent.com/developer/article/2387743)
+  （含 tasklet_struct/work_struct 结构、request_threaded_irq 用法、threaded irq 与 workqueue 的调度类别差异）
+- jiffies/HZ、time_before 回绕安全比较依据 [《Linux Kernel Development》第 11 章 Timers and Time Management](https://raw.githubusercontent.com/firmianay/Life-long-Learner/a7e6ccfe8bd1d15985b45ab0188c91113faa3312/linux-kernel-development/chapter-11.md)
+- 内核模块骨架与 insmod/modprobe 行为依据内核文档 [Documentation/kernel-hacking](https://kernel.googlesource.com/pub/scm/fs/xfs/xfs-linux/+/0f8aeef1a56cf815637f50f218681245701c3920/Documentation/kernel-hacking/hacking.rst)
+- 原笔记自带的宏内核/微内核、五大管理、六个关键数据结构保留
 
 <!-- related-generated -->
 ## 相关
