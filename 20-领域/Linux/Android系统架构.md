@@ -109,6 +109,5 @@ App 崩溃不影响其他 App——这就是为什么 Android 能"杀后台"而�
 
 - [[20-领域/Linux/Linux内核.md|Linux内核]]
 - [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]]
-- [[20-领域/Linux/Linux学习路线与视频清单.md|Linux学习路线与视频清单]]
 
 **导航**：[[20-领域/Linux/README.md|Linux]]

@@ -462,7 +462,6 @@ uint32_t SecureService_Call(uint32_t service_id, uint32_t param1, uint32_t param
 **同目录**
 
 - [[20-领域/Linux/Linux内核.md|Linux内核]]
-- [[20-领域/Linux/Linux学习路线与视频清单.md|Linux学习路线与视频清单]]
 - [[20-领域/Linux/Android系统架构.md|Android系统架构]]
 
 **相关主题**

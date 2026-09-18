@@ -140,7 +140,6 @@ Linux内核是操作系统的核心，采用宏内核架构，但通过模块化
 **同目录**
 
 - [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]]
-- [[20-领域/Linux/Linux学习路线与视频清单.md|Linux学习路线与视频清单]]
 - [[20-领域/Linux/Android系统架构.md|Android系统架构]]
 
 **相关主题**
