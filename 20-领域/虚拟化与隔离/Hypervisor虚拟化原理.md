@@ -254,7 +254,7 @@ guest 物理地址 (IPA, Intermediate Physical Address)   ← guest 以为这是
   - [ELCE 2016 Jailhouse Tutorial](http://events17.linuxfoundation.org/sites/events/files/slides/ELCE2016-Jailhouse-Tutorial.pdf)
 
 - **项目证据**：
-  - 实机上 `vmexits_mmio` 远多于其他类型，印证"非法 MMIO 访问会被硬件拦截"：[[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现：手把手操作]]
+  - 实机上 `vmexits_mmio` 远多于其他类型，印证"非法 MMIO 访问会被硬件拦截"：[[10-项目/IMX95-EVK/Harpoon复现|Harpoon 复现：手把手操作]]
   - `kvm-arm.mode=nvhe` 的实测背景：[[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
 
 <!-- related-generated -->

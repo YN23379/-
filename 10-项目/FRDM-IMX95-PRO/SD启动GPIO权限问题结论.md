@@ -125,6 +125,6 @@ GPIO OUT=1, IN=1, PDIR=00008000
 
 **同目录**
 
-- [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向NXP确认的问题清单]]
+- [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向NXP确认的问题清单]]
 - [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md|理解-i.MX95启动与资源隔离]]
 - [[10-项目/FRDM-IMX95-PRO/MCUXpresso-SDK获取.md|MCUXpresso-SDK获取]]

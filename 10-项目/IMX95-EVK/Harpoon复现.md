@@ -880,7 +880,7 @@ Started cell "freertos"
 > LPUART3 给了 guest cell，而 Pro 板的没有？**能否提供 Pro 板可用的 SM 配置 + cell**，
 > 或者告诉我应该用哪一路 LPUART？"
 
-**完整版问题清单**见 [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]。比自己搭 Yocto 快得多。
+**完整版问题清单**见 [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]。比自己搭 Yocto 快得多。
 
 ### 路径 3：自己改源码重编（最后才走）
 
@@ -1341,11 +1341,11 @@ setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-
 ## 相关
 
 - 两条流程的本质区别、设计取舍 → [[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
-- 当时上板的完整记录和原始输出 → [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md|Harpoon 验证与复现]]
+- 当时上板的完整记录和原始输出 → [[10-项目/IMX95-EVK/Harpoon验证与复现.md|Harpoon 验证与复现]]
 - 判定"厂商包能不能用手头板子"的方法 → [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|Jailhouse 与 Harpoon 的分层与判定]]
 - 引脚所有权怎么查、`UNCLAIMED` 怎么读 → [[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95 引脚控制：IOMUXC 与 RGPIO 的分工]]
-- 要发给 NXP 的问题（已按实测 + UG10170 更新）→ [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
-- 全部资料索引 → [[10-项目/FRDM-IMX95-PRO/资料清单表.md|资料清单表]]
+- 要发给 NXP 的问题（已按实测 + UG10170 更新）→ [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
+- 全部资料索引 → [[10-项目/IMX95-EVK/资料清单表.md|资料清单表]]
 
 ## 附一：官方文档的关键结论（UG10170 Rev 3.3）
 

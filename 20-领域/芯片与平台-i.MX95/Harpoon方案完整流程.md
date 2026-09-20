@@ -14,7 +14,7 @@ updated: 2026-09-18
 > 你原来那条 IAR→imx-mkimage→flash.bin→UUU 的流程属于「启动期静态加载」，
 > Harpoon（A55 上跑 FreeRTOS）属于「Linux 运行期动态加载」。
 >
-> **要照着做的话看这篇**：[[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现：手把手操作]]
+> **要照着做的话看这篇**：[[10-项目/IMX95-EVK/Harpoon复现|Harpoon 复现：手把手操作]]
 > （每步标了在电脑/板子-U-Boot/板子-Linux 哪个环境操作）。本篇只讲"为什么这样设计"。
 >
 > **官方依据**：本篇的架构描述以 **Harpoon 用户指南 UG10170 Rev 3.3**（`HRPNUG_3.3.pdf`，86 页）为准，
@@ -77,7 +77,7 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
 | 3. 取得 inmate 二进制 | FreeRTOS 应用（如 `hello_world.bin`） | **必须按 inmate cell 的内存布局链接**（入口 `0xf0000000`）——这就是为什么不能直接用 M7 的 hello.bin：链接地址完全不同 |
 | 4. 控制脚本（可选） | `jh_harpoon.sh`、`harpoon_ctrl`、`harpoon.conf` | 它们只是把第 3 节那串命令包起来；**注意**包内 `harpoon.conf` 默认指向 audio 变体（i.MX95 没有这个 cell/bin），正式用法是先跑 `harpoon_set_configuration.sh freertos latency` 重新生成 |
 
-> **第 2~3 步的东西具体从哪来？** 见 [[10-项目/FRDM-IMX95-PRO/Harpoon复现|复现手册]]
+> **第 2~3 步的东西具体从哪来？** 见 [[10-项目/IMX95-EVK/Harpoon复现|复现手册]]
 > 的「三个文件的来源与用途」一节。一句话：**三个文件都在 Harpoon 包的 `rootfs.tar.zst` 里**，
 > 路径分别是 `usr/share/jailhouse/cells/` 和 `usr/share/harpoon/inmates/freertos/`。
 > cell 是二进制成品，**源码在 [NXP/harpoon-apps](https://github.com/NXP/harpoon-apps)，不在安装包里**。
@@ -146,7 +146,7 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
    > → **inmate 写 LPUART3 寄存器有效（`vmexits_mmio` 在涨），但信号出不了芯片。**
    > 可行方向是用 Linux 域已注册且空闲的 **LPUART4（`0x42590000`）/ LPUART5（`0x425A0000`）**，
    > 但 cell 是预编译二进制，改 console 必须取源码重编或问 NXP 要配置。
-   > 详见 [[10-项目/FRDM-IMX95-PRO/Harpoon复现|复现手册「下一步」一节]]。
+   > 详见 [[10-项目/IMX95-EVK/Harpoon复现|复现手册「下一步」一节]]。
 4. **`jh_clk` 里那串参数不是装饰**：`kvm-arm.mode=nvhe`、`kvm.enable_virt_at_load=false` 保证 KVM
    不跟 Jailhouse 抢虚拟化硬件；`cpuidle.off=1` 防止核进深度休眠导致 inmate 的核失联。
 5. **一切默认不持久**：`setenv` 没 `saveenv`（板子环境区 CRC 还是坏的），cell/inmate 都在 RAM 里，
@@ -169,7 +169,7 @@ modprobe -r jailhouse
 | 结论 | 等级 | 出处 |
 |---|---|---|
 | `jh_harpoon.sh start` 的命令顺序 | 源码确认 | 读包内 `jh_harpoon.sh` 与 `harpoon.conf` |
-| 完整命令序列能在 Pro 板跑通 FreeRTOS inmate | **实机验证** | `jailhouse cell list` 显示 `1 freertos running 5`，见 [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md|项目实证]] |
+| 完整命令序列能在 Pro 板跑通 FreeRTOS inmate | **实机验证** | `jailhouse cell list` 显示 `1 freertos running 5`，见 [[10-项目/IMX95-EVK/Harpoon验证与复现.md|项目实证]] |
 | inmate 控制台 = LPUART3、入口 0xf0000000 | 源码确认 | 两份 cell 配置（`-freertos.cell`/`-industrial.cell`）内容一致 |
 | Pro 原厂自带 Jailhouse、Harpoon 包版本不匹配 | **实机验证** | `modinfo jailhouse`、包内 manifest 对比 |
 | `jh_root_mem` 改写 `/memory` 的机制 | 官方资料明确说明 | U-Boot `ft_board_setup`（`imx95_frdm.c`）源码 + Harpoon 文档 |
@@ -177,6 +177,6 @@ modprobe -r jailhouse
 ## 相关
 
 - 判定"包能不能用于手头板子"的方法 → [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|Jailhouse 与 Harpoon 的分层与判定]]
-- 上板全记录与原始输出 → [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md|Harpoon 验证与复现]]
+- 上板全记录与原始输出 → [[10-项目/IMX95-EVK/Harpoon验证与复现.md|Harpoon 验证与复现]]
 - A55 上跑 FreeRTOS 的三种形态 → [[20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md|A55 运行 FreeRTOS 的路径]]
 - 对照的 M7 启动方式 → [[20-领域/芯片与平台-i.MX95/启动与烧录/STM32与i.MX95启动和开发流程对比.md|STM32 与 i.MX95 启动对比]]

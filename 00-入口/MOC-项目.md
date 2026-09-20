@@ -14,25 +14,39 @@ updated: 2026-09-17
 
 > 用法：`Ctrl+O` 快速打开；本页在 Obsidian 里点链接直接跳。每篇末尾的「相关」节给出同目录与相关主题的跳转。
 
-## 10-项目（共 25 篇）
+## 10-项目（共 26 篇）
 
-### FRDM-IMX95-PRO（13 篇）
+### IMX95-EVK（新板主线，8 篇）
+
+> 目标板已从 **FRDM-IMX95-PRO** 换成 **i.MX95 19x19 LPDDR5 EVK**（NXP 确认 Harpoon 只支持 EVK）。
+> 本目录是**当前主线**；Pro 板的记录在下一个目录留档。
 
 | 笔记 | 一句话 | 依据 |
 |---|---|---|
-| [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md\|A55-FreeRTOS任务与时间安排]] | 合计可用工作日：21 天（含今天）。所以只分 3 个阶段，阶段内不再细分到天。 | 不适用 |
-| [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md\|A55运行FreeRTOS的方向调整]] | 初始资料和板卡默认分工里，M7 是“高性能实时核”，FreeRTOS 示例也在 cm7 目录，因此按 M7 推进 | 实机验证 |
-| [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md\|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]] | vTaskStartScheduler()之前仍是普通的顺序执行程序；调用之后，调度器接管CPU，main()后 | 实机验证 |
+| [[10-项目/IMX95-EVK/EVK-19x19到手操作计划.md\|EVK-19x19到手操作计划]] | 拿到板子后按什么顺序做什么：开箱清点、装散热片、首次上电、Harpoon 复现、JTAG | 官方资料明确说明 |
+| [[10-项目/IMX95-EVK/Harpoon复现.md\|Harpoon复现]] | Linux 本来独占整台机器。Harpoon 做的事，是在 Linux 跑着的时候，从它手里"切"出一部分硬件 | 实机验证 |
+| [[10-项目/IMX95-EVK/Harpoon验证与复现.md\|Harpoon验证与复现]] | 目标由 M7 改为 A55 上跑 FreeRTOS 后，需要判断：从 NXP 下载的 Harpoon 包（HS_ | 实机验证 |
+| [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md\|待向NXP确认的问题清单]] | NXP 已确认 Pro 板不在 Harpoon 支持范围，决定换 EVK（i.MX95 19x19） | 官方资料明确说明 |
+| [[10-项目/IMX95-EVK/A55-FreeRTOS任务与时间安排.md\|A55-FreeRTOS任务与时间安排]] | 合计可用工作日：21 天（含今天）。所以只分 3 个阶段，阶段内不再细分到天。 | 不适用 |
+| [[10-项目/IMX95-EVK/JTAG与SWD接口调研.md\|JTAG与SWD接口调研]] | Pro 板无 JTAG 座（只有测试点）；EVK 有 10-pin J30 座，引脚定义见 UM12022 Table 52 | 官方资料明确说明 |
+| [[10-项目/IMX95-EVK/资料清单表.md\|资料清单表]] | 资料总表 + UM12022(EVK) / UM12527(Pro) 区分 + UG10170 确认了什么 | 实机验证 |
+| [[10-项目/IMX95-EVK/MCUXpresso-SDK获取.md\|MCUXpresso-SDK获取]] | 获取 i.MX95 Cortex-M7 对应的 SDK，用于编译 hello_world 和 FreeRTOS | 源码确认 |
+
+### FRDM-IMX95-PRO（旧板，8 篇，留档）
+
+> **已换板**（NXP 确认 Harpoon 不支持本板）。这里的记录**不作废**：
+> jailhouse 流程、cell 机制、"FreeRTOS 在 A55 上跑起来"的验证换板后仍可复用。
+
+| 笔记 | 一句话 | 依据 |
+|---|---|---|
+| [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md\|A55运行FreeRTOS的方向调整]] | 初始资料和板卡默认分工里，M7 是"高性能实时核"，因此按 M7 推进 | 实机验证 |
+| [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md\|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]] | vTaskStartScheduler()之前仍是普通的顺序执行程序；调用之后，调度器接管CPU | 实机验证 |
 | [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md\|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]] | 记录时间：2026-09-09至2026-09-15。 | 实机验证 |
 | [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md\|FRDM-IMX95-PRO开发记录]] | FRDM-IMX95-PRO 使用 i.MX 95 处理器，包含 6 个 Cortex-A55、1 个 Cort | 实机验证 |
-| [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md\|Harpoon验证与复现]] | 目标由 M7 改为 A55 上跑 FreeRTOS 后，需要判断：从 NXP 下载的 Harpoon 包（HS_ | 实机验证 |
-| [[10-项目/FRDM-IMX95-PRO/JTAG与SWD接口调研.md\|JTAG与SWD接口调研]] | 同页还有 DAP 引脚与球号（见第二节）以及 JTAG__TP26 的交叉引用。 | 实机验证 |
-| [[10-项目/FRDM-IMX95-PRO/MCUXpresso-SDK获取.md\|MCUXpresso-SDK获取]] | 获取 i.MX95 Cortex-M7 对应的 SDK，用于编译 hello_world 和 FreeRTOS  | 源码确认 |
 | [[10-项目/FRDM-IMX95-PRO/SD启动GPIO权限问题结论.md\|SD启动GPIO权限问题结论]] | 2026-09-15已完成实机修复。已验证的SD启动镜像中，M7 FreeRTOS持久化启动后LPUART7/C | 实机验证 |
 | [[10-项目/FRDM-IMX95-PRO/开发日志.md\|开发日志]] | 相对原始配置只改变GPIO2的归属： | 实机验证 |
-| [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md\|待向NXP确认的问题清单]] | 1. 下载了 Harpoon Software v3.5 / Real-Time Edge 3.3，发现它只提供 | 不适用 |
-| [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md\|理解-i.MX95启动与资源隔离]] | i.MX95 不是一个"CPU 加外设"的芯片，而是一个多核 + 多域 + 权限管理器的系统。理解它要分三层： | 实机验证 |
-| [[10-项目/FRDM-IMX95-PRO/资料清单表.md\|资料清单表]] | — | 实机验证 |
+| [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md\|理解-i.MX95启动与资源隔离]] | i.MX95 不是一个"CPU 加外设"的芯片，而是一个多核 + 多域 + 权限管理器的系统 | 实机验证 |
+| [[10-项目/FRDM-IMX95-PRO/README.md\|README]] | 本目录说明与导航 | 不适用 |
 
 ### PLC-微波炉（4 篇）
 
