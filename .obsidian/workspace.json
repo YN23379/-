@@ -199,8 +199,9 @@
       "bases:新建数据库": false
     }
   },
-  "active": "6b0baf922ee7cafd",
+  "active": "a05e7e648d9e50b8",
   "lastOpenFiles": [
+    "10-项目/FRDM-IMX95-PRO/EVK-19x19到手操作计划.md",
     "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
     "20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md",
     "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
@@ -236,7 +237,6 @@
     "20-领域/Linux/Linux驱动基础/驱动基础.md",
     "00-入口/MOC-领域.md",
     "20-领域/C与C++/C语言/内存与对齐.md",
-    "10-项目/面试项目/README.md",
     "90-附件/RTOS/ucosii任务状态.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png"
