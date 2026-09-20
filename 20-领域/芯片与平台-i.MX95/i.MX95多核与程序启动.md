@@ -20,10 +20,10 @@ Arm 既指一种处理器指令集架构，也指设计处理器核心的公司�
 
 Cortex 后面的字母表示核心面向的主要应用方向。
 
-| 系列 | 英文方向 | 主要特点 | 常见软件 |
-|---|---|---|---|
-| Cortex-A | Application | 运算能力强，支持 MMU、虚拟内存和复杂操作系统 | Linux、Android、QNX |
-| Cortex-R | Real-time | 强调高性能实时控制、低延迟和功能安全 | 汽车控制、存储控制、实时系统 |
+| 系列       | 英文方向            | 主要特点                      | 常见软件               |
+| -------- | --------------- | ------------------------- | ------------------ |
+| Cortex-A | Application     | 运算能力强，支持 MMU、虚拟内存和复杂操作系统  | Linux、Android、QNX  |
+| Cortex-R | Real-time       | 强调高性能实时控制、低延迟和功能安全        | 汽车控制、存储控制、实时系统     |
 | Cortex-M | Microcontroller | 面积和功耗较低，中断响应快，适合微控制器和实时任务 | 裸机、FreeRTOS、Zephyr |
 
 这里的分类表示设计重点，不是绝对限制。Cortex-A 也能处理实时任务，但普通 Linux 调度和复杂缓存会增加时延的不确定性。Cortex-M 的总运算能力较低，但中断路径简单，配合 TCM 和 RTOS 更容易获得稳定的响应时间。
@@ -45,18 +45,18 @@ Cortex 后面的字母表示核心面向的主要应用方向。
 
 ## i.MX95 中 A55、M7 和 M33 的区别
 
-| 项目 | Cortex-A55 | Cortex-M7 | Cortex-M33 |
-|---|---|---|---|
-| 主要用途 | 应用处理和 Linux | 高性能实时控制 | 安全、低功耗和系统管理类任务 |
-| 架构 | Armv8-A 系列 | Armv7E-M | Armv8-M |
-| 位宽 | 支持 64 位 AArch64 | 32 位 Thumb 指令集 | 32 位 Thumb 指令集 |
-| 当前板上数量 | 6 个 | 1 个 | 1 个 |
-| 当前已知频率 | 启动日志显示 1.8 GHz | 官方资料标明最高 800 MHz | 以芯片资料和实际时钟配置为准 |
-| 内存管理 | MMU | MPU | MPU |
-| 虚拟内存 | 支持 | 不提供完整虚拟内存 | 不提供完整虚拟内存 |
-| 操作系统 | 适合 Linux 等复杂系统 | 适合裸机或 FreeRTOS | 适合裸机或 RTOS |
-| 实时性 | 吞吐量高，但时延较复杂 | 中断快，可使用 TCM，实时性较好 | 强调低功耗、安全和可控响应 |
-| 安全特性 | 支持异常级和 TrustZone-A | 以高性能实时处理为主 | 支持 TrustZone-M |
+| 项目     | Cortex-A55         | Cortex-M7         | Cortex-M33     |
+| ------ | ------------------ | ----------------- | -------------- |
+| 主要用途   | 应用处理和 Linux        | 高性能实时控制           | 安全、低功耗和系统管理类任务 |
+| 架构     | Armv8-A 系列         | Armv7E-M          | Armv8-M        |
+| 位宽     | 支持 64 位 AArch64    | 32 位 Thumb 指令集    | 32 位 Thumb 指令集 |
+| 当前板上数量 | 6 个                | 1 个               | 1 个            |
+| 当前已知频率 | 启动日志显示 1.8 GHz     | 官方资料标明最高 800 MHz  | 以芯片资料和实际时钟配置为准 |
+| 内存管理   | MMU                | MPU               | MPU            |
+| 虚拟内存   | 支持                 | 不提供完整虚拟内存         | 不提供完整虚拟内存      |
+| 操作系统   | 适合 Linux 等复杂系统     | 适合裸机或 FreeRTOS    | 适合裸机或 RTOS     |
+| 实时性    | 吞吐量高，但时延较复杂        | 中断快，可使用 TCM，实时性较好 | 强调低功耗、安全和可控响应  |
+| 安全特性   | 支持异常级和 TrustZone-A | 以高性能实时处理为主        | 支持 TrustZone-M |
 
 ### MMU、MPU 和 TCM
 
@@ -80,60 +80,489 @@ M33 通常比 M7 更偏向低功耗、安全隔离和系统管理。它支持 Ar
 
 FRDM-IMX95-PRO 上的 i.MX95 包含 6 个 Cortex-A55、1 个 Cortex-M7 和 1 个 Cortex-M33。这些核心位于同一颗 SoC 中，但用途和运行环境不同。
 
-| 核心 | 常见用途 | 当前需要关注的内容 |
-|---|---|---|
+| 核心         | 常见用途           | 当前需要关注的内容                  |
+| ---------- | -------------- | -------------------------- |
 | Cortex-A55 | 运行 Linux 和复杂应用 | U-Boot、Linux、文件系统和 M7 固件管理 |
-| Cortex-M7 | 高性能实时控制 | FreeRTOS 示例、实时任务和外设控制 |
-| Cortex-M33 | 安全、低功耗和系统管理 | 启动管理及项目是否使用该核心 |
+| Cortex-M7  | 高性能实时控制        | FreeRTOS 示例、实时任务和外设控制      |
+| Cortex-M33 | 安全、低功耗和系统管理    | 启动管理及项目是否使用该核心             |
 
 ## 上电流程与 SM 的角色
 
-前面几节讲的是"有哪些核、各自适合干什么"。这一节讲**上电之后这些核是按什么顺序醒的，以及为什么是这个顺序**。
+前面几节讲的是"有哪些核、各自适合干什么"。这一节讲**上电之后这些核按什么顺序醒、每一步到底做了什么、上一步怎么把控制权交给下一步**。
 
-### 先记住一句
+> **本篇依据**：`imx-sm` 官方源码与文档（`sm/doc/intro.md`、`arch.md`、`imp.md`、`config.md`，
+> `devices/MIMX95/sm/dev_sm_rom.c`，`sm/lmm/lmm.c`）。凡标 `源码确认` 的都能在源码里找到对应行。
 
-> **SM（System Manager，跑在 AON M33 上）是"管家"，它比 A55 先醒，而且它决定 A55 怎么醒。**
+### 0. 先把生词解释清楚
 
-### 七个阶段
+这一节会反复出现几个词，先说清楚**英文全称、在哪一层、干什么**：
+
+| 词 | 英文全称 | 是什么 | 在哪一层 |
+|---|---|---|---|
+| **AON** | **Always-On**（常开域） | SoC 里**一直有电**的那部分。主电源断了它还在（靠备份电池/低功耗电源），所以能负责"叫醒整个系统"这类活 | 电源域（芯片内部的供电分区） |
+| **AON MIX** | Always-On MIX | AON 电源域里的模块集合。SM 用到的外设**绝大多数都在这个域**（见下面第三节的表） | 电源域 |
+| **SCP** | **System Control Processor**（系统控制处理器） | **承担系统管理职责的那个核**的统称。官方原文："`SCP - System Control Processor. For example, the AON Cortex-M33 in i.MX9.`" | 一个核 |
+| **SM** | **System Manager**（系统管理器） | **跑在 SCP 上的那套软件**。i.MX9 上就是跑在 AON M33 里的固件 | 软件 |
+| **M33P** | Cortex-M33 Processor | i.MX95 里那个 AON 域的 M33 核。**SM 独占它**，不允许客户往里加任务 | 一个核 |
+| **Boot ROM** | 引导 ROM | **芯片出厂固化在片内 ROM 里的一段代码**，不可改。上电后第一个执行的东西 | 片内 ROM |
+| **ELE** | **EdgeLock Enclave**（边缘安全飞地） | i.MX9 的**安全子系统**（一个独立的安全核 + 固件）。负责密钥、签名验证、TRDC 配置下发 | 独立安全核 |
+| **LM** | **Logical Machine**（逻辑机） | 把一组核 + 内存 + 外设打成一个包，**看起来像一颗独立 SoC**，可以独立启动/复位/关机 | 逻辑划分 |
+| **LMM** | **LM Manager**（逻辑机管理器） | SM 里**负责启动这些 LM 的组件** | 软件模块 |
+| **TRDC / RDC** | Trusted Resource Domain Controller / Resource Domain Controller | **硬件级资源归属与访问控制**。TRDC 管外设/内存归属哪个域，RDC 管外设归属 | 硬件 IP |
+| **mSel** | mode Select | **启动模式档位**。同一份 SM 配置可以有多套启动表，用 mSel 选第几套 | 配置参数 |
+| **TCM** | Tightly Coupled Memory | 紧耦合内存，直接贴着核，延迟低。SM 的代码和数据都在 AON M33 的 TCM 里 | 片上内存 |
+
+> **一句话理解 SCP 和 SM 的区别**：**SCP 是"岗位"，SM 是"干这个岗位的人"。**
+> i.MX95 上这个岗位由 AON M33 担任，SM 就是跑在它上面的固件。
+
+### 1. 七个阶段的完整链条
 
 ```text
-① 上电复位（POR）
-   所有核都停在复位向量，谁也不跑
+① POR 上电复位（纯硬件）
+   ↓
+② Boot ROM 执行（片内 ROM 固化代码）
+   ↓
+③ Boot ROM 把 SM 镜像装进 AON 的 TCM，释放 M33P
+   ↓
+④ SM 启动：读 handover → 初始化板级与器件 → 配置 TRDC/RDC 隔离
+   ↓
+⑤ LMM_Boot()：按 boot[] 表逐个拉起 LM（M7、A55 集群）
+   ↓
+⑥ A55 的 CPU0 起来 → ATF(BL31) → U-Boot → Linux
+   ↓
+⑦ Linux 用 PSCI 叫醒 CPU1~5，6 个核全在线
+```
 
-② Boot ROM 执行（芯片内部固化的代码，不可改）
-   读启动模式引脚（SW4），决定从哪启动
-   加载并验证第一个镜像
+下面逐阶段展开。
 
-③ AON M33 启动 → 加载 System Manager（SM）
-   ★ 这是"管家上岗"
+---
 
-④ SM 做初始化与隔离
-   配置 TRDC / RDC（硬件访问权限）
-   划定各域能用哪些外设、内存
-   配置各核的启动地址
+### ① POR 上电复位：纯硬件，没有软件参与
 
-⑤ SM 按启动表拉起其他核
-   M7：加载固件到 TCM，然后 release
-   A55 集群：★ 只释放 CPU0
+**"POR" = Power-On Reset（上电复位）**。
 
-⑥ A55 的 CPU0 开始跑
-   先跑 ATF（BL31）→ 设置 EL3 安全环境
-   再跑 U-Boot
-   U-Boot 加载 Linux，Linux 用 PSCI 把 CPU1~5 叫醒
+**这一步完全是硬件行为**，没有任何代码执行。发生的事情：
 
-⑦ Linux 起来，6 个核全在线
-   → 之后才是 Harpoon 这类方案能做的事
+```text
+电源稳定
+   ↓ 电源管理芯片（PMIC）拉高各路电压，等 PLL/时钟稳定
+   ↓ 复位控制模块（SRC，System Reset Controller）释放复位信号
+   ↓ 各核的 PC（程序计数器）被硬件强制设为"复位向量地址"
+   ↓ 只有 Boot ROM 所在的核开始取指
+```
+
+**关键点**：
+
+- **复位不是"从 0 地址开始执行"这么简单**。i.MX95 的复位向量地址是**芯片设计时固定的**，
+  由硬件决定，软件改不了。
+- **上电瞬间所有核都被复位**，但**不是所有核都立刻跑**。Boot ROM 只会让**主核**开始执行，
+  其余核停在复位状态等指令。
+- **为什么必须这样**：如果 6 个 A55 + M7 + M33 一起抢总线，系统直接乱掉。
+  **必须有个"主"先跑，由它来决定别人的命运。**
+
+**和 STM32 的对比**：
+
+| | STM32 | i.MX95 |
+|---|---|---|
+| 复位后从哪执行 | Flash 里的复位向量（`0x08000000`） | **片内 Boot ROM**（用户改不了） |
+| 有几个核 | 通常 1 个 | **多个**，需要"谁先跑"的机制 |
+| 用户能不能改第一段代码 | 能（自己写 `Reset_Handler`） | **不能**（Boot ROM 固化） |
+
+> **这是从单片机转到应用处理器最大的认知转变**：
+> 单片机上电第一条指令是**你写的**；i.MX95 上电第一条指令是**芯片厂商写死在 ROM 里的**。
+
+---
+
+### ② Boot ROM：在哪、是什么、干了什么
+
+**"Boot ROM" 是芯片内部一块只读存储器**，出厂时烧好了引导代码。特点：
+
+| 特性 | 说明 |
+|---|---|
+| 位置 | **片内**（不是外部 Flash），地址由芯片设计固定 |
+| 能否修改 | **不能**。烧死在硅片里 |
+| 大小 | 通常几十 KB 级别 |
+| 谁写的 | 芯片厂商（NXP） |
+| 代码质量 | 经过严格验证，是"信任根"的起点 |
+
+**Boot ROM 做的主要事情**（顺序）：
+
+```text
+1. 读启动模式引脚（SW7 拨码）→ 决定从哪个设备启动
+2. 初始化最基本的硬件：时钟、引脚、启动介质控制器
+3. 找到启动容器（boot container，就是一个打包好的镜像文件）
+4. ★ 交给 ELE 验证签名（安全启动）—— 验证不过就停住
+5. 把容器里的各个镜像分别装到它们该去的地方
+6. 释放对应的核，让它们从各自的入口开始跑
+```
+
+**关键：Boot ROM 是"分发者"，不是"执行者"。**
+
+它自己不跑操作系统，只负责**把镜像搬到正确的位置，然后把各个核放出去**。
+官方源码里对应的是 `DEV_SM_RomBootImgNGet()` 这类函数——**从 ROM 的记录里读出
+"第 N 个镜像该给哪个核、装到哪个地址、mSel 是多少"**。
+
+**启动介质的选择**（`UM12527` §2.3，Pro 板用 SW4；**EVK 用 SW7**）：
+
+| SW4[1:4]（Pro）/ SW7[1-4]（EVK） | 模式 |
+|---|---|
+| `x001` | USB Serial Downloader（配合 UUU 用） |
+| `x010` | eMMC |
+| `x011` | microSD |
+| `x100` | FlexSPI NOR |
+
+---
+
+### ③ Boot ROM → M33：怎么交接的
+
+**这一步是"从 Boot ROM 过渡到 SM"的关键，也是最容易讲不清楚的地方。**
+
+#### 硬件上怎么做
+
+Boot ROM 做两件事：
+
+```text
+1. 把 SM 的镜像（sm.bin）**搬进 AON M33 的 TCM**
+   —— TCM 是紧耦合内存，直接贴着核，延迟低
+2. 让 M33P 退出复位，它的 PC 指向镜像入口
+   —— 从此 M33 开始执行 SM 的代码
+```
+
+#### 数据上怎么传递：handover 结构
+
+**Boot ROM 不只搬代码，还留了一张"交接单"**——这就是源码里的 **handover** 机制。
+
+官方源码 `devices/MIMX95/sm/dev_sm_rom.c` 里的定义（`源码确认`）：
+
+```c
+#define HANDOVER_BASE    0x2003DC00U    // 交接单放在这个地址
+#define HANDOVER_BARKER  0xC0FFEE16U    // 魔数，用来确认"这确实是交接单"
+#define HANDOVER_VER     0x2U
+#define HANDOVER_SIZE    0x100U
+
+#define PASSOVER_BASE    0x2003DE00U    // 另一张：passover
+#define PASSOVER_TAG     0x504FU
+#define PASSOVER_SIZE    0x80U
+```
+
+**这两个结构的分工**：
+
+| 结构 | 方向 | 内容 | 地址 |
+|---|---|---|---|
+| **handover** | ROM → SM | "我把哪些镜像装到了哪里、给哪个核、mSel 是几" | `0x2003DC00` |
+| **passover** | ROM ↔ SM | 需要**跨复位保留**的信息（如复位原因） | `0x2003DE00` |
+
+**SM 启动后第一件事就是去读这个地址**（官方源码 `DEV_SM_RomHandoverGet()`）：
+
+```c
+const rom_handover_t *ptr = (const rom_handover_t *) HANDOVER_BASE;
+
+/* 先验证魔数 —— 确认这块内存里放的确实是交接单 */
+if (ptr->barker != HANDOVER_BARKER)   return SM_ERR_NOT_SUPPORTED;
+/* 再验证版本和大小 */
+if (ptr->ver  != HANDOVER_VER)        return SM_ERR_NOT_SUPPORTED;
+if (ptr->size < sizeof(rom_handover_t)) return SM_ERR_NOT_SUPPORTED;
+```
+
+**为什么要验证魔数**：这块内存**物理上就是普通 RAM**，如果 ROM 没写过它，
+里面可能是上次运行的残留数据。**用魔数确认"这确实是 ROM 留下的，不是垃圾"**，
+这是一个很典型的"跨阶段数据传递"做法。
+
+**镜像记录怎么编码**（同样来自源码）：
+
+```c
+#define ROM_HANDOVER_IMG_CPU(x)    (((x) & 0x00FFU) >> 0)        // 低 8 位：哪个核
+#define ROM_HANDOVER_IMG_TYPE(x)   (((x) & 0xFF00U) >> 8)        // 次 8 位：镜像类型
+#define ROM_HANDOVER_IMG_MSEL(x)   (((x) & 0x00FF0000U) >> 16)   // 再 8 位：mSel
+#define ROM_HANDOVER_IMG_FLAGS(x)  (((x) & 0xFF000000U) >> 24)   // 高 8 位：标志
+```
+
+**一个 32 位整数里塞了四个字段**——核 ID、镜像类型、mSel、标志。
+SM 靠它知道"**ROM 给我留了哪些镜像、都在哪个核的手上**"。
+
+> **这就回答了"阶段之间怎么衔接"**：
+> **硬件上靠"搬代码 + 释放核"，数据上靠"在固定地址留一个带魔数的结构"。**
+> 没有魔法，就是约定好地址和格式。
+
+---
+
+### ④ SM 启动：从 main() 到"隔离配置完成"
+
+M33 跑起来后，执行 SM 的 `main()`。官方文档 `sm/doc/imp.md` 给了完整流程（`源码确认`）：
+
+```c
+main()
+ ├─ BRD_SM_Init()                     // 板级初始化
+ │   ├─ BOARD_InitHardware()          // 板子硬件初始化
+ │   ├─ BRD_SM_SerialDevicesInit()    // 板级串口（调试输出用）
+ │   ├─ DEV_SM_RomBootCpuGet()        // ★ 从 handover 读 mSel
+ │   └─ DEV_SM_Init()                 // 器件（SoC）级初始化
+ ├─ 打印 "Hello from SM"              // ★ 你在实机看到的那句
+ ├─ LMM_Init()                        // 初始化逻辑机管理器
+ │   ├─ LMM_ClockInit() 等各组件初始化
+ │   └─ RPC_SCMI_Init()               // 为每个 LM 建 RPC 接口
+ ├─ LMM_Boot()                        // ★ 开始启动各个 LM
+ ├─ TEST_Config() / TEST()            // 单元测试（正常启动不走）
+ ├─ MONITOR_Cmd()                     // 调试监视器（看到 SM Debug Monitor 就是它）
+ └─ 死循环 WFI                        // 进入低功耗等待
+```
+
+**"Hello from SM" 出现在这里**——这就是本项目在 COM19 上看到的那句。
+它证明 SM 已经跑到了 `BRD_SM_Init()` 之后。
+
+#### SM 此时要做的核心事情：配隔离
+
+官方文档 `arch.md` 说得很明确，SM 的第一职责是：
+
+> **`Isolate execution of different cores to prevent interference` —— 隔离不同核的执行，防止互相干扰。
+> 这包括在启动任何其他核之前，独占 RDC 并加载它们的配置。**
+
+**顺序很重要**：
+
+```text
+先配好隔离（TRDC/RDC）
+   ↓ 再启动别的核
+```
+
+**为什么不能反过来**：其他核一旦跑起来就会去访问外设。**如果隔离还没配好，
+它们就能碰到不该碰的东西**——那就失去了隔离的意义。
+
+#### SM 独占的硬件（谁也拿不到）
+
+官方文档 `arch.md` 列了一张表，**这些 IP 是 SM 独占的，其他核访问不到**（节选）：
+
+| IP 模块 | 所在 MIX | 用途 |
+|---|---|---|
+| **M33P** | AON | 执行 SM 应用本身 |
+| LPUART1/2 | AON | 调试输出 |
+| **LPI2C1/2** | AON | 跟 PMIC 通信 |
+| **IOMUXC** | AON | **仲裁引脚的共享访问** |
+| **GPIO1** | AON | 仲裁 GPIO 共享访问 |
+| **WDOG1/2** | AON | 监视 SM 自己的健康 |
+| **MU1-6** | AON | **给各客户端提供通信通道** |
+| **TRDC_A / TRDC_M / TRDC_W 等** | 各 MIX | **配置硬件隔离**（经 ELE 下发） |
+| **ELE (MU0)** | AON | 跟 ELE 通信 |
+| CCM / GPC / SRC | CCMSRCGPC | 时钟 / 电源 / 复位管理 |
+
+> **这张表解释了很多"为什么"**：
+>
+> - **为什么 `pinmux-pins` 里看不到某些引脚**？因为 **IOMUXC 归 SM 独占**，
+>   Linux 只能通过 SCMI **请 SM 代配**——这就印证了本项目的实测现象。
+> - **为什么 LPUART3 切不出来**？因为引脚的分配权在 SM 手里（`IOMUXC` 是 SM 独占的）。
+> - **为什么 MPUART1/2 是 SM 的调试口**？它们也在 AON，归 SM。
+
+#### 关于 DDR
+
+官方文档另一句关键的话（`源码确认`）：
+
+> **`All the IP in the DRCMIX is owned by the SM. The DDR controller, phy (inc. FW load),
+> and PLL are initially configured by a DDR initialization firmware called by the M33 ROM.`**
+
+**翻译**：DDR 控制器/PHY/PLL 最初是**由 M33 ROM 调用一段 DDR 初始化固件**配好的。
+这解释了为什么第一次上电时 **COM19 会先打印一堆 DDR OEI 信息**——那是 DDR 初始化阶段，
+**比 SM 的 "Hello from SM" 更早**。
+
+---
+
+### ⑤ LMM_Boot()：按表逐个拉起各个 LM
+
+SM 初始化完成后调用 `LMM_Boot()`。**这段代码很短，但机制很关键**（`源码确认`，`sm/lmm/lmm.c:143`）：
+
+```c
+int32_t LMM_Boot(void)
+{
+    ...
+    /* 取得起始时间戳 */
+    uint64_t startTime = DEV_SM_Usec64Get();
+
+    /* 外层循环：按"启动顺序号"从 1 到 LM 总数 */
+    for (uint8_t bootOrder = 1U; bootOrder <= SM_NUM_LM; bootOrder++) {
+        /* 内层循环：遍历所有 LM */
+        for (uint32_t lmId = 0U; lmId < SM_NUM_LM; lmId++) {
+
+            /* 这个 LM 的启动顺序 == 当前轮次？ */
+            if (g_lmmConfig[lmId].boot[mSel] == bootOrder) {
+
+                /* 算出这个 LM 该在什么时刻启动（支持延时） */
+                uint64_t bootTime = startTime + g_lmmConfig[lmId].rtime;
+                while (DEV_SM_Usec64Get() < bootTime) { ; }   /* 等到时间 */
+
+                s_bootLm   = lmId;
+                s_bootSkip = g_lmmConfig[lmId].bootSkip[mSel];
+                SWI_Trigger();          /* ★ 触发软中断，实际启动在中断里做 */
+                status = s_bootStatus;
+            }
+        }
+    }
+}
+```
+
+**三个要点**：
+
+**① 启动表长什么样**（`sm/doc/config.md`，`源码确认`）：
+
+| 字段 | 含义 |
+|---|---|
+| `boot[]` | **每个 mSel 一套**的启动顺序：`0` = 不启动，`1/2/3...` = 第几个启动 |
+| `bootSkip[]` | 没有镜像时是否忽略错误：`0` = 报错停住（默认），`1` = 跳过继续 |
+| `rtime` | **延时多少微秒再启动**（相对启动循环开始，最大 178 秒） |
+
+**为什么要有 `rtime`**——官方给的理由很实际：
+
+> 在汽车场景里，跑 CAN 协议的 M7 设 `rtime = 0`，AP（A55）设 `rtime = 50000`（50ms）。
+> **这样 AP 启动就不会去跟实时核抢资源**，让实时核先起来把该配的都配好。
+
+**② 实际配置长什么样**（本项目板级配置，`源码确认`）：
+
+看 `mx95evkjailhouse.cfg` 和 `mx95frdm-pro.cfg`，三个 LM 的启动顺序是：
+
+```text
+LM0  name="SM",  boot=1, did=2, safe=feenv     ← SM 自己，第一个（boot=1）
+LM1  name="M7",  boot=2, skip=1, did=4, safe=seenv    ← M7，第二个
+LM2  name="AP",  boot=3, skip=1, did=3, default       ← A55 集群，第三个
+```
+
+**这就把"先 M7 后 A55"落到了配置上**——不是设计者拍脑袋，是配置表里写死的顺序。
+
+注意 `skip=1`：说明 **M7 或 A55 没有镜像时不报错，继续往下走**。
+所以你可以只烧 Linux 不烧 M7，系统照样起来。
+
+**③ 为什么用软中断（SWI）而不是直接调用**
+
+`SWI_Trigger()` 触发一个**软件中断**，真正的启动动作在中断处理函数 `LMM_Handler()` 里做。
+
+**这么做的好处**：启动一个核涉及**电源域上电、时钟使能、复位释放**一整套操作，
+放在中断上下文里执行，**语义上更清晰、也便于处理错误和超时**。
+（实际启动会走到 `LMM_SystemLmBoot()` → `LMM_DoBoot()`。）
+
+#### A55 是怎么被"放出来"的
+
+看配置里 AP 这个 LM 的 start/stop 表（`源码确认`）：
+
+```text
+VOLT_ARM     msel=1, start=1|1, stop=9    ← 先给 ARM 电压域上电
+PD_A55P      msel=1, start=2,   stop=8    ← 再给 A55 平台电源域上电
+PD_A55C0     msel=1, stop=7               ← 各核电源域（stop 时才动）
+PD_A55C1     msel=1, stop=6
+...
+PERF_A55     msel=1, start=3|3            ← 设置性能档位（频率）
+CPU_A55C0    msel=1, start=4              ← ★ 只启动 CPU0！
+CPU_A55P     msel=1, stop=1
+```
+
+**注意 `start` 的编号是顺序执行的**：`VOLT_ARM`(1) → `PD_A55P`(2) → `PERF_A55`(3) → `CPU_A55C0`(4)。
+
+**顺序不能乱**：**先给电压，再上电，再设频率，最后才放核**。
+如果先放核再给电，核会在没电的状态下取指 → 直接跑飞。
+
+**★ 关键：只有 `CPU_A55C0` 有 `start`，其他 C1~C5 只有 `stop`**——
+**这就是"SM 只放 CPU0 出去"在配置里的体现**。
+
+---
+
+### ⑥ A55 CPU0 起来 → ATF → U-Boot → Linux
+
+CPU0 被释放后，从它的入口地址开始执行。**这段是 ARM 标准启动链**：
+
+```text
+CPU0 复位
+   ↓
+ATF / BL31（跑在 EL3）
+   - 建立安全监控环境
+   - 初始化 PSCI 服务（★ 后面叫醒其他核要用）
+   - 把控制权交到 EL2/EL1
+   ↓
+U-Boot（跑在 EL2 或 EL1）
+   - 初始化 DDR、外设
+   - 从存储加载内核镜像和设备树
+   - 准备好启动参数（bootargs）
+   - 跳转到内核
+   ↓
+Linux 内核
+   - 解压、初始化内存管理、驱动
+   - 挂载根文件系统
+   - 启动 init / systemd
+```
+
+> **注意 U-Boot 也会做一些"板级初始化"**，这和 SM 的初始化不冲突：
+> **SM 管的是"谁能用"，U-Boot 管的是"怎么用"。**
+
+---
+
+### ⑦ Linux 叫醒 CPU1~5
+
+**Linux 自己不会去写 A55 的复位寄存器**（那些归 SM 管）。它通过标准接口请求：
+
+```text
+Linux 内核
+   ↓ PSCI（Power State Coordination Interface）调用
+ATF / BL31（EL3，PSCI 的实现者）
+   ↓ 转发给 SM（通过 SCMI 协议，走 MU 邮箱）
+SM 的 LMM
+   ↓ 执行 PD_A55Cn 上电 + CPU_A55Cn 释放
+CPU1~5 逐个上线
+```
+
+**PSCI 是 ARM 定义的标准接口**，作用是"**让操作系统用标准方式管理 CPU 上电/下电/复位**"，
+不用关心具体芯片怎么实现。
+
+**这一环为什么对 Harpoon 重要**：
+
+> **CPU1~5 是"运行期"才被叫醒的，不是启动时就放出来的。**
+> 这意味着 hypervisor **完全可以在运行期对某个核做手脚**——
+> 比如把 CPU5 从 Linux 手里拿走给 FreeRTOS。
+>
+> 如果 6 个核在启动时就被 SM 一次性全放出来，Linux 一上来就全占了，
+> **再想切就难得多**。
+
+---
+
+### 一张图：完整的交接链
+
+```text
+POR（硬件复位）
+  │  硬件行为：设 PC 到复位向量、释放复位
+  ▼
+Boot ROM（片内固化）
+  │  ① 读 SW7 决定启动介质
+  │  ② 找启动容器、交 ELE 验签
+  │  ③ 把 SM 镜像搬进 AON TCM
+  │  ④ 在 0x2003DC00 写 handover 结构（魔数 0xC0FFEE16）
+  │  ⑤ 释放 M33P
+  ▼
+SM（跑在 AON M33）/ main()
+  │  ① 读 handover（验魔数）→ 拿到 mSel 和各镜像信息
+  │  ② 板级初始化，打印 "Hello from SM"
+  │  ③ ★ 配置 TRDC/RDC —— 把隔离规则写进硬件
+  │  ④ LMM_Init()：建 RPC 接口（SCMI）
+  │  ⑤ LMM_Boot()：按 boot[] 表依次启动
+  │       LM1 M7    (boot=2)  ← 放核
+  │       LM2 AP    (boot=3)  ← 只放 CPU_A55C0
+  │  ⑥ 进 WFI 死循环，转为"服务者"角色：等各核发 SCMI 请求
+  ▼
+A55 CPU0
+  │  ATF/BL31 (EL3) → U-Boot → Linux
+  ▼
+Linux
+  │  PSCI → ATF → SCMI → SM
+  │  逐个叫醒 CPU1~5
+  ▼
+6 核全在线
+  │
+  ▼
+（Harpoon）在 SM 定的规矩内，再从 Linux 手里切一个核给 FreeRTOS
 ```
 
 ### 三个必须理解的点
 
 #### 1. 为什么是 AON M33 先跑，而不是 A55
 
-**因为需要有个人先"分配资源"。**
+**因为需要有个人先"分配资源"，而且这个人必须"一直在"。**
 
 如果 A55 先跑，它会默认自己是主人，想用哪个外设就用哪个。等它把资源全占了，再想收回来就晚了。
 
-所以设计成：**管家先上岗，把规矩定好（哪些归谁），再叫醒干活的。**
+**选 AON 域的 M33 还有第二个原因**：AON 是**常开域**，主电源断了它还有电。
+这样系统休眠时 SM 还在跑，**能负责"被事件唤醒"**——如果 SM 在 A55 上，A55 一睡 SM 就没了。
 
 **这解释了一件重要的事**：**资源隔离是在 Linux 起来之前就写进硬件的。**
 
@@ -144,50 +573,56 @@ FRDM-IMX95-PRO 上的 i.MX95 包含 6 个 Cortex-A55、1 个 Cortex-M7 和 1 个
 
 ```text
 A55 集群（6 个核）
-   CPU0   ← SM 只释放这一个
-   CPU1~5 ← 暂时停着，等着被叫醒
+   CPU0   ← SM 只释放这一个（配置里只有 CPU_A55C0 有 start）
+   CPU1~5 ← 暂时停着，等着被 PSCI 叫醒
 ```
 
 **因为多核启动比单核复杂得多**：谁当主核、栈放哪、核间怎么同步、缓存怎么维护，这些 **Linux 自己比 SM 更清楚**。
 
-所以约定：**SM 只放 CPU0 出去，剩下的由 Linux 用 PSCI 接口（通过 ATF）按需叫醒。**
+所以约定：**SM 只放 CPU0 出去，剩下的由 Linux 用 PSCI 接口（经 ATF 转发、走 SCMI 到 SM）按需叫醒。**
 
-**这也解释了为什么"切核"是可行的**：CPU1~5 本来就是 Linux 后来叫醒的，属于"运行期资源"，**hypervisor 完全可以在某个核上做手脚**。
+**这也解释了为什么"切核"是可行的**：CPU1~5 本来就是 Linux 后来叫醒的，属于"运行期资源"。
 
-#### 3. 启动链上每一环在干什么
+#### 3. 阶段之间靠什么衔接
 
-| 阶段 | 谁在跑 | 干什么 |
+这是最容易被略过、但最该讲清的一点。**看完整条链，衔接只有三种方式**：
+
+| 衔接方式 | 用在哪 | 具体做法 |
 |---|---|---|
-| Boot ROM | 芯片内部固化代码 | 读启动引脚，加载下一个镜像 |
-| SM | AON M33 | **定规矩：谁能用哪些硬件** |
-| ATF / BL31 | A55（EL3） | 建立安全环境与可信启动链 |
-| U-Boot | A55（EL2/EL1） | 加载内核和设备树，准备启动参数 |
-| Linux | A55（EL1） | 接管 A55，跑起来 |
-| （Harpoon） | A55（EL2 由 hypervisor 占） | 从 Linux 手里切核给 FreeRTOS |
+| **硬件释放 + 入口地址** | 每个"换核执行"的地方 | 上一个阶段把下一个阶段的代码放到约定地址，然后释放那个核 |
+| **固定地址 + 魔数结构** | ROM → SM | `0x2003DC00` 的 handover（魔数 `0xC0FFEE16`）、`0x2003DE00` 的 passover |
+| **标准化接口** | Linux → SM | PSCI（ARM 定义）→ SCMI（ARM 定义）→ MU 邮箱（硬件） |
 
-**每一环都是"把下一环叫起来，然后交出控制权"。**
+**没有魔法**。所谓"阶段过渡"，本质就是这三件事：
+**把代码放对位置、把该传的数据放对地址、用标准接口请求下一件事**。
 
-### 启动模式与 SW4
+### 启动模式拨码
 
-Boot ROM 靠**读引脚电平**决定从哪启动。本板用 SW4 拨码选择（`UM12527` §2.3）：
+Boot ROM 靠**读引脚电平**决定从哪启动。**两块板的拨码位置不同**：
 
-| SW4[1:4] | 模式 |
+| 板子 | 启动模式开关 |
+|---|---|
+| FRDM-IMX95-PRO | **SW4**[1:4]（`UM12527` §2.3） |
+| **i.MX95 EVK** | **SW7**[1-4]（`UM12022` Table 55 / QSG） |
+
+| 拨码 | 模式 |
 |---|---|
 | `x001` | USB Serial Downloader（配合 UUU 用） |
-| `x010` | eMMC |
-| `x011` | microSD |
+| `x010` | **eMMC（默认）** |
+| `x011` | microSD / uSDHC2 |
 | `x100` | FlexSPI NOR |
 
-**注意 `x` 是最低位无关**，看后三位。
+**注意 `x` 是最低位无关**，看后三位。**另外 EVK 的 `SW4` 是电源开关，不是启动开关**，别搞混。
 
 ### 和 Harpoon 的关系（重要）
 
 把上电流程和 Harpoon 连起来看，是一条线：
 
 ```text
-上电 → SM 定规矩（写 TRDC/RDC 隔离）
-     → Linux 起来（只拿到 SM 给的那部分）
-     → Harpoon 在 SM 定的规矩之内，再切一次
+上电 → Boot ROM 放 SM → SM 配 TRDC/RDC 定规矩
+     → SM 只放 CPU0 → Linux 起来（只拿到 SM 给的那部分）
+     → Linux 用 PSCI 叫醒 CPU1~5
+     → Harpoon 在 SM 定的规矩之内，再从 Linux 手里切一个核
 ```
 
 > **Harpoon 不能违反 SM 定的规矩。**
@@ -195,12 +630,26 @@ Boot ROM 靠**读引脚电平**决定从哪启动。本板用 SW4 拨码选择�
 >
 > 这就是 FRDM-IMX95-PRO 上 Harpoon 的 inmate 串口没输出的根源：
 > **（EVK 的）SM 配置没把 LPUART3 分给 Linux 域，Harpoon 再怎么切也切不出一个不归它的串口。**
+>
+> 而且从第三节的表能看到，**`IOMUXC` 本身就是 SM 独占的**——
+> Linux 连"自己配引脚"这件事都做不到，必须经 SCMI 请 SM 代配。
 
 ### 依据
 
-- SM 先启动、TRDC/RDC 隔离、A55 只释放 CPU0：**官方资料明确说明**（`imx-sm` 官方 README + `sm/doc/arch.md` + `config_lmm.h` 启动表）
-- SW4 启动模式：**官方资料明确说明**（`UM12527` §2.3）
-- 实机边证：COM19 在最早阶段就输出 DDR OEI 与 `Hello from SM`（见上文「第一次上电看到的 SM 输出」）
+| 结论 | 等级 | 出处 |
+|---|---|---|
+| SCP 定义（AON M33 就是 SCP） | **官方资料明确说明** | `sm/doc/intro.md` 术语表 |
+| SM 首要职责是隔离、启动其他核前先配 RDC | **官方资料明确说明** | `sm/doc/arch.md` |
+| SM 启动流程（main → BRD_SM_Init → LMM_Init → LMM_Boot） | **源码确认** | `sm/doc/imp.md` Bootflow 节 |
+| SM 独占 IP 清单（含 IOMUXC / GPIO1 / MU1-6 / TRDC） | **官方资料明确说明** | `sm/doc/arch.md` 物理视图表 |
+| DDR 由 M33 ROM 调用的固件初始化 | **官方资料明确说明** | `sm/doc/arch.md` |
+| handover/passover 地址、魔数、字段编码 | **源码确认** | `devices/MIMX95/sm/dev_sm_rom.c` |
+| `LMM_Boot()` 双重循环 + `SWI_Trigger()` | **源码确认** | `sm/lmm/lmm.c:143` |
+| `boot[]` / `bootSkip[]` / `rtime` 语义 | **源码确认** | `sm/doc/config.md` |
+| LM0/LM1/LM2 的 boot=1/2/3 | **源码确认** | `mx95evkjailhouse.cfg`、`mx95frdm-pro.cfg` |
+| A55 只有 CPU_A55C0 有 start | **源码确认** | 同上，AP LM 的 start/stop 表 |
+| SW4/SW7 启动模式表 | **官方资料明确说明** | `UM12527` §2.3、`UM12022` Table 55 |
+| 实机看到 "Hello from SM"、DDR OEI | **实机验证** | COM19 上电日志 |
 
 ## 为什么不能把它当成普通 STM32 直接烧录
 
