@@ -152,13 +152,33 @@ eth0    UP       169.254.9.133/16 fe80::204:9fff:fe0b:4261/64
 
 **把 `169.254.9.133` 这个数字抄下来**，第 4 步要用。你板子上的可能不一样，抄你自己的。
 
-**如果 eth0 那行没有 169.254 开头的地址**：等一下再敲一次 `ip -brief addr`，两边自动协商要几秒钟。还是没有就检查网线是不是插好了。
+**如果 eth0 那行没有 169.254 开头的地址**：等一下再敲一次 `ip -brief addr`，两边自动协商要几秒钟。
+**实测经常第一次只显示 IPv6 地址**（`fe80::...`），再敲一次才出现 IPv4 的 `169.254.x.x`。
+还是没有就检查网线是不是插好了。
+
+> **记住：这个 IPv4 地址每次重启都会变**（实测两次分别是 `169.254.9.133` 和 `169.254.206.207`）。
+> 所以**每次 scp 之前都要重新查一遍**，不能拿上次的地址直接用。
 
 **做完你人在**：板子的 Linux 里。接着做第 4 步。
 
 ---
 
 ### 第 4 步：从电脑把 3 个文件传进板子
+
+> **⚠️ 先别急着传，检查板子上是不是已经有了。**
+>
+> 这些文件是存在板子 eMMC 里的，**只要传过一次就一直都在，重启也不会丢**。所以在**串口窗口**里先敲：
+>
+> ```bash
+> ls /usr/share/jailhouse/cells/ | grep harpoon
+> ls /usr/share/harpoon/inmates/freertos/
+> ```
+>
+> - **如果两边都列出了文件**（比如看到 `imx95-harpoon-freertos.cell` 和 `hello_world.bin rt_latency.bin`）
+>   → 说明以前传过、还在板子里，**第 4、5 步直接跳过，去做第 6 步**。
+> - **如果缺文件** → 继续往下传，做完第 5 步再走。
+>
+> （2026-09-20 实测：板子上已经有了，所以这一轮 cp 命令报了"文件不存在"，但清单一查两个文件都在。**报错不等于失败，看清单为准。**）
 
 **[电脑]** 串口窗口**不要关**（板子还在跑，关了就断线了）。**新开一个 PowerShell 窗口**，敲：
 
@@ -372,7 +392,14 @@ echo c0100000.rpmsg-ca55 > /sys/bus/platform/drivers/imx-rpmsg/unbind
 | 第 2 行 | 把 CPU 频率策略设成性能优先（稳定一点） |
 | 第 3 行 | 让 Linux 先松开一个通信模块，免得跟 FreeRTOS 抢 |
 
-**屏幕上应该看到**：前两行没输出。第三行如果报 `No such file or directory` 之类的错，**没关系，继续往下做**（这个模块可能本来就没加载）。
+**屏幕上应该看到**：前两行没输出。**第三行会报错**，实测长这样：
+
+```text
+-sh: echo: write error: No such device
+```
+
+**这个错没关系，继续往下做。** 原因是这条路（`rpmsg-ca55`）在当前启动方式下本来就没挂成设备。
+本次实测（2026-09-20）在这一步报了同样的错，后面 Jailhouse 照样正常启动、FreeRTOS 照样跑起来。
 
 **做完你人在**：板子的 Linux 里。接着做第 11 步。
 
@@ -453,13 +480,15 @@ jailhouse cell start freertos
 jailhouse cell list
 ```
 
-**应该看到**（比第 11 步多出一行）：
+**应该看到**（比第 11 步多出一行，而且 **imx95 那行的 CPU 少了一个**）：
 
 ```text
-ID   Name      State      CPUs
-0    imx95     running    0-5
-1    freertos  running    5
+ID      Name        State      Assigned CPUs    Failed CPUs
+0       imx95       running    0-4
+1       freertos    running    5
 ```
+
+**注意 `imx95` 从 `0-5` 变成了 `0-4`** —— 少的那个 **5 号核给了 FreeRTOS**。这就是"划走 1 个核"的直接证据。
 
 看到 `freertos  running` → **FreeRTOS 已经在 A55 的核上跑起来了**。
 
@@ -542,6 +571,38 @@ reboot
 ```
 
 **为什么要记**：下次再跑，看到一样的数字就说明一切正常；数字不一样，就是中间某步出问题了。
+
+---
+
+## 第 15 步之后：2026-09-20 实测结果（第二次完整复现，5 个验证点全过）
+
+**这次是照本文档从头走完的，结论：方案跑通。**
+
+| 验证点 | 实际输出 | 结果 |
+|---|---|---|
+| 1 内存参数生效 | `MemTotal: 4398132 kB`、`MemFree: 3824920 kB` | ✅ |
+| 1 附 内核参数 | `cat /proc/cmdline` 含 `kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-arm.mode=nvhe` | ✅ |
+| 2 hypervisor 启动 | `Jailhouse hypervisor v0.12`，CPU 0~5 全部 OK，`Activating hypervisor`；`cell list` → `0 imx95 running 0-5` | ✅ |
+| 3 FreeRTOS 启动 | `Created cell "freertos"` → `Cell "freertos" can be loaded` → `Started cell "freertos"`；`cell list` → `1 freertos running 5`（imx95 变为 `0-4`） | ✅ |
+| 4 Linux 少一核 | `nproc` = `5` | ✅ |
+| 5 确实在执行 | `vmexits_total 1517`、`vmexits_mmio 1515`、`vmexits_management 2` | ✅ mmio 占绝对多数 |
+| 收工 | `shutdown`→`destroy`→`disable`（释放 CPU 0~5）→`modprobe -r` 全部成功 | ✅ |
+
+**本次与文档预期不同的 3 处（文档已按实测修正）**：
+
+1. **第 4/5 步可以跳过**：板子上**已经有** cell 和 inmate 文件（以前传过，存在 eMMC 里没丢），
+   所以那轮 `cp /tmp/hello_world.bin ...` 报了 `No such file or directory`——**报错但清单里文件是全的**。
+   教训：传文件前先 `ls` 看一眼，别白传，也别把"cp 报错"当成失败。
+2. **第 10 步第三行必报错**：`echo c0100000.rpmsg-ca55 > .../unbind` 报
+   `-sh: echo: write error: No such device`（不是文档原先猜的 `No such file`）。无害，继续做。
+3. **`cell list` 的实际表格多一列**：有 `Failed CPUs` 列，且 `imx95` 的 CPU 变成 `0-4`。
+
+**一个要记住的坑**：板子的 IPv4 地址**每次重启都会变**（这次是 `169.254.206.207`，
+上一次复现是 `169.254.9.133`）。`ip -brief addr` 有时第一次只显示 IPv6 地址
+（`fe80::...`），等几秒再敲一次才会出现 `169.254.x.x`。**每次 scp 前都要重新查一遍 IP。**
+
+**核数确认**：实际是 **1 个核**（5 号核给了 FreeRTOS，Linux 剩 0-4）。
+（备注：周报里写的"两个核"与此不符，如果要按 2 核跑，需要改 cell 配置里的 CPU 分配后重新验证。）
 
 ---
 
