@@ -1,11 +1,11 @@
 ---
 type: 知识库
 scope: 芯片与平台-i.MX95
-doc_type: 未分类
+doc_type: 原理
 status: 已整理
-evidence: 源码确认
-tags: [协议, 多核与异构, 安全与隔离, 驱动]
-updated: 2026-09-17
+evidence: 实机验证
+tags: [协议, 多核与异构, 安全与隔离, 驱动, 排查方法]
+updated: 2026-09-21
 ---
 
 # i.MX95引脚控制：IOMUXC与RGPIO的分工
@@ -94,14 +94,133 @@ i.MX95引脚多、可复用功能多，而且多数功能不是GPIO（LPUART/SPI
 
 三层要分开：引脚所有权（谁能配IOMUX）、TRDC（谁能访问寄存器窗口）、PCNS/PCNP（引脚数据寄存器归安全世界还是非安全世界）。
 
-## 六、常见误区
+## 六、常见误区（速查）
 
-- 把`IOMUXC_BASE`理解成“绑定GPIO地址”：它只是IOMUXC寄存器的访问地址。
+- 把`IOMUXC_BASE`理解成"绑定GPIO地址"：它只是IOMUXC寄存器的访问地址。
 - 以为M7能直接写IOMUXC：本板SDK走`SM_PINCTRL`路径（源码可确认），M7经SCMI请SM代写。
-- 把“引脚复用”和“GPIO安全域（PCNS/PCNP）”混为一谈：前者决定引脚接什么功能，后者决定这根GPIO的数据寄存器归哪个世界访问。
-- 把“引脚所有权（`PIN_* OWNER`）”当成“RGPIO归谁”：它只管IOMUX配置权。
+- 把"引脚复用"和"GPIO安全域（PCNS/PCNP）"混为一谈：前者决定引脚接什么功能，后者决定这根GPIO的数据寄存器归哪个世界访问。
+- 把"引脚所有权（`PIN_* OWNER`）"当成"RGPIO归谁"：它只管IOMUX配置权。
+- **把 pinmux 表里的 `UNCLAIMED` 当成"引脚空闲"**：它只反映本域有没有驱动占用，看不到别的域。详见下一节。
+- **把引脚的两个复用身份当成"分工"**：`UART3_TXD` 和 `GPIO_IO14` 是同一个针脚的二选一，不是"一个发一个收"。
 
-## 七、适用范围与依据
+## 七、怎么查一根引脚"归不归我管"（实机方法）
+
+前面讲的是原理，这一节讲**上板怎么查**。i.MX95 上排查引脚问题的第一步不是"配置对不对"，而是"**这根引脚归不归我所在的域管**"——顺序搞反会白忙很久。
+
+### 为什么必须先查"归属"
+
+引脚所有权由 SM（System Manager，跑在 AON M33 上）分配。**不归你这个域的引脚，你连申请都申请不到，更谈不上配置。** 这时候代码里写什么都不报错，只是没效果。
+
+### 三处证据
+
+**证据 1：这个域里到底有哪些外设实例**
+
+```bash
+cat /proc/tty/driver/* 2>/dev/null | head
+```
+
+以串口为例，驱动会**自己报出**它注册了哪几个实例、MMIO 基址是多少：
+
+```text
+0: uart:FSL_LPUART mmio:0x44380010 irq:139 tx:34055 rx:2672     ← LPUART0
+4: uart:FSL_LPUART mmio:0x42590010 irq:137 tx:0 rx:0            ← LPUART4（空闲）
+5: uart:FSL_LPUART mmio:0x425A0010 irq:138 tx:0 rx:0            ← LPUART5（空闲）
+```
+
+用 `dmesg` 交叉验证（会打出更完整的外设节点名和基址）：
+
+```bash
+dmesg | grep -i -E "lpuart|ttyLP|serial"
+```
+
+```text
+42590000.serial: ttyLP4 at MMIO 0x42590010 ... is a FSL_LPUART
+425a0000.serial: ttyLP5 at MMIO 0x425a0010 ... is a FSL_LPUART
+44380000.serial: ttyLP0 at MMIO 0x44380010 ... is a FSL_LPUART
+```
+
+**判断**：如果某个实例（比如 LPUART3）根本没出现在这两处，说明**这个域压根没有它**。
+
+**证据 2：引脚清单**
+
+```bash
+grep -i uart /sys/kernel/debug/pinctrl/*/pinmux-pins
+```
+
+```text
+pin 116 (uart1rxd): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 117 (uart1txd): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+```
+
+> ### ⚠️ `UNCLAIMED` 是本主题最大的坑
+>
+> **它不是"这个脚空着、随便用"的意思。**
+>
+> 这张表**只列出 SMCU 交给当前域管的引脚**。`UNCLAIMED` 只说明**当前没有本域驱动占用它**，
+> **完全看不到别的域在干什么**。
+>
+> **反证**：本项目的 M7 工程当时用 `GPIO_IO14`（J15-8）、`GPIO_IO15`（J15-10）做 GPIO 回环是**成功的**——
+> 说明那时 M7 域正在用这两个脚。而这张 Linux 域的表里，这两个脚照样显示 `UNCLAIMED`。
+>
+> **结论：本域视角的"空闲" ≠ 物理引脚空闲。** 排查时务必分清。
+
+**证据 3：pinctrl 控制器的名字本身就说明架构**
+
+```text
+/sys/kernel/debug/pinctrl/scmi_dev.8-scmi-pinctrl-imx/
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+```
+
+`scmi-pinctrl-imx` = **这个域不直接写 IOMUX 寄存器，而是经 SCMI 请 SM 代写**。设备树顶层的 `firmware` 节点就是 SCMI 接口。
+
+所以完整链路是：
+
+```text
+本域设备树里申请某根引脚的 pinctrl
+   ↓ SCMI 消息
+SM（AON M33）
+   ↓ SM 查这张脚的归属
+   ↓ 不归本域 → 拒绝，IOMUX 保持原样
+```
+
+**这就解释了"为什么代码没报错、但引脚没反应"**：申请被静默拒绝，引脚维持原功能。
+
+### 排查顺序（记住这个次序）
+
+```text
+1. 归属：这根引脚/这个外设实例，在本域的设备树和 pinmux 表里存在吗？   ← 先查这个
+2. 配置：IOMUX 的 MUX 值选对功能了吗？电气参数对吗？
+3. 数据：RGPIO/外设寄存器读写正常吗？
+```
+
+**第 1 步不过，查 2、3 都是白费。**
+
+### 一个容易搞混的概念：引脚复用 ≠ 收发分工
+
+对串口尤其容易搞错。以 UART3 为例：
+
+```text
+J15-8 这个物理针脚
+   ├── 身份 A：UART3_TXD（串口发数据）
+   └── 身份 B：GPIO_IO14（普通输入输出）
+   同一时刻只能选一个，由 IOMUX MUX 寄存器决定
+
+J15-10 另一个物理针脚
+   ├── 身份 A：UART3_RXD（串口收数据）
+   └── 身份 B：GPIO_IO15
+```
+
+> ❌ 错："`GPIO_IO14` 管发送、`GPIO_IO15` 管接收"
+> ✅ 对："`UART3_TXD` 和 `GPIO_IO14` 是**同一个针脚的两个可选身份**"
+
+所以一根针上要么是串口的发送、要么是 GPIO，**不可能同时是两者**。
+
+### 项目证据
+
+- 引脚域归属与串口实例的完整排查过程：[Harpoon复现-手把手操作](../../10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md)「下一步」一节
+- `UNCLAIMED` 误读的实例：同一篇
+
+
 
 - 适用范围：i.MX95系列的IOMUXC/RGPIO组织方式；具体pad名、功能编号和地址是i.MX9596的值。
 - 源码依据（`SDK_26_06_00_IMX95LPD5EVK-19`）：

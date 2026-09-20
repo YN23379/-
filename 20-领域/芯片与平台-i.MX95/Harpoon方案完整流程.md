@@ -43,6 +43,11 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
 | 3. 取得 inmate 二进制 | FreeRTOS 应用（如 `hello_world.bin`） | **必须按 inmate cell 的内存布局链接**（入口 `0xf0000000`）——这就是为什么不能直接用 M7 的 hello.bin：链接地址完全不同 |
 | 4. 控制脚本（可选） | `jh_harpoon.sh`、`harpoon_ctrl`、`harpoon.conf` | 它们只是把第 3 节那串命令包起来；**注意**包内 `harpoon.conf` 默认指向 audio 变体（i.MX95 没有这个 cell/bin），正式用法是先跑 `harpoon_set_configuration.sh freertos latency` 重新生成 |
 
+> **第 2~3 步的东西具体从哪来？** 见 [[10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md|复现手册]]
+> 的「三个文件的来源与用途」一节。一句话：**三个文件都在 Harpoon 包的 `rootfs.tar.zst` 里**，
+> 路径分别是 `usr/share/jailhouse/cells/` 和 `usr/share/harpoon/inmates/freertos/`。
+> cell 是二进制成品，**源码在 [NXP/harpoon-apps](https://github.com/NXP/harpoon-apps)，不在安装包里**。
+
 ## 三、烧录阶段
 
 和你原流程**完全一样**：镜像经 `imx-mkimage` 打包 → 改名 → UUU 发送（或 SD 卡持久化）。
@@ -96,8 +101,18 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
 2. **inmate 的入口地址 `-a 0xf0000000` 不是随手写的**，它是 inmate cell 配置里给这块内存的起始地址；
    二进制必须按这个地址链接，否则 start 后直接跑飞。
 3. **inmate 控制台是独立串口**：Harpoon FreeRTOS cell 配置里控制台是 LPUART3（`0x42570000`），
-   **不占 Linux 的串口**（root cell 的 debug console 是 LPUART1）。Pro 板 J22 没引出 LPUART3，
-   要看输出就得换串口重编 cell + inmate——这是"跑通了但看不见输出"的原因。
+   **不占 Linux 的串口**（root cell 的 debug console 是 LPUART1）。
+
+   > **2026-09-20 实测推翻"换个串口接上就能看"的想法**：
+   > LPUART3 在这块 Pro 板上**不归 Linux 域**，所以不是"没引出"这么简单，而是**引脚控制权不在 Linux 手里**：
+   > - `/proc/tty/driver/*`：Linux 域只有 **LPUART0 / LPUART4 / LPUART5** 三个实例，**没有 LPUART3**
+   > - pinmux 表（129 行）里 **uart 相关只有 uart1rxd/txd、uart2rxd/txd**，**没有任何 uart3 引脚**
+   > - 该表路径是 `scmi_dev.8-scmi-pinctrl-imx`，说明 Linux 是**经 SCMI 请 SM 代配引脚**的，SM 不给就配不了
+   >
+   > → **inmate 写 LPUART3 寄存器有效（`vmexits_mmio` 在涨），但信号出不了芯片。**
+   > 可行方向是用 Linux 域已注册且空闲的 **LPUART4（`0x42590000`）/ LPUART5（`0x425A0000`）**，
+   > 但 cell 是预编译二进制，改 console 必须取源码重编或问 NXP 要配置。
+   > 详见 [[10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md|复现手册「下一步」一节]]。
 4. **`jh_clk` 里那串参数不是装饰**：`kvm-arm.mode=nvhe`、`kvm.enable_virt_at_load=false` 保证 KVM
    不跟 Jailhouse 抢虚拟化硬件；`cpuidle.off=1` 防止核进深度休眠导致 inmate 的核失联。
 5. **一切默认不持久**：`setenv` 没 `saveenv`（板子环境区 CRC 还是坏的），cell/inmate 都在 RAM 里，

@@ -8,33 +8,41 @@ tags:
   - 启动
   - 存储
   - 多核与异构
-updated: 2026-09-17
+  - Harpoon
+  - Jailhouse
+  - 串口与引脚
+updated: 2026-09-21
 ---
 
 # Harpoon 可用性验证与复现步骤
 
 > 2026-09-17 精简：验证结论与复现步骤是同一次调研，合成一篇。
+> 2026-09-21 补充：新增第五节「复现结果确认与"没有串口输出"的根因排查」、第六节「版本混用纠错」、第七节「后续路径」，并就地修正了此前关于 J22 引出串口、J15-8 接 USB-TTL、以及 GPIO_IO14/15 与 UART3 关系的错误说法。
 
 ## 目录
 
-- 一、Harpoon（Real-Time Edge 3.3 / HS v3.5）能否用于 FRDM-IMX95-PRO —— 纸面验证记录
+- 一、Harpoon（Real-Time Edge 3.3 / HS v3.5）能否用于 FRDM-IMX95-PRO —— 文档与镜像核对记录
 - 二、Harpoon 全过程记录与复现步骤（FRDM-IMX95-PRO）
+- 三、复现结果确认与"没有串口输出"的根因排查（2026-09-20 / 09-21）
+- 四、手册版本混用纠错：UM12022（EVK）vs UM12527（Pro）
+- 五、后续路径与优先级
 
 ---
 
-## 一、Harpoon（Real-Time Edge 3.3 / HS v3.5）能否用于 FRDM-IMX95-PRO —— 纸面验证记录
+## 一、Harpoon（Real-Time Edge 3.3 / HS v3.5）能否用于 FRDM-IMX95-PRO —— 文档与镜像核对记录
 
 
 
 > 类型：项目档案。板型：NXP FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）。
 > 记录时间：2026-09-17。记录人：开发。
-> 状态：纸面验证完成；**实机验证已于当日完成并通过**（详见 `2026-09-17-Harpoon全过程与复现步骤.md` 第十二节）。
+> 状态：文档与镜像核对完成；**实机验证已于当日完成并通过**（详见本文件第二节第十二小节，以及第三节的复现确认）。
 
 > **结论更新（当日实机验证后）**：
 > 1. **板子出厂自带的是 Jailhouse，不是 Harpoon**——Jailhouse（hypervisor + 工具 + `imx95.cell` + 演示 inmate）在原厂系统里齐全；`/usr/share/harpoon`、`/etc/harpoon` 实测不存在。不要把两者混为一谈。
-> 2. 本文件判定的是"**这个预编译包作为整机镜像能否用在 Pro 板**"，结论是**不能**（五条证据见第四节）。
+> 2. 本文件判定的是“**这个预编译包作为整机镜像能否用在 Pro 板**”，结论是**不能**（五条证据见第四节）。
 > 3. 但包里**可搬运的资产（FreeRTOS inmate 二进制 + Harpoon cell 配置 + 控制程序）在 Pro 板上是可以用的**，已实机验证：`imx95-harpoon-freertos.cell` + `rt_latency.bin` → `jailhouse cell list` 显示 `1 freertos running 5`，`cell stats` 显示 `vmexits_mmio` 持续增长。
-> 4. 准确口径：**"板级外壳"必须换，"软件资产"能直接搬**——即"拆开用"。
+> 4. 准确口径：**“板级外壳”必须换，“软件资产”能直接搬**——即“拆开用”。
+> 5. 补一句：**“跑起来了”不等于“看得到输出”**。FreeRTOS 确实在跑，但它写的是 LPUART3，而 LPUART3 根本不在 Linux 域里，引脚也从未被复用到 UART3 上——所以串口上一个字节都不会有。根因见第三节。
 
 ### 一、要解决的问题和上下文
 
@@ -213,6 +221,7 @@ Jailhouse 上游 `nxp-imx/imx-jailhouse` 在 RTE 3.3 使用的 `lf-6.12.34_2.1.0
 - `待确认`：`imx95-19x19-frdm-pro-root.dtb` 从哪取（完整 LF BSP 包 / 板载 /boot / 内核源码重编）。
 - `待确认`：NXP 是否有 Pro 板的 Harpoon 计划（路径 C）。
 - 若走 B：A55 是否仍保留 Linux、划几个核给 inmate、需要哪些外设与实时指标。
+- **LPUART3 到底归哪个域管**——这一条 2026-09-21 排查后仍未定，需要 System Manager（AON M33 上的 SM 固件）的引脚分配配置才能确认，见第三节。`推测`。
 
 ### 附：本次用到的路径与命令
 
@@ -243,6 +252,7 @@ UUU               : F:\project\Learning\RTOS\tools\uuu-1.5.243\uuu.exe
 
 - 知识库：`i.MX95 上 Jailhouse / Harpoon 的分层与判定方法`
 - 项目档案：`方向调整-A55运行FreeRTOS.md`、`进度汇报-2026-09-17.md`
+- 后续排查：本文件第三节、第四节
 
 ---
 
@@ -324,9 +334,10 @@ UUU               : F:\project\Learning\RTOS\tools\uuu-1.5.243\uuu.exe
   且会引入"用别块板的 SM/电源配置启动本板"的非官方组合，性价比不高。
 - 写了一份测试手册 `README-测试流程.md`（SW4 启动模式、UUU 命令、判定标准、恢复步骤）。
 
-### 三、阶段三：上板基线（确认板子在跑、确认串口映射）
+### 三、阶段三：上板前确认（板子在跑、串口映射）
 
 1. 电脑侧串口：`COM17=A55 控制台 console=ttyLP0`、`COM18=M7`、`COM19=M33 System Manager`、`COM16` 备用；115200-8-N-1。
+   （串口归属的正式依据是 UM12527 §2.19：J22 是 USB Type-C 调试口，由 CH9114F（U67）四路 USB-UART 桥驱动，A55/M33/M7 共用这一个 Type-C。电脑侧枚举出 4 个 COM 口，但哪个口对应哪个域**不固定**，NXP 建议 4 个口都打开。上面的对应关系是本次实测的结果，换机器/换驱动可能变。）
 2. 抓到的启动链（实机日志）：
    ```text
    U-Boot SPL 2025.04-g99518e6b6f20 → NOTICE: BL31: v2.12.0 (lf-6.18.2-1.0.0) → U-Boot 2025.04
@@ -481,7 +492,7 @@ Hello 166434 from cell!
 | **Harpoon cell 配置**             | ❌ 无             | ✅ `imx95-harpoon-freertos.cell`（772 B）/ `-industrial.cell`（1028 B） | 同上                                                            |
 | **控制程序/脚本**                     | ❌ 无             | ✅ `harpoon_ctrl`、`jh_harpoon.sh`、`harpoon.conf`、`harpoon.service`  | 同上                                                            |
 | 运行脚本的机器判断                       | —               | ❌ 只认 EVK/15X15，Pro 会 `Unknown` 退出                                  | 改脚本或手敲命令                                                      |
-| inmate 控制台串口                    | —               | LPUART3（`0x42570000`，实测两处 cell 一致）                                 | Pro 板 J22 只引出 UART1/2/7，需确认 LPUART3 是否可用，否则换 UART 重编 cell/bin |
+| inmate 控制台串口                    | —               | LPUART3（`0x42570000`，实测两处 cell 一致）                                 | **原写"Pro 板 J22 只引出 UART1/2/7"是错的**，见第四节纠错；LPUART3 不在 Linux 域内，需换到 LPUART4/5 并重编 cell/bin |
 
 ### 八、复现步骤
 
@@ -512,7 +523,7 @@ Hello 166434 from cell!
 6) 收工：断电重启即可完全恢复（没有任何持久改动）
 ```
 
-#### 8.2 复现 B：把 Harpoon 的 FreeRTOS inmate 跑起来（**2026-09-17 已实机跑通**，原始输出见第十二节）
+#### 8.2 复现 B：把 Harpoon 的 FreeRTOS inmate 跑起来（**2026-09-17 首次跑通，2026-09-20 复现确认**，原始输出见第十二节、第三节）
 
 ```text
 1) 在 PC 上从 RTE rootfs 抽出 Harpoon 文件（本工程已抽出，位于 F:\project\Learning\RTOS\build\rte-extract）：
@@ -579,6 +590,7 @@ INMATE_NAME=freertos
 | 6 | 脚本挂死、看着像板子卡死 | 读取函数只按"多久没有新数据"退出，遇到 inmate 每秒上百行刷屏永远等不到安静 | 读取函数加绝对超时上限并截断输出 |
 | 7 | inmate 一跑起来 Linux 就没法输入 | `uart-demo.bin` 占用 LPUART1 及其中断，Linux 控制台失去输入 | 换 inmate 控制台到独立 UART；或接受"跑起来就靠复位收回控制" |
 | 8 | PowerShell 脚本报除零/变量为 null | 无 BOM 的 UTF-8 脚本被 PS 5.1 按 ANSI 解码，中文注释吞掉下一行 | 交互脚本一律纯 ASCII |
+| 9 | FreeRTOS inmate 跑起来但串口一个字节都没有 | FreeRTOS 写 LPUART3（`0x42570000`），而 LPUART3 不在 Linux 域、引脚也没复用到 UART3 | 见第三节；短期待验证方案是换 LPUART4/5 |
 
 ### 十、文件与路径清单
 
@@ -610,14 +622,29 @@ boot 分区挂载点        : /run/media/boot-mmcblk0p1  (Image, imx95-19x19-frd
 SD 卡挂载点            : /run/media/mmcblk1p1
 ```
 
+#### 10.1 那三个文件的来源与用途（简版）
+
+`imx95-harpoon-freertos.cell`、`hello_world.bin`、`rt_latency.bin` 这三个文件都不是本工程编译的，也不是从板上原有的系统里来的（`实机验证`：原厂 Pro 系统没有 `/usr/share/harpoon`）。它们的实际来源是：
+
+| 项目 | 内容 |
+|---|---|
+| 出处包 | `F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK`（即 HS v3.5 / RTE 3.3，EVK 版） |
+| 打包位置 | 它们不在解压目录的顶层，而是**压在 rootfs 归档里面**：`real-time-edge\nxp-image-real-time-edge-imx95-19x19-lpddr5-evk.rootfs.tar.zst` |
+| 归档内路径 | `usr/share/jailhouse/cells/imx95-harpoon-freertos.cell`；`usr/share/harpoon/inmates/freertos/{hello_world.bin,rt_latency.bin}` |
+| 本地解出位置 | `F:\project\Learning\RTOS\build\rte-extract\` |
+| 包里有没有源码 | **没有**。整个包只有二进制和配置，没有任何 `.c` / `.h`。cell 与 inmate 的源码在上游 `https://github.com/NXP/harpoon-apps` |
+
+完整的抽取命令、`tar` 列表核对方式和每个文件在启动序列里的作用，写在姊妹笔记 `Harpoon复现-手把手操作.md` 的「三个文件的来源与用途」一节，这里不重复。
+
 ### 十一、结论
 
 1. 下载的 Harpoon（HS v3.5 / RTE 3.3）**是 EVK 板级构建，官方不支持 FRDM-IMX95-PRO**：DTB、机器映射表、启动容器、运行脚本的机器判断、inmate 控制台串口五处都对不上。
 2. 但 **Pro 板出厂系统自带完整的 Jailhouse**，只要在启动时用 U-Boot 的 `jh_root_mem`/`jh_clk` 把内存让出来，就能在 A55 上划出独立实时域——**这一点已经实机验证通过**（CPU5 划给 inmate 并持续运行输出）。
 3. 剩下的工作只是"把 inmate 换成 Harpoon 的 FreeRTOS 应用"：文件已经从包里抽出，缺的是**传到板上**这一步（网络链路未通、PC 无读卡器，可走串口 base64 或先修网络），以及处理 **LPUART3 控制台在 Pro 板上是否引出**这个板级差异。
 4. **全过程零持久写入**：断电即回到原厂状态。
+5. （2026-09-21 补）第 3 条里的"传到板上"当天就做完了，FreeRTOS 也已经跑起来；**真正卡住的是"看不到输出"**，原因不是接线、不是逻辑分析仪、也不是 FreeRTOS 没跑，而是 inmate 写的 LPUART3 在 Pro 板上既不属于 Linux 域、引脚也没被复用到 UART3。详见第三节。
 
-### 十二、最终结果：Harpoon 的 FreeRTOS inmate 在 Pro 板上跑通（2026-09-17 当天完成）
+### 十二、最终结果：Harpoon 的 FreeRTOS inmate 在 Pro 板上跑通（2026-09-17 首次，2026-09-20 复现）
 
 #### 12.1 操作序列与实机原始输出
 
@@ -666,11 +693,12 @@ SD 卡挂载点            : /run/media/mmcblk1p1
 | 这个包能直接当 Pro 板的系统镜像用吗？ | **不能**。它是 EVK 板级构建（启动容器/DTB/SM/脚本机器判断/inmate 控制台 UART 都对不上） |
 | 包里的 Harpoon 资产能在 Pro 板上跑吗？ | **能，已实机验证**：`imx95-harpoon-freertos.cell` + `rt_latency.bin`（FreeRTOS）在 A55 CPU5 上 running |
 | 怎么做到的？ | **"拆开用"**：底座用 Pro 板原厂自带的 Jailhouse 与 `imx95.cell`，inmate 用 Harpoon 包里的 FreeRTOS 二进制与 cell 配置；启动时用 U-Boot 的 `jh_root_mem`/`jh_clk` 把内存让出来 |
-| 还缺什么？ | 官方针对 Pro 板的板级适配：`imx95-19x19-frdm-pro-root.dtb`、`jh_harpoon.sh` 的机器判断、inmate 控制台 UART（LPUART3 在 Pro 板未引出） |
+| 还缺什么？ | 官方针对 Pro 板的板级适配：`imx95-19x19-frdm-pro-root.dtb`、`jh_harpoon.sh` 的机器判断、inmate 控制台 UART（LPUART3 不在 Linux 域内，需换 LPUART4/5） |
 
 #### 12.3 仍未解决 / 待确认
 
-- **inmate 控制台看不到输出**：两个 harpoon cell 里 console 地址都是 LPUART3（`0x42570000`），而 Pro 板 J22 只引出 UART1/2/7。要看到 FreeRTOS 的打印，需要把 cell/console 改到已引出的 UART 并重编 inmate 的 console 配置。
+- ~~**inmate 控制台看不到输出**：两个 harpoon cell 里 console 地址都是 LPUART3（`0x42570000`），而 Pro 板 J22 只引出 UART1/2/7。~~
+  **2026-09-21 修正**：J22 引出 UART1/2/7 的说法来自错误的手册（UM12022，那是 EVK 的），已作废，见第四节。问题是真实存在的，但原因不是"J22 没引出"，而是 **LPUART3 不在 Linux 域内、引脚也未被复用到 UART3**，完整排查见第三节。
 - `jh_harpoon.sh start` 直接跑会 `Unsupported Machine: Unknown` 退出（脚本只认 EVK/15X15）。
 - `jh_root_mem` / `jh_clk` **每次启动都要重设**（没有 `saveenv`，也没有 `fw_setenv`）。
 - 用 `harpoon_ctrl` 跑完整的实时性测量（RT latency 的 p99/max 统计）需要 RPMsg 配对与 `harpoon_set_configuration.sh`，本次只验证到"cell 成功启动并持续运行"。
@@ -683,9 +711,260 @@ SD 卡挂载点            : /run/media/mmcblk1p1
 4. **SSH 是比串口好得多的控制通道**：inmate 抢走 LPUART1 后串口失去输入，但 SSH 仍然可用（本次就是靠 SSH 完成的整套 jailhouse 操作）。
 5. 直连网线时两端都会自配 `169.254.x.x/16`，无需 DHCP、无需手工配 IP 即可互通。
 
-### 关联
+### 本节关联
 
 - 同日：`2026-09-17-Harpoon可用性验证.md`（判定证据）、`2026-09-17-FRDM-IMX95-PRO开发日志.md`（现场流水）
+- 知识库：`i.MX95上Jailhouse与Harpoon的分层与判定方法.md`
+- 后续复现与排查：本文件第三节、第四节、第五节
+
+---
+
+## 三、复现结果确认与"没有串口输出"的根因排查（2026-09-20 / 09-21）
+
+> 类型：项目档案 / 排查记录。板型：NXP FRDM-IMX95-PRO。
+> 时间：2026-09-20 完整复现一遍；2026-09-21 定位"跑起来了但没有串口输出"的原因。
+> 这一节回答的问题只有一个：**FreeRTOS 已经在 CPU5 上 running，为什么串口一个字节都没有？**
+
+### 13.1 复现结果：5 项验证全部通过
+
+2026-09-20 按第二节 8.2 的步骤从头做了一遍（断电冷启动 → 抢 U-Boot → 设 `jh_root_mem`/`jh_clk` → 启动 Linux → SSH → jailhouse 序列），5 项验证点全部通过，`实机验证`：
+
+| # | 验证点 | 实测结果 | 证据等级 |
+|---|---|---|---|
+| 1 | 内存确实被 U-Boot 改小 | `MemTotal: 4398132 kB`、`MemFree: 3824920 kB`（原来 15.8 GiB） | 实机验证 |
+| 2 | 内核命令行带上了全部 Jailhouse 参数 | `/proc/cmdline` 含 `kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-arm.mode=nvhe`，以及 `console=ttyLP0,115200 … root=/dev/mmcblk0p2` | 实机验证 |
+| 3 | hypervisor 激活成功 | `Jailhouse hypervisor v0.12 (393-gcda91277-dirty)`，CPU 0-5 全部 `OK`，最后 `Activating hypervisor` | 实机验证 |
+| 4 | cell 状态正确 | enable 后 `jailhouse cell list` → `0 imx95 running 0-5`；`cell create/load/start freertos` 后 → `1 freertos running 5`，同时 imx95 变成 `0-4` | 实机验证 |
+| 5 | Linux 侧只剩 5 个核，收工干净 | `nproc` = 5；`cell stats freertos` → `vmexits_total 1517`、`vmexits_mmio 1515`、`vmexits_management 2`；teardown `cell shutdown` / `cell destroy` / `disable`（依次释放 CPU 2,1,0,4,3,5）/ `modprobe -r jailhouse` 全部正常 | 实机验证 |
+
+**关于核数的口径修正（重要）**：本次**实际只划了 1 个核**给 FreeRTOS —— Linux 拿 0-4，FreeRTOS 独占 5。本文档早期版本里"两个核"、"2 cores"这类说法与实测不符，属于早期规划阶段的设想被误写成了结果，**以本节实测为准**。
+
+`vmexits_mmio` 占 `vmexits_total` 的 99.9%（1515/1517）这一点很关键：它说明 inmate 运行期间绝大多数陷入都是"访问外设寄存器"触发的，而 inmate 启动后最主要的外设访问就是写自己的控制台 UART。**这为后面"FreeRTOS 确实在写 UART 寄存器"提供了硬证据。**
+
+### 13.2 排查第一步：`jailhouse console -f` 是不是 inmate 的串口？（假设被否定）
+
+最初的假设是：`jailhouse console -f <cell>` 是 Jailhouse 提供的"虚拟控制台"，inmate 的 `printf` 会从这里出来。
+
+实测结果是否定的。加 `-f` 后抓到的全部内容如下，`实机验证`：
+
+```text
+Initializing Jailhouse hypervisor v0.12 (393-gcda91277-dirty) on CPU 1
+Code location: 0x0000ffffc0200800
+Page pool usage after early setup: mem 71/993, remap 0/131072
+Initializing processors:
+ CPU 1... OK
+ CPU 0... OK
+ CPU 2... OK
+ CPU 5... OK
+ CPU 4... OK
+ CPU 3... OK
+Initializing unit: irqchip
+Initializing unit: ARM SMMU v3
+Initializing unit: ARM SMMU
+Initializing unit: PVU IOMMU
+Initializing unit: PCI
+Adding virtual PCI device 00:00.0 to cell "imx95"
+Adding virtual PCI device 00:01.0 to cell "imx95"
+Adding virtual PCI device 00:02.0 to cell "imx95"
+Adding virtual PCI device 00:03.0 to cell "imx95"
+Page pool usage after late setup: mem 125/993, remap 208/131072
+Activating hypervisor
+Adding virtual PCI device 00:00.0 to cell "freertos"
+Shared memory connection established, peer cells:
+ "imx95"
+Created cell "freertos"
+Page pool usage after cell creation: mem 148/993, remap 208/131072
+Cell "freertos" can be loaded
+Started cell "freertos"
+```
+
+**这里面没有一行是 FreeRTOS 打印的**，全部是 hypervisor 自己的日志（初始化、建 cell、加载、启动）。结论：`jailhouse console -f` 连的是 **hypervisor 的控制台**，不是 inmate 的。Harpoon 的 inmate 是直接 MMIO 写自己的 UART 寄存器（`vmexits_mmio` 那 1515 次就是它），并不存在"虚拟控制台"这条通道。
+
+**所以路径"用 `jailhouse console -f` 看 inmate 输出"是走不通的，这条排除掉。**（同一现象在第九节坑表里记为第 9 条。）
+
+### 13.3 排查第二步：串口与引脚到底归谁管（决定性证据）
+
+思路转向：既然 inmate 直接写 UART 寄存器，那就查"这个 UART 在这块板上到底存不存在、引脚有没有被配成 UART"。三条命令，全部 `实机验证`。
+
+**（1）内核认到几个 LPUART 串口**
+
+```text
+# cat /proc/tty/driver/* 2>/dev/null | head
+serinfo:1.0 driver revision:
+0: uart:FSL_LPUART mmio:0x44380010 irq:139 tx:34055 rx:2672 brk:1 RTS|CTS|DTR|DSR|CD
+4: uart:FSL_LPUART mmio:0x42590010 irq:137 tx:0 rx:0 CTS|DSR|CD
+5: uart:FSL_LPUART mmio:0x425A0010 irq:138 tx:0 rx:0 CTS|DSR|CD
+```
+
+Linux 侧**只有三个** LPUART：`ttyLP0`（`0x44380000`，即 LPUART1，也是当前 console，`tx:34055 rx:2672` 说明在跑）、`ttyLP4`（`0x42590000`）、`ttyLP5`（`0x425A0000`）。后两个 `tx:0 rx:0`，完全空闲，没被任何东西用。
+
+**（2）dmesg 里串口的注册与 console 归属**
+
+```text
+# dmesg | grep -i -E "lpuart|ttyLP|serial"
+[    0.000000] earlycon: lpuart32 at MMIO32 0x0000000044380000 (options '')
+[    0.000000] Kernel command line: kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-arm.mode=nvhe console=ttyLP0,115200 earlycon root=/dev/mmcblk0p2 rootwait rw
+[    2.390884] 42590000.serial: ttyLP4 at MMIO 0x42590010 (irq = 137, base_baud = 1500000) is a FSL_LPUART
+[    2.400171] serial serial0: tty port ttyLP4 registered
+[    2.405954] 425a0000.serial: ttyLP5 at MMIO 0x425a0010 (irq = 138, base_baud = 1500000) is a FSL_LPUART
+[    2.416129] 44380000.serial: ttyLP0 at MMIO 0x44380010 (irq = 139, base_baud = 1500000) is a FSL_LPUART
+[    2.425524] printk: legacy console [ttyLP0] enabled
+```
+
+`ls -l /dev/ttyLP* /dev/ttyS*` 也只有 `ttyLP0`、`ttyLP5`（外加 ttyS0-3）。
+
+**这三条合起来说明：Linux 域里只有 LPUART0(LPUART1)、LPUART4、LPUART5。整个 Linux 域里根本没有 LPUART3 这个设备。** 而 Harpoon 的 cell 配置把 inmate 控制台设成 LPUART3（`0x42570000`）。
+
+**（3）引脚有没有被 mux 成 UART**
+
+```text
+# grep -i uart /sys/kernel/debug/pinctrl/scmi_dev.8-scmi-pinctrl-imx/pinmux-pins
+pin 116 (uart1rxd): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 117 (uart1txd): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 118 (uart2rxd): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 119 (uart2txd): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+```
+
+整个 `pinmux-pins` 文件一共 129 行，**与 uart 相关的只有上面 4 行**，没有 uart3，也没有 uart4/uart5/uart7。
+
+```text
+# grep -E "pin (18|19) " .../pinmux-pins
+pin 18 (gpioio14): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 19 (gpioio15): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+```
+
+（pin 18 = `GPIO_IO14` = J15-8；pin 19 = `GPIO_IO15` = J15-10。）
+
+### 13.4 怎么读 `UNCLAIMED`：不能说成"引脚是空闲的"
+
+这里是最容易读错、也最容易得出错误结论的地方。
+
+`UNCLAIMED` **不等于"这个引脚没人用、可以随便拿"**。这张表只列出 **SMCU（System Manager，跑在 AON M33 上的 SM 固件）划分给 Linux 域的那部分引脚**；`UNCLAIMED` 的含义只是"当前没有 Linux 驱动在占用它"，**它对 M7 域在干什么完全不知情**。
+
+反例就在本工程里：M7 那边的项目之前用 J15-8 / J15-10 做过一次成功的 GPIO 回环测试，说明**那段时间 M7 确实在用这两个引脚**。如果只看这张表，会误以为它们闲置。
+
+所以正确的说法是：**"从 Linux 域看是空闲的"和"物理上真的空闲"是两回事**，用前者推后者会出错。`实机验证`（对表的读法）+ `推测`（引脚归属，需 SM 配置确认）。
+
+顺带一个更根本的观察：调试路径本身就带 `scmi_dev.8-scmi-pinctrl-imx` 这个名字——**Linux 并不直接写 IOMUX 寄存器**，它是通过 SCMI 协议请求 SM 去改。设备树顶层有一个 `firmware` 节点，就是这套 SCMI 接口的入口。也就是说：**如果 SM 没把某个引脚分配给 Linux 域，Linux 连"把它配成 UART"这个动作都做不了**，这不是权限问题，是根本没这条路。
+
+### 13.5 根因结论
+
+**问题不在接线，不在逻辑分析仪，也不在 FreeRTOS 有没有跑起来。**
+
+- FreeRTOS 确实在写 LPUART3 的寄存器 —— `vmexits_mmio = 1515` 是 `实机验证` 的直接证据。
+- 但 Pro 板上这个引脚的 IOMUX 从来没有被切到 UART3 功能，所以信号根本没有出到 J15-8 这个焊盘上。
+  - `由实测推断`：LPUART3 不属于 Linux 域（`/proc/tty/driver`、dmesg、`pinmux-pins` 三处都没有它），因此 Linux 无法把这个引脚复用到 UART3，也就不会有信号出来。
+  - `推测`：LPUART3 及其引脚可能归 M7 域管。这一条需要 System Manager 的引脚分配配置或 NXP 确认才能定论，目前只是最合理的解释。
+- `imx95-harpoon-freertos.cell` 来自 **i.MX95 19x19 LPDDR5 EVK** 的软件包。在 EVK 上 LPUART3 大概确实是 Linux 域的设备（`推测`，本次没有 EVK 板可验证）；在 FRDM-IMX95-PRO 上不是。这就是"同一个 cell 在 EVK 上能打印、在 Pro 板上静默"的原因。
+
+### 13.6 一处早期理解的纠正：UART3_TXD 和 GPIO_IO14 是同一个焊盘
+
+更早的工作笔记里写过类似"**GPIO_IO14 = 发送 / GPIO_IO15 = 接收**"的说法，把它理解成"这个引脚负责发、那个引脚负责收"。**这是读错了。**
+
+正确的说法是：
+
+| 物理引脚 | 可选身份 A | 可选身份 B | 说明 |
+|---|---|---|---|
+| J15-8（SoC pin 18） | `UART3_TXD` | `GPIO_IO14` | **同一个焊盘的两套身份**，由 IOMUX 复用寄存器二选一，任何时刻只能是一者 |
+| J15-10（SoC pin 19） | `UART3_RXD` | `GPIO_IO15` | 同上 |
+
+也就是说，J15-8 这个焊盘**要么是 UART3 的发送脚，要么是一个普通 GPIO，不可能同时是两者**。IOMUX 寄存器决定当前是哪一种。之前把"两个名字"当成"两个角色分工"，才会推出"接个 USB-TTL 到 J15-8 就能看到 FreeRTOS 打印"这种结论——**只有当引脚被复用成 UART3_TXD 时这句话才成立，而实测它没被复用**（第 13.3 节）。
+
+这一条同时解释了为什么 M7 之前能用 J15-8/J15-10 做 GPIO 回环：那时引脚被配成了 GPIO（身份 B），而不是 UART（身份 A）。
+
+### 13.7 更新后的后续路径
+
+四条路，按现实可行性重排：
+
+**路径 0：逻辑分析仪夹 J15-8 + J15 上的 GND（目的是"确认结论"，不是"找输出"）**
+
+现在做这一步的意义已经变了：不是去碰运气找波形，而是**验证"没有信号"这个判断**。预期结果就是一条直线。
+
+- 采样率 4 MS/s；
+- 在 CH0 上加一个 "Async Serial" 分析器（波特率 115200，8 数据位，1 停止位，无校验，非反相）；
+- 触发条件 CH0 下降沿，采集模式 "Start Capture"；
+- **先按 Start**，然后再执行 `jailhouse cell shutdown freertos`，接着 `jailhouse cell start freertos`。
+
+这样能同时覆盖"inmate 重新初始化 UART"这个动作窗口。如果抓到的是平线，第 13.5 节的结论就得到独立确认；如果意外抓到 0x55/0xAA 之类的数据，那说明判断有漏洞，需要回头重查。
+
+**路径 0.5：把 inmate 控制台换到 LPUART4 或 LPUART5（最现实的一条）**
+
+LPUART4（`0x42590000`）和 LPUART5（`0x425A0000`）**已经注册在 Linux 域里并且完全空闲**（`tx:0 rx:0`，`实机验证`）。把 inmate 的 console 从 LPUART3 改成这两个之一，理论上就能看到输出。
+
+前提是：要么拿到 NXP 针对 Pro 板/这两个 UART 提供的 cell，要么**从源码重建**（`github.com/NXP/harpoon-apps`）——cell 配置和 inmate 里的 console 地址都要改，属于路径 3 的一部分。注意换 UART 还得确认对应引脚是否已复用到 Linux 域，不能想当然。
+
+**路径 1：`jailhouse console -f`**
+
+**已实测，无效，这条关闭**（第 13.2 节）。
+
+**路径 2：问 NXP**
+
+把 LPUART3 在 Pro 板上的归属、以及是否有 Pro 板 Harpoon 支持的问题整理成清单发给 NXP/FAE（见提问清单笔记）。
+
+**路径 3：从源码重建**
+
+用 `harpoon-apps`（west + ARM GCC 14.2）改板级目录、console 地址、cell 配置后重新编译。这是唯一能真正"改对"的路，但成本最高。
+
+### 13.8 待确认
+
+- `待确认`：Pro 板上 LPUART3 及其引脚到底归哪个域。需要 System Manager 的引脚分配配置（本文件目前只能确认"不在 Linux 域"）。
+- `待确认`：换到 LPUART4/5 后，对应引脚是否已在 Linux 域内可用。
+- `待确认`：逻辑分析仪在 J15-8 上抓到的实际波形（预期平线，尚未执行）。
+
+---
+
+## 四、手册版本混用纠错：UM12022（EVK）vs UM12527（Pro）
+
+> 这一节记录一次真实犯错：**把 EVK 的手册当成 Pro 板的手册用**，并因此写出了两处错误结论。
+
+### 14.1 错在哪
+
+早期笔记里写了"Pro 板 J22 只引出 UART1/2/7，所以要确认 LPUART3 是否可用"。这条的出处是 **UM12022**。而 UM12022 是 **IMX95LPD5EVK-19** 板（也就是 EVK）的手册：
+
+- UM12022 里 J22 是一个 **8 针 I2C 排针**；
+- UM12022 里的调试桥是 **FT4232H（U70）**。
+
+这两条**都不适用于 FRDM-IMX95-PRO**。板子不同，接口布局和调试芯片完全不同，照着 EVK 手册数 Pro 板的接口必然出错。
+
+### 14.2 正确的手册与内容
+
+FRDM-IMX95-PRO 对应的是 **UM12527**：
+
+| 手册 | 对应板 | J22 是什么 | 调试串口桥 | 其他 |
+|---|---|---|---|---|
+| UM12022 | IMX95LPD5EVK-19（EVK） | 8 针 I2C 排针 | FT4232H（U70） | 不适用于本板 |
+| **UM12527** | **FRDM-IMX95-PRO（本板）** | **USB Type-C 调试连接器** | **CH9114F（U67）四路 UART USB 桥** | §2.20：J15 是 2x20 针 EXPI 扩展排针，用来引裸信号 |
+
+UM12527 §2.19 说明：A55 / M33 / M7 三个域**共用这一个 Type-C 口**，电脑侧会枚举出 4 个 COM 口；**哪个 COM 对应哪个域并不固定**，NXP 建议把 4 个口都打开再看。
+
+UM12527 §2.20 说明：J15 是 2x20 针的 EXPI（Expansion Interface）排针，用于引出裸信号——这也是"逻辑分析仪夹 J15-8"这个做法的依据（J15-**8** 是排针上的**第 8 脚**，与 SoC 的 `GPIO_IO14` 不是同一编号体系，别混）。
+
+`官方资料明确说明`（UM12527 §2.19、§2.20）。
+
+### 14.3 由此作废的两处结论
+
+1. **"Pro 板 J22 只引出 UART1/2/7"** —— 作废。这是从 EVK 手册抄来的。J22 在 Pro 板上是调试 Type-C，不是排针。已在第一节结论、第二节第七节和第十二小节就地标注。
+2. **"接个 USB-TTL 到 J15-8 就能看到 FreeRTOS 打印"** —— 作废。J15-8 只是裸信号焊盘，能不能看到输出取决于这个焊盘当前被复用成什么。实测它没有被复用成 UART3_TXD（第 13.3 节），所以接上去也不会有信号。J15-8 上要用逻辑分析仪而不是 USB-TTL 去"听"，见路径 0。
+
+### 14.4 教训
+
+查板级信息（排针定义、调试芯片、串口号）时，**先确认手册编号对应的板型**，再抄结论。这个工程同时存在 EVK 和 Pro 两套资料，是最容易串的地方。以后引用板级结论时，在笔记里连同手册编号和章节号一起写。
+
+---
+
+## 五、后续路径优先级汇总
+
+| 优先级 | 路径 | 做什么 | 成本 | 状态 |
+|---|---|---|---|---|
+| 1 | **0.5** | 把 inmate 控制台换到 LPUART4（`0x42590000`）或 LPUART5（`0x425A0000`），二者在 Linux 域已注册且空闲 | 中（需要 NXP 的 cell 或从源码重建） | 待做 |
+| 2 | **0** | 逻辑分析仪夹 J15-8 + J15 GND，4 MS/s，Async Serial 分析器 115200-8-1-N，CH0 下降沿触发，先 Start 再重启 cell | 低（约 10 分钟） | 待做，目的是确认"无信号" |
+| 3 | **2** | 向 NXP/FAE 提问：LPUART3 归属、Pro 板 Harpoon 支持计划、是否有现成 cell | 低 | 待做 |
+| 4 | **3** | 从 `github.com/NXP/harpoon-apps` 源码重建 | 高 | 待做 |
+| — | ~~1~~ | ~~`jailhouse console -f`~~ | — | **已测，无效，关闭** |
+
+### 本节关联
+
+- 姊妹笔记：`Harpoon复现-手把手操作.md`（抽文件、传文件、跑起来的具体命令）
 - 知识库：`i.MX95上Jailhouse与Harpoon的分层与判定方法.md`
 
 <!-- related-generated -->
