@@ -13,6 +13,9 @@ updated: 2026-09-18
 > 一句话：Harpoon 不是"另一条打包烧录的流水线"，而是**另一种运行架构**——
 > 你原来那条 IAR→imx-mkimage→flash.bin→UUU 的流程属于「启动期静态加载」，
 > Harpoon（A55 上跑 FreeRTOS）属于「Linux 运行期动态加载」。
+>
+> **要照着做的话看这篇**：[[10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md|Harpoon 复现：手把手操作]]
+> （每步标了在电脑/板子-U-Boot/板子-Linux 哪个环境操作）。本篇只讲"为什么这样设计"。
 
 ## 一、先对齐：你的 M7 流程 vs Harpoon 流程
 
@@ -54,11 +57,12 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
 完整顺序（等价于 `jh_harpoon.sh start`，实测逐条跑通）：
 
 ```text
-① U-Boot 阶段：预留内存 + 设内核参数（必须在做任何 Jailhouse 事之前）
+① U-Boot 阶段：规定 Linux 只能用哪几块内存 + 设内核参数（必须在做任何 Jailhouse 事之前）
    setenv jh_root_mem 0x58000000@0x90000000,0xc0000000@0x180000000
    setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-arm.mode=nvhe
    run bsp_bootcmd
-   → 起来后 MemTotal 从 ~15.8GB 降到 ~4.3GB，证明保留区已从 Linux 挖走
+   → 起来后 MemTotal 从 ~15.8GB 降到 ~4.19GB，
+     正好等于 jh_root_mem 两块之和（1.375 + 3.0 = 4.375GB）
 
 ② Linux 阶段：把实时性相关环境准备好
    for c in 0..5: echo 1 > .../cpu$c/power/pm_qos_resume_latency_us   # 限制 CPU 恢复延迟
@@ -83,10 +87,12 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
 
 ## 五、关键细节（容易踩的坑）
 
-1. **内存预留必须在 Linux 启动前做**。U-Boot 读 `jh_root_mem`，通过 `ft_board_setup` 重写设备树的
-   `/memory` 节点，把保留区从 Linux 可见内存里挖掉。若 Linux 已经把这块内存用起来，hypervisor
-   就没得用——这是"为什么必须在 U-Boot 里 setenv"的根本原因。
-   副作用：Linux 可用内存变小（实测 MemTotal ≈ 4398132 kB），所以保留区该多大要按需算。
+1. **`jh_root_mem` 规定的是"Linux 能用的内存"，必须在 Linux 启动前设**。U-Boot 读它，通过
+   `ft_board_setup` 重写设备树的 `/memory` 节点，把 Linux 的可用内存**限定**在这些块里。
+   必须在启动前做的原因：Linux 一旦起来就会把物理内存全认下来，之后再想收回来就晚了。
+   **推论（由实测推断，未逐行读 U-Boot 源码确认）**：两块之和 4.375GB ≈ 实测 MemTotal 4.19GB，
+   说明其余内存 Linux 看不到，是留给 Jailhouse 划给 inmate 的；而 inmate 入口 `0xf0000000`(3.75GB)
+   正好落在 Linux 第一块内存（2.25~3.625GB）之外——**这片区域 Linux 碰不到，所以能安全带外来程序**。
 2. **inmate 的入口地址 `-a 0xf0000000` 不是随手写的**，它是 inmate cell 配置里给这块内存的起始地址；
    二进制必须按这个地址链接，否则 start 后直接跑飞。
 3. **inmate 控制台是独立串口**：Harpoon FreeRTOS cell 配置里控制台是 LPUART3（`0x42570000`），

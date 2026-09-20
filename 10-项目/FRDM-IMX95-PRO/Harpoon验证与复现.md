@@ -451,17 +451,17 @@ Hello 166434 from cell!
 
 **全过程没有向任何持久介质写入过 Harpoon 或任何镜像。** 逐项对照：
 
-| 动作 | 写到哪 | 断电后 |
-|---|---|---|
-| 检查下载包（DTB/manifest/容器字符串） | 只读，PC 内存 | 无影响 |
-| `tar -xf` 抽出 harpoon cell/inmate 文件 | 只写 PC 的 `build\rte-extract\` | 无影响 |
-| UUU `boot-evk-container.uuu` | **未执行** | — |
-| 抓启动日志、登录 Linux、查 Jailhouse | 只读 | 无影响 |
-| U-Boot 里 `setenv jh_root_mem / jh_clk` | **只改 U-Boot 内存里的环境副本，没有 `saveenv`** | **丢失，需重做** |
-| `run bsp_bootcmd` 启动 Linux | 只是启动，不改介质 | — |
-| `modprobe jailhouse` + `jailhouse enable` | hypervisor 从 `/lib/firmware/jailhouse.bin` 载入 **RAM** | 丢失 |
-| `jailhouse cell create/load/start` | inmate 二进制载入 **RAM**（入口 `0xf0000000`） | 丢失 |
-| 写日志文件 | PC 的 `F:\project\Learning\RTOS\build\logs\` | — |
+| 动作                                        | 写到哪                                                   | 断电后        |
+| ----------------------------------------- | ----------------------------------------------------- | ---------- |
+| 检查下载包（DTB/manifest/容器字符串）                 | 只读，PC 内存                                              | 无影响        |
+| `tar -xf` 抽出 harpoon cell/inmate 文件       | 只写 PC 的 `build\rte-extract\`                          | 无影响        |
+| UUU `boot-evk-container.uuu`              | **未执行**                                               | —          |
+| 抓启动日志、登录 Linux、查 Jailhouse                | 只读                                                    | 无影响        |
+| U-Boot 里 `setenv jh_root_mem / jh_clk`    | **只改 U-Boot 内存里的环境副本，没有 `saveenv`**                   | **丢失，需重做** |
+| `run bsp_bootcmd` 启动 Linux                | 只是启动，不改介质                                             | —          |
+| `modprobe jailhouse` + `jailhouse enable` | hypervisor 从 `/lib/firmware/jailhouse.bin` 载入 **RAM** | 丢失         |
+| `jailhouse cell create/load/start`        | inmate 二进制载入 **RAM**（入口 `0xf0000000`）                 | 丢失         |
+| 写日志文件                                     | PC 的 `F:\project\Learning\RTOS\build\logs\`           | —          |
 
 换句话说：**这次是"运行时验证"，不是"烧录验证"。** 唯一写入过板子的是……没有。
 
@@ -472,16 +472,16 @@ Hello 166434 from cell!
 
 ### 七、Harpoon 缺什么：与"原厂已有的 Jailhouse"对照
 
-| 组件 | 原厂 Pro 系统 | 下载的 Harpoon 包 | 复现需要做什么 |
-|---|---|---|---|
-| Jailhouse 工具/模块/固件 | ✅ 有（6.18.2 内核版） | ✅ 有（6.12.34 内核版，版本与 Pro 内核不匹配） | 用板载自带的 |
-| `imx95.cell`（root cell） | ✅ 有 | ✅ 有 | 用板载自带的 |
-| 演示 inmate（`uart-demo.bin` 等） | ✅ 有 | ✅ 有 | 已跑通 |
-| **Harpoon FreeRTOS inmate 二进制** | ❌ 无 | ✅ `inmates/freertos/{hello_world,industrial,rt_latency}.bin` | 从包里抽出来传到板上 |
-| **Harpoon cell 配置** | ❌ 无 | ✅ `imx95-harpoon-freertos.cell`（772 B）/ `-industrial.cell`（1028 B） | 同上 |
-| **控制程序/脚本** | ❌ 无 | ✅ `harpoon_ctrl`、`jh_harpoon.sh`、`harpoon.conf`、`harpoon.service` | 同上 |
-| 运行脚本的机器判断 | — | ❌ 只认 EVK/15X15，Pro 会 `Unknown` 退出 | 改脚本或手敲命令 |
-| inmate 控制台串口 | — | LPUART3（`0x42570000`，实测两处 cell 一致） | Pro 板 J22 只引出 UART1/2/7，需确认 LPUART3 是否可用，否则换 UART 重编 cell/bin |
+| 组件                              | 原厂 Pro 系统       | 下载的 Harpoon 包                                                      | 复现需要做什么                                                       |
+| ------------------------------- | --------------- | ------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Jailhouse 工具/模块/固件              | ✅ 有（6.18.2 内核版） | ✅ 有（6.12.34 内核版，版本与 Pro 内核不匹配）                                     | 用板载自带的                                                        |
+| `imx95.cell`（root cell）         | ✅ 有             | ✅ 有                                                                | 用板载自带的                                                        |
+| 演示 inmate（`uart-demo.bin` 等）    | ✅ 有             | ✅ 有                                                                | 已跑通                                                           |
+| **Harpoon FreeRTOS inmate 二进制** | ❌ 无             | ✅ `inmates/freertos/{hello_world,industrial,rt_latency}.bin`       | 从包里抽出来传到板上                                                    |
+| **Harpoon cell 配置**             | ❌ 无             | ✅ `imx95-harpoon-freertos.cell`（772 B）/ `-industrial.cell`（1028 B） | 同上                                                            |
+| **控制程序/脚本**                     | ❌ 无             | ✅ `harpoon_ctrl`、`jh_harpoon.sh`、`harpoon.conf`、`harpoon.service`  | 同上                                                            |
+| 运行脚本的机器判断                       | —               | ❌ 只认 EVK/15X15，Pro 会 `Unknown` 退出                                  | 改脚本或手敲命令                                                      |
+| inmate 控制台串口                    | —               | LPUART3（`0x42570000`，实测两处 cell 一致）                                 | Pro 板 J22 只引出 UART1/2/7，需确认 LPUART3 是否可用，否则换 UART 重编 cell/bin |
 
 ### 八、复现步骤
 
