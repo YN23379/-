@@ -613,49 +613,77 @@ reboot
 **原因**：FreeRTOS 的输出串口是 **LPUART3**（cell 配置里定的），而板子的 J22 只引出了 UART1/2/5/7，
 **LPUART3 的引脚根本没接到任何排针上**。所以不是"程序没跑"，是"它的嘴对着墙说话"。
 
-**要看到输出，必须改 cell 配置，把 inmate 的 console 换到板子上有的串口。**
-（顺带：改成 2 核也是改同一个文件，所以这两件事可以一起做。）
+**要看到输出，必须让 FreeRTOS 的串口有个"听众"。** 三条路，按代价从低到高：
 
-**但这里有个坎**（2026-09-20 查包的结果）：
+### 路径 0（最优先，先试这个）：直接接一根串口线到 J15-8
 
-| 包里的东西 | 是什么 | 能不能用来改配置 |
+**依据**（两处证据拼起来）：
+
+| 结论 | 依据等级 | 出处 |
 |---|---|---|
-| `imx95.cell`、`imx95-harpoon-freertos.cell`、`-industrial.cell` | **预编译好的成品**（二进制） | ❌ 改不了（bvi/hex 硬改不现实） |
-| `harpoon_set_configuration.sh` | 只是**选**用哪套 cell/bin，写进 `/etc/harpoon/harpoon.conf` | ❌ 不生成 cell |
-| `jh_harpoon.sh` | 按 conf 里的路径依次敲 jailhouse 命令 | ❌ 不生成 cell |
-| `.c/.h` 源码 | **包里一个都没有** | — |
+| `UART3_TXD` 与 `GPIO_IO14` 复用、`UART3_RXD` 与 `GPIO_IO15` 复用 | **官方资料明确说明** | EVK 手册 UM12022（`UART3_TXD ... multiplexed with GPIO_IO14`） |
+| `J15-8` = GPIO_IO14、`J15-10` = GPIO_IO15 | **实机验证** | 本工程 M7 项目用 J15-8 短接 J15-10 做 GPIO 回环，OUT/IN 同步成功 |
+| 所以 LPUART3 的 TX 就在 J15-8 上，接 USB-TTL 就能收到 | **待验证**（推断） | 由上两条推出，还没实际接过 |
 
-也就是说：**`.cell` 是在 Harpoon/Jailhouse 源码树里由 C 文件编译出来的，这个包里只有编译结果，没有源。**
-所以要改 console 或核数，得先拿到源码（Real-Time Edge 的 Yocto 源码，含 `meta-nxp-harpoon` 层），
-或者直接问 NXP 要"console 改成 UARTx / CPU 改成 2 核"的现成 cell。
+**接法**：
 
-**下次上班第一件事（约 1 小时，只查不改）**：
-
-```bash
-# 1. 看板子上的 jailhouse 有没有现成的虚拟控制台功能（能把 inmate 输出转到当前串口）
-jailhouse --help
-
-# 2. 看 cell 文件里跟 console/uart 有关的线索（二进制里能捞到一些可读字符串）
-strings /usr/share/jailhouse/cells/imx95-harpoon-freertos.cell | grep -i -E 'console|uart|lpuart|0x4257'
-strings /usr/share/jailhouse/cells/imx95-harpoon-freertos-industrial.cell | grep -i -E 'console|uart|lpuart'
-
-# 3. 确认板子上还装了哪些 harpoon 相关文件（说不定有别的 cell 变体或源码）
-ls -R /usr/share/harpoon/ /etc/harpoon/
-ls -l /usr/share/jailhouse/cells/
+```text
+USB-TTL 转接器            FRDM-IMX95-PRO
+   RXD  ────────────────  J15-8   (GPIO_IO14 / LPUART3_TXD)
+   GND  ────────────────  J15 上任一 GND 针
+   TXD      （不接！）
 ```
 
-**三条路，按代价从低到高**：
+- **只接 RXD 和 GND，不要接 TXD** —— 我们只"听"，不"说"，避免两个输出打架
+- **USB-TTL 必须是 3.3V 电平**的（J15 是 3.3V 系统，接 5V 电平有风险）
+- 波特率按 **115200 8-N-1** 试（不对再试 921600 / 9600）
 
-1. **虚拟控制台**：如果板上的 hypervisor 编译时开了 `JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE`，
-   inmate 的输出可以通过 hypervisor 转到 root cell 的串口（也就是你现在的 COM17）——**不用重编，立刻能看到**。
-   这个要先查（上面第 1、2 条命令就是查它）。
-2. **问 NXP 要配置**：直接说"我要 FreeRTOS 的 console 改成 UART1/UART2/UART7，CPU 用 2 个"，
-   要现成的 cell 文件。这比自己搭环境快得多。
-3. **自己改源码重编**：下载 Real-Time Edge / Harpoon 源码，改 `imx95-harpoon-freertos.c` 里的
-   console 和 CPU 分配，交叉编译出新的 `.cell`。最彻底，但要搭 Yocto 环境，是以天计的活。
+**然后**：跑一遍第 6~13 步（重启 → U-Boot 设参数 → jailhouse enable → cell create/load/start），
+在这个 USB-TTL 的串口窗口里看有没有文字冒出来。
 
-**建议顺序**：先花 1 小时走第 1 条（可能白捡），同时把第 2 条的问题发给 NXP，两条并行；
-只有都走不通才启动第 3 条。
+**如果什么都没有**：说明引脚的 IOMUX 还在 GPIO 功能上（没切到 UART），那就得走下面第 2、3 条。
+
+### 路径 1：试 jailhouse 自带的 console 命令
+
+板上 jailhouse 有 `console [-f|--follow]` 子命令（2026-09-20 实测 `jailhouse --help` 确认）：
+
+```bash
+jailhouse console -f
+```
+
+这个连的是 **hypervisor 自己的控制台**。如果 FreeRTOS 走的是"虚拟控制台"（输出经 hypervisor 转发），
+这里就能看到；但它现在明显是在直接写 LPUART3 的寄存器（`vmexits_mmio` 1515 次占绝对多数），
+所以**大概率看不到 FreeRTOS 的字**，但能看到 hypervisor 的日志（也许有线索）。**成本 5 分钟，值得一试。**
+
+### 路径 2：问 NXP 要配置
+
+直接说清需求要现成的 cell：
+
+> "我要 Harpoon FreeRTOS 的 console 改成板子上引出的串口（UART1/UART2/UART7 任选），
+> 另外 CPU 想用 2 个核，请给对应的 cell 文件。"
+
+比自己搭 Yocto 快得多。
+
+### 路径 3：自己改源码重编（最后才走）
+
+下载 Real-Time Edge / Harpoon 源码（含 `meta-nxp-harpoon` 层），改 `imx95-harpoon-freertos.c` 里的
+console 和 CPU 分配，交叉编译出新的 `.cell`。最彻底，但要搭 Yocto 环境，以天计。
+
+**为什么必须走源码这条路（2026-09-20 查包的结果）**：
+
+| 包里的东西 | 是什么 | 能不能改配置 |
+|---|---|---|
+| `imx95.cell`、`-freertos.cell`、`-industrial.cell` | **预编译成品**（二进制） | ❌ hex 硬改不现实 |
+| `harpoon_set_configuration.sh` | 只是**选**用哪套 cell/bin，写进 `/etc/harpoon/harpoon.conf` | ❌ 不生成 cell |
+| `jh_harpoon.sh` | 按 conf 里的路径依次敲 jailhouse 命令 | ❌ 不生成 cell |
+| `.c / .h` 源码 | **一个都没有** | — |
+
+`.cell` 是在源码树里由 C 文件编译出来的，包里只有结果没有源。
+（板上 `jailhouse` 有 `config create ... [-c CONSOLE]` 子命令能生成**系统/root cell**配置，
+但它生成的是 `imx95.cell` 那一类，不是 inmate cell，帮不上改 FreeRTOS 串口的忙。）
+
+**建议顺序**：先花 10 分钟走**路径 0**（接根线，可能直接就成了）；同时把**路径 2**的问题发给 NXP；
+路径 0 失败再试**路径 1**；都走不通才启动**路径 3**。
 
 ---
 
