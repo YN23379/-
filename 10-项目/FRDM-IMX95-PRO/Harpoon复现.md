@@ -4,7 +4,11 @@ scope: FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）
 doc_type: 教程
 status: 已整理
 evidence: 实机验证
-tags: [Harpoon, Jailhouse, 启动, 多核与异构, i.MX95]
+tags:
+  - Harpoon
+  - Jailhouse
+  - 启动
+  - 多核与异构
 updated: 2026-09-20
 ---
 
@@ -386,10 +390,10 @@ echo c0100000.rpmsg-ca55 > /sys/bus/platform/drivers/imx-rpmsg/unbind
 
 **这三行是干嘛的**（一句话版）：
 
-| 第几行 | 干嘛的 |
-|---|---|
-| 第 1 行 | 让 CPU 核随时能被立刻叫醒，不许睡太沉 |
-| 第 2 行 | 把 CPU 频率策略设成性能优先（稳定一点） |
+| 第几行   | 干嘛的                              |
+| ----- | -------------------------------- |
+| 第 1 行 | 让 CPU 核随时能被立刻叫醒，不许睡太沉            |
+| 第 2 行 | 把 CPU 频率策略设成性能优先（稳定一点）           |
 | 第 3 行 | 让 Linux 先松开一个通信模块，免得跟 FreeRTOS 抢 |
 
 **屏幕上应该看到**：前两行没输出。**第三行会报错**，实测长这样：
@@ -456,11 +460,11 @@ jailhouse cell start freertos
 
 **这三行是干嘛的**：
 
-| 第几行 | 干嘛的 | 类比 |
-|---|---|---|
-| 第 1 行 | 按配置文件划出一个新分区（哪个核、哪段内存归 FreeRTOS） | 划出一间房 |
-| 第 2 行 | 把 FreeRTOS 程序搬进那块内存 | 把家具搬进房间 |
-| 第 3 行 | 把那个核从 Linux 手里拿过来，让 FreeRTOS 开始跑 | 开门营业 |
+| 第几行   | 干嘛的                              | 类比      |
+| ----- | -------------------------------- | ------- |
+| 第 1 行 | 按配置文件划出一个新分区（哪个核、哪段内存归 FreeRTOS） | 划出一间房   |
+| 第 2 行 | 把 FreeRTOS 程序搬进那块内存              | 把家具搬进房间 |
+| 第 3 行 | 把那个核从 Linux 手里拿过来，让 FreeRTOS 开始跑 | 开门营业    |
 
 **关于 `-a 0xf0000000`**：`-a` 后面跟的是"加载地址"，就是第 2 行要把程序放到内存的哪个位置。`0xf0000000` 是 cell 配置里规定好的地址，**照抄，别改**（改了 FreeRTOS 一启动就跑飞）。
 
@@ -1121,12 +1125,12 @@ setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-
 
 这串是传给 Linux 内核的启动参数，四个各有用途：
 
-| 参数 | 干嘛的 | 不设会怎样 |
-|---|---|---|
-| `kvm-arm.mode=nvhe` | 让 Linux 自带的 KVM 用 NVHE 模式 | 虚拟化硬件被 KVM 占着，Jailhouse 起不来 |
-| `kvm.enable_virt_at_load=false` | 加载 KVM 时别立刻接管虚拟化硬件 | 同上，两边抢 |
-| `cpuidle.off=1` | 关掉 CPU 深度休眠 | 分给 FreeRTOS 的核睡过去，叫不醒 |
-| `clk_ignore_unused` | 别自动关掉"没人用"的时钟 | 有些外设时钟被关，起不来 |
+| 参数                              | 干嘛的                       | 不设会怎样                       |
+| ------------------------------- | ------------------------- | --------------------------- |
+| `kvm-arm.mode=nvhe`             | 让 Linux 自带的 KVM 用 NVHE 模式 | 虚拟化硬件被 KVM 占着，Jailhouse 起不来 |
+| `kvm.enable_virt_at_load=false` | 加载 KVM 时别立刻接管虚拟化硬件        | 同上，两边抢                      |
+| `cpuidle.off=1`                 | 关掉 CPU 深度休眠               | 分给 FreeRTOS 的核睡过去，叫不醒       |
+| `clk_ignore_unused`             | 别自动关掉"没人用"的时钟             | 有些外设时钟被关，起不来                |
 
 **为什么要 `run bsp_bootcmd`**：这是板子原厂的"启动 Linux"命令。设完参数必须立刻执行它，因为停在 U-Boot 超时会被看门狗复位。
 

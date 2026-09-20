@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md",
+                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Harpoon复现-手把手操作"
+              "title": "Harpoon复现"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "面试题与面经/笔记/面试/项目/智能安防报警.md",
+                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
                 "collapseAll": true,
                 "extraContext": true,
                 "sortOrder": "alphabetical",
@@ -109,7 +109,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "智能安防报警 的反向链接列表"
+              "title": "反向链接"
             }
           },
           {
@@ -161,13 +161,25 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md",
+                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
               "title": "大纲"
+            }
+          },
+          {
+            "id": "2edee6b8109d6757",
+            "type": "leaf",
+            "state": {
+              "type": "file-properties",
+              "state": {
+                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md"
+              },
+              "icon": "lucide-info",
+              "title": "笔记属性"
             }
           }
         ],
@@ -189,6 +201,21 @@
   },
   "active": "6b0baf922ee7cafd",
   "lastOpenFiles": [
+    "20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md",
+    "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
+    "20-领域/虚拟化与隔离",
+    "10-项目/面试项目/系统健康监测平台.md",
+    "20-领域/Linux/Linux系统编程/内存管理.md",
+    "20-领域/Linux/Linux系统编程/文件与文件系统.md",
+    "20-领域/Linux/Linux系统编程/Linux基础与开发环境.md",
+    "20-领域/Linux/嵌入式Linux.md",
+    "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
+    "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
+    "20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md",
+    "20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md",
+    "20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md",
+    "20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md",
+    "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md",
     "10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md~RFa7d073.TMP",
     "10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md~RFa7b4fb.TMP",
     "10-项目/FRDM-IMX95-PRO/开发日志.md~RF7eb447.TMP",
@@ -198,13 +225,8 @@
     "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md~RF7e4b3c.TMP",
     "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md~RF7e3e2d.TMP",
     "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md~RF7e342a.TMP",
-    "10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md~RF7e2e6d.TMP",
-    "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md~RF7e2b22.TMP",
-    "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
-    "10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md",
     "40-归档/合并前原件/API概念.md",
     "40-归档/合并前原件/LCA.md",
-    "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md",
     "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md",
     "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md",
     "10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md",
@@ -215,16 +237,6 @@
     "00-入口/MOC-领域.md",
     "20-领域/C与C++/C语言/内存与对齐.md",
     "10-项目/面试项目/README.md",
-    "20-领域/C与C++/C语言/数据类型与存储类型.md",
-    "20-领域/C与C++/C语言/基础与进阶总览.md",
-    "20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md",
-    "20-领域/嵌入式通用/模块间通信设计.md",
-    "20-领域/嵌入式通用/原理图基础与阅读方法.md",
-    "20-领域/嵌入式通用/ARM架构.md",
-    "20-领域/嵌入式通用/原码反码补码.md",
-    "20-领域/嵌入式通用/README.md",
-    "20-领域/嵌入式通用/STM32基础.md",
-    "20-领域/数据结构与算法/排序算法.md",
     "90-附件/RTOS/ucosii任务状态.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png"
