@@ -606,6 +606,59 @@ reboot
 
 ---
 
+## 下一步：为什么看不到输出，以及要改什么
+
+**现状**：1 个核跑通了，但 FreeRTOS 的打印一个字都看不到。
+
+**原因**：FreeRTOS 的输出串口是 **LPUART3**（cell 配置里定的），而板子的 J22 只引出了 UART1/2/5/7，
+**LPUART3 的引脚根本没接到任何排针上**。所以不是"程序没跑"，是"它的嘴对着墙说话"。
+
+**要看到输出，必须改 cell 配置，把 inmate 的 console 换到板子上有的串口。**
+（顺带：改成 2 核也是改同一个文件，所以这两件事可以一起做。）
+
+**但这里有个坎**（2026-09-20 查包的结果）：
+
+| 包里的东西 | 是什么 | 能不能用来改配置 |
+|---|---|---|
+| `imx95.cell`、`imx95-harpoon-freertos.cell`、`-industrial.cell` | **预编译好的成品**（二进制） | ❌ 改不了（bvi/hex 硬改不现实） |
+| `harpoon_set_configuration.sh` | 只是**选**用哪套 cell/bin，写进 `/etc/harpoon/harpoon.conf` | ❌ 不生成 cell |
+| `jh_harpoon.sh` | 按 conf 里的路径依次敲 jailhouse 命令 | ❌ 不生成 cell |
+| `.c/.h` 源码 | **包里一个都没有** | — |
+
+也就是说：**`.cell` 是在 Harpoon/Jailhouse 源码树里由 C 文件编译出来的，这个包里只有编译结果，没有源。**
+所以要改 console 或核数，得先拿到源码（Real-Time Edge 的 Yocto 源码，含 `meta-nxp-harpoon` 层），
+或者直接问 NXP 要"console 改成 UARTx / CPU 改成 2 核"的现成 cell。
+
+**下次上班第一件事（约 1 小时，只查不改）**：
+
+```bash
+# 1. 看板子上的 jailhouse 有没有现成的虚拟控制台功能（能把 inmate 输出转到当前串口）
+jailhouse --help
+
+# 2. 看 cell 文件里跟 console/uart 有关的线索（二进制里能捞到一些可读字符串）
+strings /usr/share/jailhouse/cells/imx95-harpoon-freertos.cell | grep -i -E 'console|uart|lpuart|0x4257'
+strings /usr/share/jailhouse/cells/imx95-harpoon-freertos-industrial.cell | grep -i -E 'console|uart|lpuart'
+
+# 3. 确认板子上还装了哪些 harpoon 相关文件（说不定有别的 cell 变体或源码）
+ls -R /usr/share/harpoon/ /etc/harpoon/
+ls -l /usr/share/jailhouse/cells/
+```
+
+**三条路，按代价从低到高**：
+
+1. **虚拟控制台**：如果板上的 hypervisor 编译时开了 `JAILHOUSE_SYS_VIRTUAL_DEBUG_CONSOLE`，
+   inmate 的输出可以通过 hypervisor 转到 root cell 的串口（也就是你现在的 COM17）——**不用重编，立刻能看到**。
+   这个要先查（上面第 1、2 条命令就是查它）。
+2. **问 NXP 要配置**：直接说"我要 FreeRTOS 的 console 改成 UART1/UART2/UART7，CPU 用 2 个"，
+   要现成的 cell 文件。这比自己搭环境快得多。
+3. **自己改源码重编**：下载 Real-Time Edge / Harpoon 源码，改 `imx95-harpoon-freertos.c` 里的
+   console 和 CPU 分配，交叉编译出新的 `.cell`。最彻底，但要搭 Yocto 环境，是以天计的活。
+
+**建议顺序**：先花 1 小时走第 1 条（可能白捡），同时把第 2 条的问题发给 NXP，两条并行；
+只有都走不通才启动第 3 条。
+
+---
+
 ## 第五部分：卡住时的排查表
 
 | 现象 | 大概原因 | 怎么办 |
