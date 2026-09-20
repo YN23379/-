@@ -78,15 +78,16 @@ updated: 2026-09-21
 > **注意一个常见的分类混乱**：不少中文资料把 **KVM 归为 Type 1**。IBM 那篇原文确实这么写
 > （"KVM 本身是一个基于操作系统的 hypervisor"）。但严格说 KVM 是**内核模块**，
 > 加载在 Linux 里，它更接近"混合型"。
->
-> **更准确的划分是三分类**：
->
-> | 类型 | 特征 | 例子 |
-> |---|---|---|
-> | Type 1 裸金属 | 直接跑硬件，无宿主 OS | Xen、ESXi、**Jailhouse** |
-> | Type 2 宿主型 | 依赖宿主 OS，作为普通进程 | QEMU、VirtualBox |
-> | **混合型** | 作为内核模块集成进 OS 内核 | **KVM**、KVM+Xen |
->
+
+**更准确的划分是三分类**
+
+| 类型 | 特征 | 例子 |
+|---|---|---|
+| Type 1 裸金属 | 直接跑硬件，无宿主 OS | Xen、ESXi、**Jailhouse** |
+| Type 2 宿主型 | 依赖宿主 OS，作为普通进程 | QEMU、VirtualBox |
+| **混合型** | 作为内核模块集成进 OS 内核 | **KVM**、KVM+Xen |
+
+
 > **对本项目的意义**：**Jailhouse 是明确的 Type 1**，但它有个特别之处——**它是加载进 Linux 内核的模块**，
 > 却**不依赖 Linux 来跑**。加载后 hypervisor 接管硬件，Linux 自己变成"第一个 guest"。
 > 见 [[20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md|Jailhouse 分区式虚拟化原理]]。

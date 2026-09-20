@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
+                "file": "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Harpoon复现"
+              "title": "Hypervisor虚拟化原理"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
+                "file": "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
                 "collapseAll": true,
                 "extraContext": true,
                 "sortOrder": "alphabetical",
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
+                "file": "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -176,7 +176,7 @@
             "state": {
               "type": "file-properties",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md"
+                "file": "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md"
               },
               "icon": "lucide-info",
               "title": "笔记属性"
@@ -201,6 +201,7 @@
   },
   "active": "6b0baf922ee7cafd",
   "lastOpenFiles": [
+    "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
     "20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md",
     "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
     "20-领域/虚拟化与隔离",
@@ -210,7 +211,6 @@
     "20-领域/Linux/Linux系统编程/Linux基础与开发环境.md",
     "20-领域/Linux/嵌入式Linux.md",
     "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
-    "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
     "20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md",
     "20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md",
     "20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md",
