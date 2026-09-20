@@ -721,6 +721,14 @@ AON M33 上的 SM
 **结论**：LPUART3 的引脚不在这张表里，说明它压根不归 Linux 域。结合此前记录的
 "SM 配置里 LPUART3 分配给 M7（标记 `test`）"，可以判断 **LPUART3 是 M7 的串口**。
 
+**官方文档印证了这一点（UG10170 §1.5）**：
+
+> `Harpoon provides a custom System Manager configuration that describes the hardware used for its applications,
+> such as the TPM and **LPUART usage for its guest cell**.`
+
+也就是说：**guest cell 用哪一路 LPUART，是写在 Harpoon 定制的那份 SM 配置里的**。
+EVK 的 SM 配置给了 LPUART3，Pro 板的 SM 配置没给 —— 这和我们实测到的现象完全吻合。
+
 ### 结论：这是"配置本身在 Pro 板上不成立"，不是"还没调通"
 
 | 环节 | 结论 | 证据等级 |
@@ -730,6 +738,26 @@ AON M33 上的 SM
 | J15-8 是什么 | `pin 18 (gpioio14)`，Linux 域显示 `UNCLAIMED` | **实机验证** |
 | J15-8 上为什么没信号 | LPUART3 引脚不归 Linux 域，写了寄存器也出不来 | **由实测推断** |
 | LPUART3 归谁 | 归 **M7 域** | **推测**，待 SM 配置确认 |
+| guest cell 的 LPUART 由 SM 配置决定 | 是 | **官方资料明确说明**（UG10170 §1.5） |
+| 官方支持这份 cell 用在哪块板 | **i.MX95 19x19 LPDDR5 EVK**，不含 FRDM-IMX95-PRO | **官方资料明确说明**（UG10170 §3.1） |
+| 官方认为应该有输出 | 是，§4.3 写明 `hello_world` 应打印 `INFO: hello_func : Hello world.` | **官方资料明确说明**（UG10170 §4.3） |
+
+**最后一行很重要**：官方**没有**把"inmate 无输出"列为已知问题，反而明确写了应该有输出。
+所以这是**异常状态**，不是"设计如此"，值得追下去。
+
+### 顺带确认：核数我们做对了
+
+UG10170 §1.4 写明 **i.MX 95 的 inmate 就是 CPU5 单核**：
+
+```c
+// For i.MX 95, CPU core 5 is assigned to the cell:
+.cpus = {
+    0b100000,
+    },
+```
+
+**和实机测到的 `1 freertos running 5` 完全一致。** 所以核数没问题，不用改。
+（"2 个核"是额外需求：官方写法是 `.cpus = { 0b110000, }`，但原文只举了 i.MX 8M 的例子。）
 
 ---
 
@@ -832,23 +860,47 @@ Started cell "freertos"
 
 **从头到尾没有一行是 FreeRTOS 打的。** 这印证了 inmate 走的是**直接 MMIO 写串口寄存器**，不是 hypervisor 虚拟控制台。**路径 1 排除。**
 
-### 路径 2：问 NXP 要配置
+### 路径 2：问 NXP 要配置（**现在最推荐**）
 
-直接说清需求要现成的 cell：
+因为已经把问题收敛得很具体了，问法可以很直接：
 
-> "我要 Harpoon FreeRTOS 的 console 改成板子上引出的串口（UART1/UART2/UART7 任选），
-> 另外 CPU 想用 2 个核，请给对应的 cell 文件。"
+> "我手里是 FRDM-IMX95-PRO，想在 A55 上跑 FreeRTOS，用的是官方 Harpoon 方案。
+> 现在能跑起来（`cell list` 显示 `freertos running 5`），但 **inmate 的 console 没有任何输出**。
+>
+> 我查了：
+> - `/proc/tty/driver/*` 里 Linux 域只有 LPUART0/4/5，**没有 LPUART3**；
+> - `pinmux-pins` 里**没有任何 uart3 引脚**；
+> - 逻辑分析仪在 J15-8 上**测不到信号**。
+>
+> UG10170 §1.5 说 guest cell 的 LPUART 是在**定制版 SM 配置**里分配的。是不是 EVK 的 SM 配置把
+> LPUART3 给了 guest cell，而 Pro 板的没有？**能否提供 Pro 板可用的 SM 配置 + cell**，
+> 或者告诉我应该用哪一路 LPUART？"
 
-比自己搭 Yocto 快得多。
+**完整版问题清单**见 [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]。比自己搭 Yocto 快得多。
 
 ### 路径 3：自己改源码重编（最后才走）
 
 > ⚠️ **注意**：路径 3 的源码仓库不是 Harpoon 包里的，要单独从 GitHub 取。
 > 详见后面「三个文件的来源」一节。这里先记住：**`imx95-harpoon-freertos.cell` 的源码在
-> [NXP/harpoon-apps](https://github.com/NXP/harpoon-apps) 仓库，不在你下载的安装包里。**
+> [NXP/harpoon-apps](https://github.com/NXP/harpoon-apps) 仓库（tag `harpoon_3.3.0`），不在你下载的安装包里。**
 
-下载 Real-Time Edge / Harpoon 源码（含 `meta-nxp-harpoon` 层），改 `imx95-harpoon-freertos.c` 里的
-console 和 CPU 分配，交叉编译出新的 `.cell`。最彻底，但要搭 Yocto 环境，以天计。
+**官方给的确切做法**（UG10170 §6.2）：
+
+```bash
+west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww
+cd hww
+west update
+```
+
+**要改的文件**（UG10170 §1.4 给了确切路径）：
+
+| 要改什么 | 文件 | 在哪 |
+|---|---|---|
+| inmate console 串口、CPU 核数 | `configs/arm64/imx95-harpoon-freertos.c` | Harpoon meta-layer 的 Jailhouse recipe 补丁里 |
+| root cell 配置 | `configs/arm64/imx95.c` | 同上 |
+| **guest cell 的 LPUART 分配** | Harpoon **定制版 SM 配置** | `Real-Time Edge SW v3.1 Yocto recipes` 或 `meta-nxp-harpoon`（UG10170 §1.5） |
+
+**注意最后一行**：光改 cell 可能不够，**SM 配置里那份 LPUART 分配也要一起改**。最彻底，但要搭 Yocto 环境，以天计。
 
 **为什么必须走源码这条路（2026-09-20 查包的结果）**：
 
@@ -938,16 +990,46 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 | Jailhouse 上游 | — | `https://github.com/siemens/jailhouse`（Siemens，GPL-2.0） |
 | `real-time-edge-baremetal` | 2025.04 | `https://github.com/nxp-real-time-edge-sw/real-time-edge-uboot` -b `baremetal-uboot_v2025.04-3.3.0` |
 | `real-time-edge-icc` | 1.1 | `https://github.com/nxp-real-time-edge-sw/real-time-edge-icc` |
-| **harpoon-apps**（cell + inmate 源码） | — | `https://github.com/NXP/harpoon-apps` |
+| **harpoon-apps**（cell + inmate 源码） | tag `harpoon_3.3.0` | `https://github.com/NXP/harpoon-apps` |
 | Yocto 层（含 `meta-nxp-harpoon`） | `real-time-edge-3.3.0.xml` | `https://github.com/nxp-real-time-edge-sw/yocto-real-time-edge` -b `real-time-edge-walnascar` |
 
 > **注意**：`SCR` 里**没有单独列出 harpoon-apps**——因为它作为 Yocto 层被整体收进去了。
-> cell/inmate 的 C 源码实际在 [NXP/harpoon-apps](https://github.com/NXP/harpoon-apps)。
-> 官方文档见 [Real-Time Edge User Guide (REALTIMEEDGEUG)](https://www.nxp.com/docs/en/user-guide/REALTIMEEDGEUG.pdf)
-> 与 [Harpoon 用户指南 UG10170](https://www.nxp.com.cn/docs/en/user-guide/UG10170.pdf)。
+
+### 官方用户指南给了准确路径和命令（UG10170）
+
+**Harpoon 用户指南**（`HRPNUG_3.3.pdf`，即 **UG10170 Rev 3.3**，86 页，2025-03-26）把"源码在哪、怎么改"写得很清楚：
+
+| 要知道的事 | 官方原文 / 结论 | 章节 |
+|---|---|---|
+| **cell 配置源码的确切文件** | cell 配置源码**以补丁形式嵌在 Harpoon meta-layer 的 Jailhouse recipe 里**，文件是 `configs/arm64/imx95-harpoon-freertos.c`（hello_world 与 rt_latency 用例） | §1.4 |
+| **root cell 配置** | `configs/arm64/imx95.c`（我们板上那份 `imx95.cell` 就是从它编出来的） | §1.4 |
+| **拉源码的准确命令** | `west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww` 然后 `west update` | §6.2 |
+| 编译需要哪些仓库 | `FreeRTOS-Kernel`、`CMSIS_5`、`mcux-sdk`（FreeRTOS 应用）；`zephyr`、`hal_nxp`（Zephyr 应用）；工业/音频还要 `GenAVB_TSN`、`rtos-abstraction-layer` | §6.1 |
+| **LPUART 归谁配** | `Harpoon provides a custom System Manager configuration that describes the hardware used for its applications, such as the TPM and **LPUART usage for its guest cell**.` | §1.5 |
+
+> ### 🔑 这条最关键：改 console 不只是改 cell
+>
+> UG10170 §1.5 明确说：**guest cell 用哪一路 LPUART，是写在 Harpoon 定制的那份 SM 配置里的**。
+> SM 配置在 `Real-Time Edge SW v3.1 Yocto recipes` 或 `Harpoon meta-layer for i.MX Yocto` 里。
+>
+> **意味着**：EVK 的 SM 配置把 LPUART3 分给了 guest cell，**Pro 板的 SM 配置没有这一条**。
+> 所以想改 console，**要同时改 SM 配置和 cell 配置两处**，不是只改 cell 就行。
+> 这也解释了为什么实测里 `pinmux-pins` 完全没有 uart3——**分配权在 SM 手里**。
 
 **路径 3 要做的事**：取 `harpoon-apps` 源码 → 改 `imx95-harpoon-freertos.c` 里的 console 配置（LPUART3 → LPUART4/5）
-和 CPU 分配（1 核 → 2 核）→ 用 Yocto 环境交叉编译出新的 `.cell` 和 `.bin`。**以天计。**
+和 CPU 分配 → **同时处理 SM 配置里的 LPUART 分配** → 用 Yocto 环境交叉编译出新的 `.cell` 和 `.bin`。**以天计。**
+
+### 官方对 CPU 核数的定义（UG10170 §1.4）
+
+| 板子 | inmate 占哪些核 | 官方原文 |
+|---|---|---|
+| i.MX 8M | CPU3 | `.cpus = { 0b1000, }` |
+| i.MX 93 | CPU1 | `.cpus = { 0b10, }` |
+| **i.MX 95** | **CPU5（单核）** | `.cpus = { 0b100000, }` |
+| 多核 SMP 示例 | （举例是 i.MX 8M 用 2 核） | `.cpus = { 0b1100, }` |
+
+**结论**：**官方 i.MX95 就是 CPU5 单核**，和我们实机测到的**完全一致**。
+"2 个核"是额外需求——要改成 `.cpus = { 0b110000, }` 重编 cell，且官方只在 i.MX 8M 上举过 SMP 的例子。
 
 ### 一句话总结
 
@@ -1056,9 +1138,34 @@ setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-
 - 当时上板的完整记录和原始输出 → [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md|Harpoon 验证与复现]]
 - 判定"厂商包能不能用手头板子"的方法 → [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|Jailhouse 与 Harpoon 的分层与判定]]
 - 引脚所有权怎么查、`UNCLAIMED` 怎么读 → [[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95 引脚控制：IOMUXC 与 RGPIO 的分工]]
-- 要发给 NXP 的问题（已按本次实测更新）→ [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
+- 要发给 NXP 的问题（已按实测 + UG10170 更新）→ [[10-项目/FRDM-IMX95-PRO/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
+- 全部资料索引 → [[10-项目/FRDM-IMX95-PRO/资料清单表.md|资料清单表]]
 
-### 附：资料版本与手册对应关系（容易搞混，务必认准）
+## 附一：官方文档的关键结论（UG10170 Rev 3.3）
+
+**Harpoon 用户指南**就是 `HRPNUG_3.3.pdf`（**UG10170** Rev 3.3，86 页，2025-03-26），
+在 `C:\Users\chen\Desktop\资料\IMX95\`，抽取文本在 `build\pdf-text\HRPNUG_3.3.txt`。
+
+| 我们关心的事 | 官方原文 / 结论 | 章节 |
+|---|---|---|
+| **官方支持哪些板子** | 8M Mini EVKB / 8M Nano EVK / 8M Plus EVK / i.MX 93 EVK / **i.MX 95 15x15 LPDDR4x EVK** / **i.MX 95 19x19 LPDDR5 EVK**——**没有 FRDM-IMX95-PRO** | §3.1 |
+| **i.MX95 给 inmate 几个核** | **CPU5 单核**：`.cpus = { 0b100000, }` | §1.4 |
+| 想用 2 个核 | `For a multicore (SMP) cell, two cores can be used.`（举例是 i.MX 8M `.cpus = { 0b1100, }`） | §1.4 |
+| **cell 配置源码文件** | `configs/arm64/imx95-harpoon-freertos.c`（hello_world / rt_latency）、`configs/arm64/imx95.c`（root cell） | §1.4 |
+| **guest cell 的 LPUART 归谁配** | **Harpoon 定制版 SM 配置**里（`... such as the TPM and LPUART usage for its guest cell`） | §1.5 |
+| 官方启动方式 | `setenv jh_root_dtb imx95-19x19-evk-harpoon.dtb` + `run jh_mmcboot` | §4.2 |
+| 官方跑应用方式 | `harpoon_set_configuration.sh freertos latency` + `systemctl start harpoon` | §4.6 |
+| **官方预期有输出** | `hello_world` 应在 inmate cell console 打印 `INFO: hello_func : Hello world.` / `tic tac tic tac ...` | §4.3 |
+| 拉源码命令 | `west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww` | §6.2 |
+| 已知问题 | HRPN-1191（i.MX95 EVK 上 `jh_mmcboot` 偶发启动失败自动重启）；**没有"inmate 无输出"这一条** | §5 |
+
+**三条要点**：
+
+1. **核数我们做对了** —— 官方就是 CPU5 单核，和实测一致。
+2. **"无输出"是异常，不是设计如此** —— 官方说应该有输出，且没列为已知问题。
+3. **改 console 要动两处** —— cell 配置 **和** 定制版 SM 配置，只改 cell 可能不够。
+
+## 附二：资料版本与手册对应关系（容易搞混，务必认准）
 
 | 手册编号 | 对应板子 | 调试口器件 | J22 是什么 |
 |---|---|---|---|
@@ -1071,3 +1178,10 @@ setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-
 > 因为 A55/M33/M7 的端口映射**不固定**）。
 >
 > **推论**：**J22 没有裸针脚可夹**，逻辑分析仪要夹的是 **J15（2×20 EXPI 排针，UM12527 §2.20）**。
+
+| 文档 | 是什么 | 位置 |
+|---|---|---|
+| **HRPNUG_3.3.pdf** = **UG10170** Rev 3.3 | **Harpoon 用户指南**（86 页） | `C:\Users\chen\Desktop\资料\IMX95\` |
+| **UM12527** | **FRDM-IMX95-PRO** 板手册 | 同上 |
+| **UM12022** | IMX95LPD5EVK-19（EVK）板手册 | 同上 |
+| 原理图 **SPF-95794_B1** | Pro 板原理图 | `...\FRDM-IMX95-PRO_DESIGNFILES\Schematic\` |

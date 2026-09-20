@@ -16,6 +16,40 @@ updated: 2026-09-18
 >
 > **要照着做的话看这篇**：[[10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md|Harpoon 复现：手把手操作]]
 > （每步标了在电脑/板子-U-Boot/板子-Linux 哪个环境操作）。本篇只讲"为什么这样设计"。
+>
+> **官方依据**：本篇的架构描述以 **Harpoon 用户指南 UG10170 Rev 3.3**（`HRPNUG_3.3.pdf`，86 页）为准，
+> 官方文档没写到的部分（Pro 板实机行为）单独标证据等级。
+
+## 〇、官方文档怎么说（UG10170 摘要）
+
+先摆官方定义，后面各节再展开。这一节的内容全部来自 **UG10170 Rev 3.3**，属**官方资料明确说明**。
+
+| 事项 | 官方原文 / 结论 | 章节 |
+|---|---|---|
+| Jailhouse 是什么 | `Jailhouse is a simple hypervisor that assigns hardware resources to a guest OS instead of virtualising them. For instance, a CPU core is statically assigned to a specific guest and is not shared with other guests.` | §1.4 |
+| inmate 是什么 | `Harpoon-apps is a set of real-time application running on Jailhouse's inmate cell. It is built on top of Zephyr or FreeRTOS, using zephyr and/or MCUXpresso drivers.` | §1.3 |
+| cell 配置里写什么 | CPU 核、中断线、内存区域、虚拟 PCI 设备 | §1.4 |
+| **i.MX 95 给 inmate 几个核** | **CPU5 单核**：`.cpus = { 0b100000, }` | §1.4 |
+| 想用 2 个核怎么办 | `For a multicore (SMP) cell, two cores can be used.`（原文举例是 i.MX 8M：`.cpus = { 0b1100, }`） | §1.4 |
+| **cell 配置源码在哪** | Harpoon meta-layer 的 Jailhouse recipe 补丁里：`configs/arm64/imx95-harpoon-freertos.c`（hello_world 与 rt_latency 用例）、`configs/arm64/imx95-harpoon-zephyr.c`、`configs/arm64/imx95.c`（root cell） | §1.4 |
+| **guest cell 的 LPUART 归谁配** | `Harpoon provides a custom System Manager configuration that describes the hardware used for its applications, such as the TPM and LPUART usage for its guest cell.` | §1.5 |
+| SM 配置在哪 | `directly embedded in the Real-Time Edge SW v3.1 Yocto recipes or in the Harpoon meta-layer for i.MX Yocto` | §1.5 |
+| **官方支持哪些板子** | i.MX 8M Mini EVKB / 8M Nano EVK / 8M Plus EVK / i.MX 93 EVK / **i.MX 95 15x15 LPDDR4x EVK** / **i.MX 95 19x19 LPDDR5 EVK**——**没有 FRDM-IMX95-PRO** | §3.1 |
+| 官方怎么启动 | U-Boot 里 `setenv jh_root_dtb imx95-19x19-evk-harpoon.dtb` + **`run jh_mmcboot`** | §4.2 |
+| 官方怎么跑应用 | `harpoon_set_configuration.sh freertos latency` + **`systemctl start harpoon`** | §4.6 |
+| 官方预期输出 | inmate cell console 上应打印 `INFO: hello_func : Hello world.` / `tic tac tic tac ...` | §4.3 |
+| 应用源码怎么拉 | `west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww` | §6.2 |
+| 已知问题 | HRPN-1191：i.MX 95 EVK 上用默认 BSP 启动命令开机、重启后再 `run jh_mmcboot`，会启动失败并自动重启（无功能影响，再执行一次即可） | §5 |
+
+**两条最重要的推论**：
+
+1. **核数没有争议**：官方 i.MX95 就是 **CPU5 单核**给 inmate，和实机测到的一致。
+   "2 个核"是**额外需求**，要自己改 `.cpus` 位图（`0b110000`）并重编 cell。
+2. **改 console 不止改 cell**：UG10170 §1.5 明说 **guest cell 用哪路 LPUART 写在定制版 SM 配置里**。
+   所以 EVK 的 cell 拿到 Pro 板上不通，**光改 cell 可能不够，SM 配置也要一起改**。
+
+> ⚠️ 官方文档（UG10170 §5）里**没有**"inmate 无输出"这条已知问题，
+> 而 §4.3 明确写了应该有输出 → **我们遇到的确实是异常状态，不是设计如此**。
 
 ## 一、先对齐：你的 M7 流程 vs Harpoon 流程
 

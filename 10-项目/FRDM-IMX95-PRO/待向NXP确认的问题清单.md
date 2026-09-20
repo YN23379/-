@@ -63,12 +63,30 @@ jailhouse cell start freertos
 
 **我们的结论（推测，请确认）**：这份 cell 来自 **i.MX95 19x19 LPDDR5 EVK** 的板级包。在 EVK 上 LPUART3 归 Linux 域，在 FRDM-IMX95-PRO 上不归。于是 inmate 老老实实往 LPUART3 的寄存器里写数据，但对应引脚始终没有 mux 到 UART3，芯片外面自然什么都测不到。这属于**配置与来源问题，不是接线问题、也不是工具链问题**。
 
+**读了 UG10170 之后，我们把这个结论又推进了一步（关键）**
+
+对照 Harpoon 用户指南 **UG10170 Rev 3.3（`HRPNUG_3.3.pdf`）**：
+
+- **§1.5**：`Harpoon provides a custom System Manager configuration that describes the hardware used for its applications, such as the TPM and LPUART usage for its guest cell.`
+  → 也就是说 **guest cell 用哪一路 LPUART，是写在 Harpoon 定制的那份 SM 配置里的**，不是只写在 cell 配置里。
+- **§1.4**：cell 配置的源码在 Harpoon meta-layer 的 Jailhouse recipe 补丁里，文件是 `configs/arm64/imx95-harpoon-freertos.c`。
+- **§3.1**：官方支持的板卡只有 **i.MX 95 15x15 LPDDR4x EVK** 和 **i.MX 95 19x19 LPDDR5 EVK**，**没有 FRDM-IMX95-PRO**。
+
+所以我们的理解是：**EVK 的 SM 配置把 LPUART3 分给了 guest cell，而 Pro 板的 SM 配置没有**。
+这就是"改了 cell 也不一定能通"的原因——**要同时改 SM 配置和 cell 配置**。
+
 **请确认并给出修正件：**
 
 1. 在 **FRDM-IMX95-PRO** 上，**LPUART3 的引脚归哪个域所有**？是否 LPUART3 被分配给 **M7** 而不是 Linux 域，这就是没有输出的原因？
-2. 请提供一份 **inmate 控制台改用 LPUART4（`0x42590000`）或 LPUART5（`0x425A0000`）** 的 `imx95-harpoon-freertos.cell`——这两路已经注册在 Linux 域且当前空闲（`tx:0 rx:0`）。
-3. 如果本板 **LPUART4 / LPUART5 没有物理引出**，那么应该用哪一路 LPUART？请一并给出配套的 cell。
-4. **FRDM-IMX95-PRO 是否被 Harpoon / Real-Time Edge 官方支持**？有没有针对该板的 cell 集合？
+2. **能否提供 Harpoon 定制的那份 SM 配置（源码或说明）**，以及对应的 `imx95-harpoon-freertos.c`？我们想看清楚 guest cell 的 LPUART 是怎么分配的，好判断在 Pro 板上应该换成哪一路。
+3. 请提供一份 **inmate 控制台改用 LPUART4（`0x42590000`）或 LPUART5（`0x425A0000`）** 的 `imx95-harpoon-freertos.cell`（含配套 SM 配置）——这两路已经注册在 Linux 域且当前空闲（`tx:0 rx:0`）。
+4. 如果本板 **LPUART4 / LPUART5 没有物理引出**，那么应该用哪一路 LPUART？请一并给出配套的 cell。
+5. **FRDM-IMX95-PRO 是否被 Harpoon / Real-Time Edge 官方支持**？有没有针对该板的 cell 集合？
+6. （核数确认）UG10170 §1.4 写明 i.MX 95 的 inmate cell 是 **CPU5 单核**（`.cpus = { 0b100000, }`），我们的实测与此一致。若要做到 **2 个 A55 核**，官方推荐"SMP cell 里放 2 核"（`.cpus = { 0b110000, }`）还是别的做法？i.MX 95 上有没有已知限制？
+
+> **参考**：UG10170 §1.4 还给了 2 核的写法（原文举例是 i.MX 8M）：
+> `For a multicore (SMP) cell, two cores can be used. For instance, on i.MX 8M: .cpus = { 0b1100, }`
+> —— 即改位图后重编 cell。但如果**官方只在 i.MX 8M 上验证过 SMP**，我们希望确认 i.MX 95 是否同样可用。
 
 ---
 
@@ -91,10 +109,11 @@ jailhouse cell start freertos
 
 请提供：
 
-1. **i.MX95 参考手册（RM）**——重点是 **Boot ROM、Memory Map、TRDC/RDC** 三章。要看的是：LPUART 各实例在 RDC/TRDC 里的默认域归属表、外设 Memory Map，以及 Boot ROM 的启动镜像与前程安排。
-2. **Harpoon 用户指南 UG10170**。
-3. **`imx95-19x19-frdm-pro-root.dtb`**（目前仍然缺失，见问题 1 卡点 2）。
-4. **FRDM-IMX95-PRO 专用的 Jailhouse cell 集合**，或至少一份**书面支持声明**：本板在 Harpoon / Real-Time Edge 里是否被支持、支持到什么程度。
+1. **i.MX95 参考手册（RM）**——重点是 **Boot ROM、Memory Map、TRDC/RDC** 三章。要看的是：LPUART 各实例在 RDC/TRDC 里的默认域归属表、外设 Memory Map，以及 Boot ROM 的启动镜像与前置安排。
+2. ~~**Harpoon 用户指南 UG10170**~~ → **已拿到**（`HRPNUG_3.3.pdf`，Rev 3.3），不用再给。
+3. **Harpoon 定制版 SM 配置**（UG10170 §1.5 提到它描述了 guest cell 的 TPM / LPUART 分配）——**这是解决"看不到输出"的关键**，也是我们目前最缺的一份。
+4. **`imx95-19x19-frdm-pro-root.dtb`**（目前仍然缺失，见问题 1 卡点 2）。
+5. **FRDM-IMX95-PRO 专用的 Jailhouse cell 集合**，或至少一份**书面支持声明**：本板在 Harpoon / Real-Time Edge 里是否被支持、支持到什么程度。
 
 ### 资料出处与适用范围说明（便于你们判断我们缺什么）
 
@@ -104,6 +123,7 @@ jailhouse cell start freertos
 | Jailhouse 二进制、`imx95.cell` | 板子原厂 rootfs | 无源码配置说明（哪个域拿哪些外设） |
 | `imx95-harpoon-freertos.cell`、`rt_latency.bin` | Harpoon v3.5 / RTE 3.3 包（在 `rootfs.tar.zst` 内，`usr/share/jailhouse/cells/` 与 `usr/share/harpoon/inmates/freertos/`） | 是 EVK 的，不是 Pro 的；且包内**无 `.c` 源码**，源码在 `github.com/NXP/harpoon-apps` |
 | 板级原理图 SPF-95794_B1、UM12527 | NXP 公开文档 | 引脚到域的归属表（J15/J22 那一段） |
+| **Harpoon 用户指南 UG10170 Rev 3.3** | NXP 公开文档（`HRPNUG_3.3.pdf`，86 页） | **已有**；但 §1.5 提到的**定制版 SM 配置**我们拿不到，见问题 3 第 3 条 |
 
 我们的复现过程、每一步命令和板上原始 log 记在 [[10-项目/FRDM-IMX95-PRO/Harpoon复现-手把手操作.md|Harpoon 复现：手把手操作]] 里，需要的话可以直接对照。
 
@@ -118,6 +138,9 @@ jailhouse cell start freertos
 | J22 调试口的硬件形态 | J22 是 **USB Type-C**，经 **CH9114F 四路 UART 桥**接到 SoC，4 个 COM 口就是这颗桥的 4 个通道 | UM12527 §2.19（**官方资料明确说明**） |
 | 串口物理通道与域的对应 | CH9114F 各通道到 A55 / M33(SM) / M7 的映射**官方明确写了"不固定"**，不能当成 COM 号到核的固定映射 | UM12527 §2.19 + `mx95frdm-pro.cfg`；**实机验证**当前这台机器上是 COM17=LPUART1、COM18=LPUART7、COM19=LPUART2 |
 | Pro 板能否用 Jailhouse | 能，已实机跑通 Harpoon 的 FreeRTOS inmate（A55 CPU5）；只是 inmate 控制台这一路 UART 的引脚没配起来（见问题 1） | `jailhouse cell list` / `cell stats`、`jailhouse console -f`、`/proc/tty/driver/*`、pinctrl debugfs（**实机验证**） |
+| inmate 分几个核 | **CPU5 单核**，与官方定义一致；UG10170 §1.4 原文 `.cpus = { 0b100000, }` | UG10170 §1.4（**官方资料明确说明**）+ 实机 `cell list`（**实机验证**） |
+| 官方支持哪些板子 | 只有 **i.MX 95 15x15 LPDDR4x EVK** 和 **i.MX 95 19x19 LPDDR5 EVK**，**不含 FRDM-IMX95-PRO** | UG10170 §3.1（**官方资料明确说明**） |
+| 官方预期应该有输出 | 跑 `hello_world` 时 inmate cell console 应打印 `INFO: hello_func : Hello world.` / `tic tac tic tac ...` | UG10170 §4.3（**官方资料明确说明**）——所以"看不到输出"确实是异常 |
 
 
 <!-- related-generated -->
