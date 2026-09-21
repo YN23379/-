@@ -1012,7 +1012,7 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 
 **结论**：**官方 i.MX95 就是 CPU5 单核**，和我们实机测到的**完全一致**。
 "2 个核"是额外需求——要改成 `.cpus = { 0b110000, }` 重编 cell，且官方只在 i.MX 8M 上举过 SMP 的例子。
-
+能够
 ### 一句话总结
 
 > **三个文件都是 Harpoon 包（Real-Time Edge 3.3，EVK 版）里的**，
@@ -1024,58 +1024,93 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 
 ## 换成自己编译的 bin 要改什么
 
-### 自己的 bin 怎么来
+### 开发流程：在电脑上编，不在板子上编
 
-**不需要打包，不需要加容器。** FreeRTOS 应用直接编成裸二进制，用 `jailhouse cell load` 装载。
+**编译全部在电脑（或 WSL）里做，板子上只放编好的 `.bin`。** 板子不装编译器。
 
-官方构建流程（UG10170 §6.2.2.1，`官方资料明确说明`）：
+```text
+【电脑/WSL】
+  1. 取源码（west + git）
+  2. 装 AArch64 交叉工具链
+  3. 改代码
+  4. 编译 → 得到 xxx.bin
+        ↓ scp
+【板子】
+  5. 把 bin 放到 /usr/share/harpoon/inmates/freertos/
+  6. jailhouse cell load freertos xxx.bin -a 0xf0000000
+  7. jailhouse cell start freertos
+```
+
+**为什么不在板子上编**：板子上没有编译器、编译 FreeRTOS + MCUXpresso SDK 很慢、
+交叉编译本来就该在宿主机做。**WSL 里做完全可以**，只要把源码和工具链装在 WSL 里。
+
+### 源码从哪来
+
+**三个仓库，都从 GitHub 取**：
+
+| 要什么 | 仓库 | 取法 |
+|---|---|---|
+| **FreeRTOS 示例应用**（含参考代码、链接脚本、MMU 配置） | `github.com/NXP/harpoon-apps` | `west init -m ... --mr harpoon_3.3.0` |
+| **FreeRTOS 内核** | 由 west 自动拉 | `west update` 自动处理 |
+| **MCUXpresso SDK 驱动** | 由 west 自动拉 | 同上 |
+
+**`west` 是个项目管理工具**（Zephyr 生态用的），它按 `harpoon-apps` 里的清单
+**自动把依赖的仓库都拉下来**（FreeRTOS-Kernel、CMSIS_5、mcux-sdk 等），不用一个个手动 clone。
+
+### 完整命令（含 WSL 环境准备）
 
 ```bash
-# 1. 取源码
-west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww
-cd hww && west update
+# --- WSL 里做 ---
 
-# 2. 装交叉工具链（A 核是 AArch64，不是 M 核那套）
+# 0. 装基础工具
+sudo apt install git python3-pip cmake ninja-build
+pip install west
+
+# 1. 拉源码
+west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww
+cd hww
+west update          # 这一步会把 FreeRTOS-Kernel、mcux-sdk 等都拉下来，比较久
+
+# 2. 装 AArch64 交叉工具链（注意：不是 M 核那套 arm-none-eabi）
 wget https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
 tar -C /opt/ -xvf arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
 export ARMGCC_DIR=/opt/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-elf
 
 # 3. 编译
-cd harpoon-apps/<应用>/freertos/boards/<板子>/armgcc_aarch64
+cd harpoon-apps/<应用>/freertos/boards/imx95lpd5evk19/armgcc_aarch64
 ./build_ddr_release.sh
-# 产物：ddr_release/<应用>.bin
+# 产物在 ddr_release/<应用>.bin
 ```
 
-| 参数 | 取值 |
-|---|---|
-| `<应用>` | `hello_world`、`rt_latency`、`audio`、`industrial`、`virtio_net` |
-| `<板子>` | **`imx95lpd5evk19`**（19x19 EVK）、`imx95lp4xevk15`（15x15） |
+**改自己的代码改哪里**：`harpoon-apps/<应用>/` 目录下，`main.c` 是入口，
+板级代码在 `boards/<板子>/`（时钟、引脚、MMU 配置）。想加自己的功能，复制一个现成应用改最省事。
 
-**关键点**：**工具链是 GNU Arm AArch64 的 GCC 13.2.Rel1**，不是 M7 那套 `arm-none-eabi`。A55 是 64 位 AArch64。
+### 工具链一共要几套
 
-**和 M7 的对比**：
+**两套，用途不同**：
 
-| | M7 方案 | Harpoon 方案 |
+| 编什么 | 工具链 | 去哪拿 |
 |---|---|---|
-| 编译目标 | Cortex-M7（32 位） | **Cortex-A55（AArch64，64 位）** |
-| 要不要打包进容器 | **要**（`imx-mkimage` → `flash.bin`） | **不要**，直接是 `.bin` |
-| 怎么上板 | UUU 烧录 | `scp` 拷贝 + `cell load` |
-| 链接地址 | M7 的 TCM 地址 | **cell 规定的 `0xf0000000`** |
+| **A55 上的 FreeRTOS / cell 配置** | **GNU Arm AArch64 GCC 13.2.Rel1** | ARM 官网下载 |
+| **Linux 侧的 `harpoon_ctrl`**（可选） | **Poky/Yocto 的 armv8a 工具链** | 用 Yocto `bitrate ... -c populate_sdk` 生成 |
 
-**所以你的记忆没错：不需要容器。**
+**只跑 FreeRTOS 的话，第一套就够**。第二套是给 Linux 用户态程序用的（比如 `harpoon_ctrl`，
+用来和 inmate 通信），不做核间通信可以不装。
 
-### 自己的 bin 要注意什么（IMPORTANT）
+**所以不需要容器**：编译产物就是一个 `.bin`，直接 scp 到板子上用 `cell load` 装载。
+
+### 自己的 bin 要注意什么
 
 | 项 | 要求 |
 |---|---|
 | **链接地址** | 必须和 cell 里给 inmate 的内存段一致（现在是 `0xf0000000`） |
 | **架构** | AArch64，不是 ARM 32 位 |
-| **MMU/缓存配置** | 参考官方的 `app_mmu.h`——inmate 要自己建页表映射设备内存 |
-| **外设初始化** | inmate 要自己初始化用到的外设（时钟、引脚），**不能指望 Linux 帮它** |
+| **MMU/缓存配置** | 参考官方的 `app_mmu.h`，inmate 要自己建页表映射设备内存 |
+| **外设初始化** | inmate 要自己初始化用到的外设（时钟、引脚），不能指望 Linux 帮它 |
 | **入口** | 裸机入口，FreeRTOS 的 `main` 之前那一段 |
 
-> **能不能用 IAR 编**：IAR 支持 AArch64，但**官方参考流程用的是 GCC + CMake**。
-> 用 IAR 要自己做链接脚本和启动代码，**建议先照官方 GCC 流程走通再考虑换工具链**。
+> **能不能用 IAR 编**：IAR 支持 AArch64，但官方参考流程用的是 GCC + CMake。
+> 用 IAR 要自己做链接脚本和启动代码，建议先照官方 GCC 流程走通再考虑换工具链。
 
 ### cell 文件要改什么
 
@@ -1102,6 +1137,69 @@ cd harpoon-apps/<应用>/freertos/boards/<板子>/armgcc_aarch64
 
 如果改的是**外设归属**（不只是内存大小），**SM 配置可能也要一起改**。UG10170 §1.5 明说 guest cell 的 LPUART 分配写在 Harpoon 定制的 SM 配置里。
 
+**改 SM 的成本比改 cell 大得多**，见下面一节。
+
+---
+
+## 改 SM 要动整套启动镜像
+
+### 为什么改 SM 比改 cell 麻烦
+
+| | 改 cell | 改 SM |
+|---|---|---|
+| 产物 | 一个 `.cell` 文件（几百字节） | **SM 固件 `.bin`** |
+| 怎么生效 | scp 到板子上，`cell create` 时读 | **必须重新打包进启动容器、重新烧录** |
+| 影响 | 只影响那个 cell | **影响整块板子的启动** |
+| 风险 | 低（改错了重来就行） | 高（烧错了板子起不来） |
+
+**所以改 SM 之前必须先问 NXP 技术人员**，因为牵扯的东西多：
+
+- SM 源码的**板级配置**（`mx95xxx.cfg`，写清了哪个 LM 拿哪些外设）
+- 需要重新编译出 SM 的 `.bin`
+- 要用 `imx-mkimage` **重新打包启动容器**
+- 要重新烧录到板上（UUU 或 SD 卡）
+
+### 启动容器（`flash.bin`）里到底装了什么
+
+**它里面不止一个 bin，而是好几个镜像拼在一起。** 下面是本项目容器里**实际抽出来的文件名**
+（对 `imx-boot-imx95-19x19-lpddr5-frdm-pro-sd.bin-flash_a55` 抽字符串得到，`源码确认`）：
+
+| 容器里的文件 | 跑在哪个核 | 是什么 |
+|---|---|---|
+| `oei-m33-ddr.bin`、`m33-oei-ddrfw.bin` | AON M33 | **DDR 初始化固件**（上电最早跑的一批） |
+| `lpddr5_imem_v202311.bin`、`lpddr5_dmem_v202311.bin` | DDR PHY | LPDDR5 的训练固件（imem/dmem 是 PHY 的指令和数据） |
+| （SM 固件） | **AON M33** | System Manager，容器里以镜像条目存在 |
+| `gpd.tee.*.bin` | A55 / TEE | **OP-TEE** 相关固件 |
+| `imx95-19x19-frdm-pro.dtb` | A55 | 设备树 |
+| `imx95-19x19-frdm-pro-root.dtb` | A55 | Jailhouse 用的 root 设备树 |
+| `setup.bin`、`os_cntr_signed.bin` | — | 容器结构里的条目（容器头/签名相关） |
+
+**几个要点**：
+
+1. **DDR 初始化固件也在容器里**。这印证了前面 SM 那节讲的：DDR 是"由 M33 ROM 调用一段固件"初始化的。
+2. **`.dtb` 也打包在容器里**，不是单独烧的。
+3. **Linux 内核和根文件系统不在这个容器里**——它们单独放在 boot 分区（eMMC），U-Boot 运行时去读。
+
+**所以三个都是 bin 吗？** 大体是，但**生成方式不同**：
+
+| 镜像 | 谁生成的 | 工具链 |
+|---|---|---|
+| SM 固件 | SM 源码 | Cortex-M33 工具链 |
+| M7 固件 | M7 工程 | IAR / GCC（Cortex-M7） |
+| DDR 固件 / OEI | NXP 提供 | 不开放 |
+| BL31、U-Boot | ATF / U-Boot 源码 | AArch64 工具链 |
+| **Linux 不是"一个 bin"** | 内核编译 | 内核 `Image` + `.dtb` + **rootfs**（一大堆文件）三部分 |
+
+**这就是单片机和多核板子的本质区别**：
+
+> 单片机上，"程序"只有一个，烧一个 bin 就完事。
+> 多核板子上，**每个核都要有自己的固件**，启动有先后顺序，
+> 所以要把这些固件**按约定格式打包成一个大文件**，交给 Boot ROM 分发。
+> 这个打包过程就是 `imx-mkimage` 干的事。
+
+**关于"Linux 怎么跑在一块什么都没有的板子上"** —— 这个问题已记到
+[[00-入口/待解疑问.md|待解疑问]]，是个值得单独搞清的大题目。
+
 ---
 
 ## .cell 是怎么编译出来的
@@ -1115,11 +1213,13 @@ configs/arm64/imx95-harpoon-freertos.c   ← C 源码（一个结构体初始化
 imx95-harpoon-freertos.cell              ← 最终文件
 ```
 
-**本质**：那个 `.c` 文件里就一个 `struct` 初始化，编译出来就是这个结构体的内存布局——这也是为什么我们前面能直接按偏移解出 `name`、内存段等内容。
+**本质**：那个 `.c` 文件里就一个 `struct` 初始化，编译出来就是这个结构体的内存布局。这也是为什么前面能直接按偏移解出 `name`、内存段等内容。
 
-**编译工具**：Jailhouse 源码树自带的构建系统，在 `harpoon-apps` 里通过 Jailhouse recipe 的补丁嵌入。官方给出的是从 `west` 拿源码后按 Yocto 流程编。
+**工具链**：就跟着 `harpoon-apps` 那套走，**不需要额外装 cell 专用工具**。
+Jailhouse 的 cell 配置源码通过 recipe 补丁嵌在 Harpoon meta-layer 里，
+按 UG10170 §6.2 的流程取到源码后一起编。
 
-**实操建议**：拿到源码后，改 `configs/arm64/imx95-harpoon-freertos.c`，按 Harpoon 的构建流程重编，产物会落到 rootfs 的 `/usr/share/jailhouse/cells/`。
+**实操**：改 `configs/arm64/imx95-harpoon-freertos.c` → 按 Harpoon 构建流程重编 → 产物落到 rootfs 的 `/usr/share/jailhouse/cells/`。
 
 ---
 
