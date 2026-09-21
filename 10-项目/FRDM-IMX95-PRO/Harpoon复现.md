@@ -612,26 +612,6 @@ reboot
 
 ## 下一步：为什么看不到输出，以及要改什么
 
-### 先说结论（2026-09-20 当天查清了，比"接线"这一步更根本）
-
-> **看不到输出，不是接线问题，也不是逻辑分析仪设置问题。**
-> **是这份从 EVK 拿来的 cell 把 inmate 的 console 配在了 LPUART3，而 LPUART3 在这块 Pro 板上压根不归 Linux 域管。**
-> 引脚控制权不在 Linux 手里，inmate 就算把寄存器写穿了，信号也出不了芯片。
-
-**完整链条（每一环都有实测证据）**：
-
-```text
-FreeRTOS inmate 跑在 A55 CPU5（属于 Linux 域）
-   ↓ 它往 LPUART3 的数据寄存器写     ← vmexits_mmio 1515 次，证明写了
-   ↓
-LPUART3 的引脚要在 IOMUX 里切到 UART3_TXD 功能，才出得来信号
-   ↓ 但引脚控制权归 SM 分配，Linux 域要经 SCMI 申请
-   ↓ Linux 域里根本没有 LPUART3 这个设备     ← 见下面证据 1、2
-结果：J15-8 上永远不会有信号
-```
-
-## 下一步：为什么看不到输出，以及要改什么
-
 ### 证据 1：Linux 域里只有 3 个 LPUART，没有 LPUART3
 
 **[板子-Linux]** 敲（这是驱动自己报的，最硬）：
@@ -1066,335 +1046,146 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 
 ---
 
-## 第六部分：原理（先照着做完，再回来看这个）
-
-### 原理速览：真正要吃透的只有 3 块
-
-流程步骤很多，但**大部分细节不用记**。先看这张表，知道哪些该花时间：
-
-| 步骤                              | 要不要懂原理   | 理由                      |
-| ------------------------------- | -------- | ----------------------- |
-| 传文件进板子                          | ❌ 不用     | 就是拷贝，和方案无关              |
-| **U-Boot 设内存参数**                | ✅ **必须** | 整个方案的地基：凭什么 Linux 会让出内存 |
-| Linux 三行环境配置                    | ⚠️ 知道大概  | 只为实时性数据好看，不影响跑通         |
-| **`modprobe` + `enable`**       | ✅ **必须** | hypervisor 怎么"上位"       |
-| **`create` / `load` / `start`** | ✅ **必须** | cell 机制的核心              |
-| 传文件的路径、命令拼写、报错处理                | ❌ 不用     | 查文档就行                   |
+## 第六部分：原理
 
 ### 一句话说清这个方案
 
-> **Harpoon 方案就是在 Linux 运行的时候，由 Jailhouse 接管硬件资源（CPU 核、内存、外设），
-> 把这些资源重新分配和隔离给不同的操作系统，让它们各自独占分到的那部分、并行运行、互不干扰。**
->
-> **分配方案写在 cell 文件里，是静态的——改了要重新生成 cell 再加载。**
+Harpoon 方案就是在 Linux 运行的时候，由 Jailhouse 接管硬件资源（CPU 核、内存、外设），把这些资源重新分配和隔离给不同的操作系统，让它们各自独占分到的那部分、并行运行、互不干扰。分配方案写在 cell 文件里，是静态的——改了要重新生成 cell 再加载。
 
-**注意主语**：接管硬件的是 **Jailhouse 本体（`jailhouse.ko` 内核模块）**，
-`jailhouse` 那个命令行只是操作界面。所以是"**由** Jailhouse 接管"，不是"通过 Jailhouse 接管"。
+注意主语：接管硬件的是 Jailhouse 本体（`jailhouse.ko` 内核模块），`jailhouse` 命令行只是操作界面。是"由 Jailhouse 接管"，不是"通过 Jailhouse 接管"。
 
-**为什么必须"Linux 跑着的时候"做**：A55 上原本跑的就是 Linux，
-**没有"Linux 还没起来"的时刻**可以给你先安排 FreeRTOS。所以只能在 Linux 起来之后现切。
+### 具体步骤
 
-### "动态加载"到底指什么（容易误解，先说清）
+**1. 放文件**
 
-说这个方案是"**运行期动态加载**"时，**"动态"说的是 hypervisor 什么时候被装进去，不是指配置能随便改**。
-这两个层面必须分开：
+把 root 和 inmate 的 cell 配置文件放到板上对应路径（`/usr/share/jailhouse/cells/`），把要运行的 inmate 程序放到 `/usr/share/harpoon/inmates/freertos/`。
 
-| 说的是什么 | 动态还是静态 | 说明 |
-|---|---|---|
-| **Jailhouse 什么时候被装进去** | **动态** | Linux 已经跑起来了，才 `modprobe` 把模块插进去。**不用重新烧板子** |
-| **资源怎么分配（cell 配置）** | **静态** | `.cpus`、内存段、外设都**编译进 cell 文件**，运行时改不了 |
+**2. 让 Linux 把内存让出来（必须在 Linux 启动前做）**
 
-**对比你熟悉的 M7 方案就清楚了**：
+FreeRTOS 需要一块自己的内存，但 Linux 启动时会把内存全部认领。这里要分两种情况：
 
-```text
-M7 方案：     FreeRTOS 固件打包进 flash.bin，开机时由 SM 加载
-              → 上电前就得决定好，改固件要重新烧录              静态
+- **有官方 dtb 时**（EVK 有）：直接换一份为 Jailhouse 准备的设备树，不用手敲内存参数。
+  ```bash
+  U-Boot > setenv jh_root_dtb imx95-19x19-evk-harpoon.dtb
+  U-Boot > run jh_mmcboot
+  ```
+  这份 dtb 的 `/memory` 节点已经是改小的，并且预留了 hypervisor 要用的内存。`jh_mmcboot` 这个宏里已经写好了 `jh_root_mem` 和 `jh_clk` 的值，所以只要指向它就行。
 
-Harpoon 方案： Linux 已经跑起来了，此时才敲命令把 Jailhouse 装进去
-              → 系统运行中才加载，不用重新烧板子                动态
-```
+- **没有 dtb 时**（Pro 板就是这样，`jh_root_dtb` 指向的 `imx95-19x19-frdm-pro-root.dtb` 在板上不存在）：只能进 U-Boot 手工做 `jh_mmcboot` 里的事。
+  ```bash
+  U-Boot > setenv jh_root_mem 0x58000000@0x90000000,0xc0000000@0x180000000
+  U-Boot > setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-arm.mode=nvhe
+  U-Boot > run bsp_bootcmd
+  ```
 
-> **一句话**：**hypervisor 是运行期动态加载的；加载之后，资源分配是静态的。**
->
-> **这个"静态"正是本项目的卡点**：Harpoon 包里**只有编译好的 `.cell`，没有源码**，
-> 所以想改 console 串口或 CPU 核数，只能去 `harpoon-apps` 取源码重编
-> （见后文「路径 3」和「三个文件的来源」）。
+  `jh` 就是 Jailhouse 的缩写。这两条本来是板子启动容器里 `jh_mmcboot` 宏的一部分（从 `imx-boot-*.bin` 抽字符串确认），所以官方本来就有这套在 U-Boot 里调整的做法。
 
-### 逐步理解：四条命令各自在干什么
+  `jh_root_mem` 的格式是 `大小@起始地址`：1.375GB@2.25GB + 3.0GB@6GB，共 4.375GB。U-Boot 用 `fdt_fixup_memory_banks()` 改设备树的 `/memory` 节点，Linux 启动后就只认这么多。实测 `MemTotal: 4398132 kB`（4.19GB），和 4.375GB 对得上。
 
-**核心框架**：
+`jh_clk` 里四个参数，两个是关键的：`kvm-arm.mode=nvhe`（让 Linux 自带的 KVM 不占用虚拟化硬件，否则 Jailhouse 起不来）和 `cpuidle.off=1`（关掉 CPU 深度休眠，否则分给 FreeRTOS 的核叫不醒）。
 
-> Linux 本来独占整台机器。Harpoon 做的事，是在 Linux 跑着的时候，从它手里"切"出一部分硬件
-> （1 个核 + 一段内存 + 一个串口），交给另一个操作系统（FreeRTOS）单独用。切完两边同时跑，互不干扰。
->
-> **切蛋糕的是 Jailhouse，切的方案写在 `.cell` 文件里。**
+**为什么内存要在启动前让，CPU 和外设不用？**
 
-### 第一块：U-Boot 阶段为什么要改内存
+Linux 启动时会把内存、CPU、外设全部认领，三者没有本质区别。区别在于**运行期再改的代价不一样**：
 
-**要解决的问题**：FreeRTOS 需要一块自己的内存。如果 Linux 把 16GB 全认了，FreeRTOS 住哪儿？
+- **内存**：这块内存已经进了 Linux 的页表，可能已被进程、页缓存、DMA 用着。运行期抽走要先把里面的东西搬走、改页表、通知所有使用方，代价极高。而在 Linux 启动前改设备树，Linux 从建立起就不知道这块内存存在，**不需要任何人配合**。
+- **CPU**：核可以停下来。`cell start` 时把某个核从 Linux 调度器里拿走交给 inmate，Linux 只是少一个核，不用搬迁任何数据。
+- **外设**：卸载驱动就能交出去，前提是它没有正在处理的 DMA 或缓冲数据。
 
-**做法**：启动 Linux 前先告诉它"你只有 4.375GB"。
+所以不是内存特殊，而是**内存里装着 Linux 的数据，抽走等于要它搬家**。
+
+（依据：Jailhouse 官方文档在其它板子的部署说明里也要求用内核启动参数 `mem=` 预留内存，见 [setup-on-emtrion-emcon-rz-boards.md](https://raw.githubusercontent.com/siemens/jailhouse/44e19da09b6614146bec15ff1529359dddb02b0c/Documentation/setup-on-emtrion-emcon-rz-boards.md)；"CPU 和外设可运行期交接"由本项目 `nproc` 6→5 实机验证，外设部分为推测。）
+
+**3. 进 Linux，启动 Jailhouse**
 
 ```bash
-setenv jh_root_mem 0x58000000@0x90000000,0xc0000000@0x180000000
+modprobe jailhouse
 ```
 
-格式 **`大小@起始地址`**，逗号分隔两块：1.375GB@2.25GB + 3.0GB@6GB = **共 4.375GB**。
+把 hypervisor 模块装进 Linux。这一步只是把模块加载进来，还没有虚拟化任何东西。
 
-**原理**：U-Boot 去改设备树
+**4. enable：Jailhouse 接管硬件，Linux 变成 cell 0**
 
-```text
-U-Boot 读到 jh_root_mem
-   ↓ ft_board_setup() 函数
-   ↓ fdt_fixup_memory_banks()
-把设备树 /memory 节点从"16GB"改成"这两块，共 4.375GB"
-   ↓
-Linux 启动，只认这 4.375GB
+```bash
+jailhouse enable /usr/share/jailhouse/cells/imx95.cell
 ```
 
-**实测验证**：`MemTotal: 4398132 kB`（4.19GB），和 4.375GB 对得上（差的是内核自己留的）。
-
-**为什么必须"Linux 启动前"做**：Linux 一旦起来，物理内存就被它全接管了，之后再想收回来极难。
-所以只能在它还没睁眼的时候，就把设备树改掉。
-
-**FreeRTOS 的内存在哪**：**在 Linux 看不到的那部分里**。
-
-```text
-0x80000000 ───────────── Linux 第一块（1.375GB）
-0x90000000
-   ...
-0xE8000000 ───────────── 第一块结束
-   ...
-0xF0000000 ───────────── ★ FreeRTOS 在这（Linux 碰不到）
-   ...
-0x180000000 ──────────── Linux 第二块（3.0GB）
-```
-
-**为什么还有 `jh_clk`**：四个参数里只有**两个真正关键**：
-
-| 参数                              | 作用                           | 不做会怎样                                  |
-| ------------------------------- | ---------------------------- | -------------------------------------- |
-| **`kvm-arm.mode=nvhe`**         | 让 Linux 自带的 KVM **不占用**虚拟化硬件 | **Jailhouse 起不来**（两个 hypervisor 抢 EL2） |
-| **`cpuidle.off=1`**             | 关掉 CPU 深度休眠                  | **分给 FreeRTOS 的核睡死，叫不醒**               |
-| `kvm.enable_virt_at_load=false` | 配套第一条                        | 同上                                     |
-| `clk_ignore_unused`             | 别自动关"没人用"的时钟                 | 某些外设时钟被关                               |
-
-**关键认知**：**ARM 的虚拟化扩展（EL2）是独占资源**。Linux 自己的 KVM 想用 EL2，Jailhouse 也要用 EL2——
-**必须让 Linux 的 KVM 让开**。这就是 `nvhe` 的用意。
-
-### 第二块：`enable` —— hypervisor 怎么上位
-
-`modprobe` **只是把工具装好，还没虚拟化任何东西**。**`enable` 才是"变身"的那一刻。**
-
-**enable 做的四件事**：
+这一步做的事：
 
 ```text
 1. 保存 Linux 当前状态（各核上下文、异常向量）
-2. 把 Linux 自己"降级"成一个 cell → 它就是 root cell
-3. 给所有核装上 EL2 的异常向量 ← 从此 CPU 有了"hypervisor 模式"
-4. 建立各 cell 的 stage-2 页表 ← 隔离的物理基础
+2. 把 Linux 降级成一个 cell → 它就是 root cell（cell 0）
+3. 给所有核装上 EL2 的异常向量，从此有了 hypervisor 层
+4. 建立各 cell 的 stage-2 页表，这是隔离的基础
 ```
 
-**实测输出印证**：
+**什么叫"降级"**：ARM 有四个特权层，EL0 用户程序、EL1 内核、EL2 hypervisor、EL3 安全监控。原先 Linux 内核在 EL1，上面没有 EL2 的东西管着它；`enable` 之后 EL2 被 hypervisor 占了，Linux 的每次特权操作和外设访问都要经过 stage-2 页表检查，不归它的会被硬件触发异常、交给 hypervisor 处理。身份上它也从"唯一的主人"变成"第一个 guest"。
 
-```text
-Initializing processors:
- CPU 1... OK   CPU 0... OK   CPU 2... OK
- CPU 5... OK   CPU 4... OK   CPU 3... OK     ← 每个核都装了 hypervisor 入口
-Initializing unit: irqchip / ARM SMMU / PVU IOMMU / PCI
-Activating hypervisor                        ← 这一刻开始，Linux 不再是最高权限
-```
+要注意 `enable` 时 Linux 手里的资源清单基本没变（还是 0-5 核、4.375GB 内存），变的是它访问硬件要经过检查。真正的资源减少发生在后面 `start` 时。
 
-**原理：ARM 的四个特权层级**
-
-```text
-EL0  用户程序
-EL1  内核（Linux 内核、FreeRTOS 都在这层）
-EL2  ★ hypervisor 层
-EL3  安全监控（TrustZone / ATF）
-```
-
-**隔离怎么实现的**：
-
-```text
-guest 执行特权操作
-   ↓ 硬件自动陷入 EL2      ← 注意：不是软件检查，是硬件触发
-hypervisor 判断："这操作归不归你？"
-   ↓ 归 → 放回去继续
-   ↓ 不归 → 拦下，记一次 vmexit
-```
-
-**这是性能好的根本原因**：不逐条检查，靠硬件在"越界的那一刻"自动触发。
-
-**为什么 Jailhouse 这么小**：**它不需要自己的驱动栈**。板子初始化（DDR、时钟、外设）**全由 Linux 做完了**，
-hypervisor 直接接管。所以代码量只有几万行。
-
-官方原话：`Jailhouse assigns hardware resources to a guest OS instead of virtualising them.`
-—— **分配，而不是虚拟化**：不做设备模拟、不做指令翻译，**硬件整块切开各拿各的**。
-
-### 第三块：`create` / `load` / `start`
+**5. create：按 cell 文件划出 inmate 的容器**
 
 ```bash
-jailhouse cell create <cell文件>                    # ① 读配置，划出一间房
-jailhouse cell load freertos <bin> -a 0xf0000000    # ② 把程序搬进去
-jailhouse cell start freertos                       # ③ 把核交出去
+jailhouse cell create /usr/share/jailhouse/cells/imx95-harpoon-freertos.cell
 ```
 
-| 命令 | 干什么 | 关键点 |
-|---|---|---|
-| `create` | 读 `.cell`，在 hypervisor 里建一个 cell 结构 | **名字是这里从文件里读出来的** |
-| `load` | 把 bin 搬到指定物理地址 | `-a` 必须和 cell 配置、bin 链接地址**三者一致** |
-| `start` | 把分配的核从 Linux 手里拿走，让核跳到 inmate 入口 | 之后两个系统**同时跑** |
+这一步只是划出一个资源容器（哪个核、哪段内存、哪些外设归它），里面是空的，没有操作系统。cell 的名字是这一步从文件里读出来的，实测输出是 `Created cell "freertos"`。
 
-> **纠正一个常见误解**：**不是 `load` 创建了 `freertos`**。
-> 实测输出 `Created cell "freertos"` 出现在 **`create`** 那一步——
-> 名字**来自 `.cell` 文件里的 `name` 字段**（文件偏移 `0x08` 开始 32 字节，已解码确认）。
-> `load` / `start` 里的 `freertos` 都是在**引用这个已建好的 cell**。
+**6. load：把程序搬进容器**
 
-**`-a` 为什么要三者一致**：
-
-```text
-bin 编译时链接到 0xf0000000
-   ↓ 代码里的跳转、数据访问都按这个地址算
-load 时 -a 也必须是 0xf0000000
-   ↓ 否则搬过去，代码一跳转就跑到别处 → 跑飞
-cell 配置里给 inmate 的内存段也要覆盖这个地址
-   ↓ 否则 hypervisor 不让你写
+```bash
+jailhouse cell load freertos /usr/share/harpoon/inmates/freertos/rt_latency.bin -a 0xf0000000
 ```
 
-**`0xf0000000` 是 DDR，不是 TCM**：i.MX95 的 DDR 从 `0x80000000` 起，`0xf0000000` = 3.75GB 处。
-（TCM 是 M7 专用的小容量片上内存，地址完全不同。）
+`-a` 指定程序装载到哪个物理地址。这个地址已经被 inmate 的 cell 文件规定好了，同时程序的编译链接地址也要和它一致，否则程序一执行就跑飞。
 
-### `vmexit` 是什么
+`0xf0000000` 是 DDR 地址（i.MX95 的 DDR 从 `0x80000000` 开始），不是 TCM。
 
-**guest 做了不该做的事 → 硬件拦下 → 交给 hypervisor → 处理完放回。一次往返 = 一个 vmexit。**
+**7. start：把核转交给 inmate**
 
-实测：`vmexits_total 1517 / vmexits_mmio 1515 / vmexits_management 2`
-
-**为什么 mmio 这么多**：FreeRTOS 在**反复写串口寄存器**（LPUART3 地址 `0x42570000`）。
-
-> **反直觉的点**：`.cell` 里已经把 LPUART3 分给它了，为什么写它还 vmexit？
->
-> **因为 MMIO 访问天然要陷入**——设备内存的映射在 stage-2 里是"不可直接访问"的，
-> hypervisor 会模拟这次访问。所以 **vmexit 多不代表配错了**，反而证明 inmate 真的在访问外设。
-
-### 整张图
-
-```text
-【离线】编出两样东西
-   .cell  → "合同"：写清哪个核、哪段内存、哪个串口归 FreeRTOS
-   .bin   → "租客"：FreeRTOS 程序本身
-
-【U-Boot】趁 Linux 没起来，先把内存改小（16GB → 4.375GB）
-
-【Linux】装 Jailhouse → enable（自己降级成 root cell，hypervisor 上位）
-   → create（划房间）→ load（搬程序）→ start（交核）
-
-【运行】两边同时跑；FreeRTOS 碰不该碰的 → 硬件拦 → vmexit
+```bash
+jailhouse cell start freertos
 ```
 
-### 和板子上电流程的关系（把这个也串起来）
+`start` 后面跟的是 `create` 时从 cell 文件里读出来的那个 name，作用是把分配给这个 cell 的 CPU 核从 Linux 手里拿走，让核跳到 inmate 的入口开始执行。用 name 而不是 ID，是因为 ID 会随重启或销毁重建而变化，name 是稳定的。
 
-Harpoon 不是凭空能切的，它**站在启动链的最后一环**：
+至此 Linux 和 FreeRTOS 在两个核上同时运行。
+
+### vmexit 是什么
+
+guest 访问了不归它的东西，硬件触发异常交给 hypervisor 处理，处理完再放回去，一次往返叫一个 vmexit。
+
+实测 `vmexits_total 1517 / vmexits_mmio 1515 / vmexits_management 2`。mmio 占绝大多数，因为 FreeRTOS 在反复写串口寄存器（LPUART3 的 `0x42570000`）。
+
+即使 `.cell` 里已经把 LPUART3 分给了这个 cell，访问它仍然会产生 vmexit——设备内存的映射在 stage-2 里不可直接访问，hypervisor 会模拟这次访问。所以 vmexit 多不代表配置错了，反而说明 inmate 确实在访问外设。
+
+### 和板子上电流程的关系
+
+Harpoon 站在启动链的最后一环：
 
 ```text
-上电 → SM 定规矩（写 TRDC/RDC 隔离，决定谁能用哪些外设）
+上电 → Boot ROM 放 SM → SM 配 TRDC/RDC 定规矩
      → 只放 A55 的 CPU0 出去
      → Linux 起来（只拿到 SM 给的那部分）
-     → Harpoon 在 SM 定的规矩之内，再切一次
+     → Linux 用 PSCI 叫醒 CPU1~5
+     → Harpoon 在 SM 定的规矩之内，再切一个核出来
 ```
 
-**Harpoon 不能违反 SM 定的规矩。** 它是"二房东"，房子是大房东（SM）先分好的。
-详见 [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95 多核与程序启动]]「上电流程与 SM 的角色」。
+Harpoon 不能违反 SM 定的规矩。SM 独占 IOMUXC，所以 Linux 连自己配引脚都做不到，必须经 SCMI 请 SM 代配——这也是本项目 LPUART3 切不出来的根源。详见 [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95 多核与程序启动]]。
 
-### Harpoon 到底在干什么
+### cell 里没有操作系统
 
-**一句话：Linux 正用着 6 个 A55 核，Harpoon 让其中 1 个核让出来单独跑 FreeRTOS，两边同时运行互不打扰。**
+cell 是资源容器，不是系统环境。不要以为 `create` 建出了"一个操作系统"，从而想"进去装驱动跑命令"。
 
-三个名词，一个租房比喻：
-
-| 名词 | 是什么 | 类比 |
+| 命令 | 做的事 | **不是**在做什么 |
 |---|---|---|
-| **hypervisor** | 硬件"二房东"，让 Linux 以为独占硬件，实际由它分配 | 二房东 |
-| **cell** | 一份资源分配单（`.cell` 文件），写明哪个核、哪段内存归谁 | 租房合同 + **房间** |
-| **inmate** | 住进 cell 的程序，这里就是 FreeRTOS | 租客 |
+| `create` | 划出资源容器 | ❌ 安装操作系统 |
+| `load` | 把程序搬到指定物理地址 | ❌ 装系统 |
+| `start` | 把核从 Linux 手里拿走 | ❌ 按名字启动某个系统 |
 
-NXP 用的这个二房东程序叫 **Jailhouse**。原理细节见
-[[20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md|Jailhouse 分区式虚拟化原理]]。
+房间一直是同一个房间，`load` 换的只是住进去的程序。
 
-#### ⚠️ 一个容易理解错的点：cell 里没有"操作系统"
-
-**cell 只是一个资源容器（房间），里面是空的。** 常见误解是以为 `create` 建出了"一个操作系统环境"，
-于是会想"能不能进这个 cell 里装驱动、跑命令"——**不行**。
-
-| 命令 | 做的事 | 类比 | **不是**在做什么 |
-|---|---|---|---|
-| `create` | 按 cell 文件**划出资源容器**（哪个核、哪段内存、哪些外设） | 划房间 | ❌ 不是"安装操作系统" |
-| `load` | 把程序**搬到容器里的指定物理地址** | 搬家具 | ❌ 不是"装系统" |
-| `start` | 把分配的核**从 Linux 手里拿走**，让核跳到程序入口执行 | 开门营业 | ❌ 不是"按名字启动某个系统" |
-
-**房间一直是同一个房间，`load` 换的只是"住进去的人"。**
-
-> **这也正好解释本项目的现象**：我们 `load` 了官方的 `rt_latency.bin`，cell 起来了、
-> `vmexits_mmio` 也在涨——**说明程序真的在跑**。但它的串口打印出不来，
-> 这跟"cell 里有没有操作系统"**毫无关系**，而是 **cell 配置里声明的那个串口（LPUART3）
-> 在 Pro 板上不归 Linux 域**。
->
-> **房间通了，出问题的是房间里的水管没接上。**
-
-### 跟你 M7 方案的区别
-
-| | 你的 M7 方案 | Harpoon 方案 |
-|---|---|---|
-| FreeRTOS 跑在哪 | M7 核 | A55 的 1 个核 |
-| **谁把它启动起来** | **SM**（开机早期，Linux 之前） | **Linux 起来之后**，敲 `jailhouse` 命令 |
-| 固件怎么进去的 | 打包进 `flash.bin`，跟着启动镜像一起烧 | 用 `scp` 传文件进去，运行时加载 |
-| 要不要重新烧板子 | 要 | 不用（板子原厂就带 Jailhouse） |
-
-**一句话记住**：M7 的 FreeRTOS 是"**开机就装在楼里的固定住户**"，Harpoon 的 FreeRTOS 是"**楼盖好后临时搬进来的租客**"。
-
-### 第 8 步那两个参数到底在干嘛
-
-**`jh_root_mem`（内存分配）**
-
-```text
-setenv jh_root_mem 0x58000000@0x90000000,0xc0000000@0x180000000
-```
-
-格式是 **`大小@起始地址`**，逗号分隔两块：
-
-| 第几块 | 大小 | 起始地址 | 换算 |
-|---|---|---|---|
-| 第一块 | `0x58000000` | `0x90000000` | 1.375 GB，从 2.25GB 到 3.625GB |
-| 第二块 | `0xc0000000` | `0x180000000` | 3.0 GB |
-| | | | **合计 4.375 GB** |
-
-**含义：Linux 只准用这两块内存，一共 4.375 GB。剩下的内存 Linux 看不到，留着给 FreeRTOS 用。**
-
-验证过了：设完之后 Linux 的 `MemTotal` 是 4398132 kB（4.19GB），和 4.375GB 基本对上（差的那点是内核自己留的）。
-
-而且 FreeRTOS 被加载到 `0xf0000000`（3.75GB），这个地址**正好在 Linux 第一块内存（到 3.625GB）之外**——所以 Linux 根本碰不到那块地方，不会跟 FreeRTOS 打架。
-
-> 这条"jh_root_mem 是 Linux 可用内存"的结论，依据是"两个数值相加 = 4.375GB，与实测 MemTotal 4.19GB 吻合"，属于**由实测推断**，还没去逐行读 U-Boot 源码确认。
-
-**`jh_clk`（内核启动参数）**
-
-```text
-setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-arm.mode=nvhe
-```
-
-这串是传给 Linux 内核的启动参数，四个各有用途：
-
-| 参数                              | 干嘛的                       | 不设会怎样                       |
-| ------------------------------- | ------------------------- | --------------------------- |
-| `kvm-arm.mode=nvhe`             | 让 Linux 自带的 KVM 用 NVHE 模式 | 虚拟化硬件被 KVM 占着，Jailhouse 起不来 |
-| `kvm.enable_virt_at_load=false` | 加载 KVM 时别立刻接管虚拟化硬件        | 同上，两边抢                      |
-| `cpuidle.off=1`                 | 关掉 CPU 深度休眠               | 分给 FreeRTOS 的核睡过去，叫不醒       |
-| `clk_ignore_unused`             | 别自动关掉"没人用"的时钟             | 有些外设时钟被关，起不来                |
-
-**为什么要 `run bsp_bootcmd`**：这是板子原厂的"启动 Linux"命令。设完参数必须立刻执行它，因为停在 U-Boot 超时会被看门狗复位。
-
----
+这也解释了本项目的现象：`load` 了 `rt_latency.bin`，cell 起来了、`vmexits_mmio` 也在涨，说明程序真的在跑；串口没输出跟"cell 里有没有操作系统"无关，是 cell 声明的 LPUART3 在 Pro 板上不归 Linux 域。
 
 ## 相关
 

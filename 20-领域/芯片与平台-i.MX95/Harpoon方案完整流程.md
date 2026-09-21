@@ -127,11 +127,19 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
 ## 五、关键细节（容易踩的坑）
 
 1. **`jh_root_mem` 规定的是"Linux 能用的内存"，必须在 Linux 启动前设**。U-Boot 读它，通过
-   `ft_board_setup` 重写设备树的 `/memory` 节点，把 Linux 的可用内存**限定**在这些块里。
-   必须在启动前做的原因：Linux 一旦起来就会把物理内存全认下来，之后再想收回来就晚了。
-   **推论（由实测推断，未逐行读 U-Boot 源码确认）**：两块之和 4.375GB ≈ 实测 MemTotal 4.19GB，
-   说明其余内存 Linux 看不到，是留给 Jailhouse 划给 inmate 的；而 inmate 入口 `0xf0000000`(3.75GB)
-   正好落在 Linux 第一块内存（2.25~3.625GB）之外——**这片区域 Linux 碰不到，所以能安全带外来程序**。
+   `ft_board_setup` 重写设备树的 `/memory` 节点，把 Linux 的可用内存限定在这些块里。
+   两块之和 4.375GB 对应实测 `MemTotal` 4.19GB，其余内存 Linux 看不到，留给 inmate；
+   inmate 入口 `0xf0000000`（3.75GB）落在 Linux 第一块内存之外，所以 Linux 碰不到。
+
+   **为什么内存必须在启动前让，而 CPU 和外设不用**：Linux 启动时会把内存、CPU、外设全部认领，
+   三者没有本质区别，区别在运行期再改的代价。内存这块已经进了 Linux 的页表，可能被进程、
+   页缓存、DMA 用着，运行期抽走要搬迁数据、改页表、通知使用方，代价极高；启动前改设备树，
+   Linux 从建立起就不知道这块内存存在，不需要任何人配合。CPU 可以停下来，拿走一个核 Linux
+   只是少一个核，不用搬迁数据。外设卸载驱动就能交出去，前提是没有在途的 DMA 或缓冲数据。
+
+   （依据：Jailhouse 官方在其它板子的部署说明里同样要求用内核启动参数 `mem=` 预留内存，
+   [setup-on-emtrion-emcon-rz-boards.md](https://raw.githubusercontent.com/siemens/jailhouse/44e19da09b6614146bec15ff1529359dddb02b0c/Documentation/setup-on-emtrion-emcon-rz-boards.md)；
+   CPU 可运行期交接由本项目 `nproc` 6→5 实机验证；外设部分为推测。）
 2. **inmate 的入口地址 `-a 0xf0000000` 不是随手写的**，它是 inmate cell 配置里给这块内存的起始地址；
    二进制必须按这个地址链接，否则 start 后直接跑飞。
 3. **inmate 控制台是独立串口**：Harpoon FreeRTOS cell 配置里控制台是 LPUART3（`0x42570000`），
