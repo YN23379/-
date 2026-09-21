@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/问题记录.md",
+                "file": "10-项目/FRDM-IMX95-PRO/开发日志.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "问题记录"
+              "title": "开发日志"
             }
           }
         ]
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/问题记录.md",
+                "file": "10-项目/FRDM-IMX95-PRO/开发日志.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -201,10 +201,12 @@
   },
   "active": "8b737600487f1838",
   "lastOpenFiles": [
-    "10-项目/FRDM-IMX95-PRO/开发日志.md",
+    "00-入口/整理记录-2026-09-21.md",
     "10-项目/FRDM-IMX95-PRO/问题记录.md",
-    "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
     "10-项目/FRDM-IMX95-PRO/开发疑问.md",
+    "99-模板/check_vault.ps1",
+    "10-项目/FRDM-IMX95-PRO/开发日志.md",
+    "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
     "00-入口/待解疑问.md",
     "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
     "20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md",
@@ -228,7 +230,6 @@
     "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.5be2a6b52ddf",
     "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.e2b0c783c242",
     "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.b200c6b7420d",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.c55d866ff1cd",
     "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md",
     "README.md",
     "10-项目/面试项目/系统健康监测平台.md",
@@ -236,7 +237,6 @@
     "10-项目/IMX95-EVK/README.md",
     "10-项目/IMX95-EVK/MCUXpresso-SDK获取.md",
     "10-项目/IMX95-EVK/JTAG与SWD接口调研.md",
-    "10-项目/IMX95-EVK/A55-FreeRTOS任务与时间安排.md",
     "90-附件/RTOS/ucosii任务状态.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png"
