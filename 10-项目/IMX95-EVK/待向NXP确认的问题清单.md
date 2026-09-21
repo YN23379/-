@@ -159,7 +159,7 @@ jailhouse cell start freertos
 | 板级原理图 SPF-95794_B1、UM12527 | NXP 公开文档 | 引脚到域的归属表（J15/J22 那一段） |
 | **Harpoon 用户指南 UG10170 Rev 3.3** | NXP 公开文档（`HRPNUG_3.3.pdf`，86 页） | **已有**；但 §1.5 提到的**定制版 SM 配置**我们拿不到，见问题 3 第 3 条 |
 
-我们的复现过程、每一步命令和板上原始 log 记在 [[10-项目/IMX95-EVK/Harpoon复现|Harpoon 复现：手把手操作]] 里，需要的话可以直接对照。
+我们的复现过程、每一步命令和板上原始 log 记在 [[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现：手把手操作]] 里，需要的话可以直接对照。
 
 ---
 

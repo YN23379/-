@@ -40,11 +40,11 @@ updated: 2026-09-17
 
 i.MX95 不是一个"CPU 加外设"的芯片，而是一个**多核 + 多域 + 权限管理器**的系统。理解它要分三层：
 
-| 层 | 谁在管 | 关键概念 | 与本项目的关系 |
-|---|---|---|---|
-| ① 启动与安全层 | Boot ROM + ELE（EdgeLock Enclave） | 启动介质选择、AHAB 容器、签名校验、生命周期 | 决定"上电后谁先跑" |
-| ② 系统管理层 | **M33 上跑的 SM（System Manager）** | LM（逻辑机）、DOM（域）、资源 OWNER/ACCESS、TRDC/RDC、SCMI、LMM | 决定"哪个核能用哪个外设" |
-| ③ 计算层 | A55×6 / M7 / M33 本体 | 地址空间、TCM/OCRAM/DRAM、异常级 | 决定"代码放哪、怎么跑" |
+| 层        | 谁在管                              | 关键概念                                             | 与本项目的关系       |
+| -------- | -------------------------------- | ------------------------------------------------ | ------------- |
+| ① 启动与安全层 | Boot ROM + ELE（EdgeLock Enclave） | 启动介质选择、AHAB 容器、签名校验、生命周期                         | 决定"上电后谁先跑"    |
+| ② 系统管理层  | **M33 上跑的 SM（System Manager）**   | LM（逻辑机）、DOM（域）、资源 OWNER/ACCESS、TRDC/RDC、SCMI、LMM | 决定"哪个核能用哪个外设" |
+| ③ 计算层    | A55×6 / M7 / M33 本体              | 地址空间、TCM/OCRAM/DRAM、异常级                          | 决定"代码放哪、怎么跑"  |
 
 一句话：**A55 上跑的 Linux 或 FreeRTOS 并不是"老大"——它能不能碰某个外设，由 ② 层决定。** 这也是历史项目里
 "remoteproc 报 `lmm(1) not under Linux Control`、换 root 也没用"的根本原因。
@@ -69,10 +69,10 @@ i.MX95 不是一个"CPU 加外设"的芯片，而是一个**多核 + 多域 + �
 
 **实机证据（同一次冷启动抓到）**：
 
-| 串口 | 内容 | 说明 |
-|---|---|---|
+| 串口            | 内容                                                                                                                                                             | 说明                                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | COM19（M33/SM） | `DDR OEI: SOC MIMX95(B0), Board mx95lp5` / `IMX+DMEM load ... TRAINING complete ... done, err = 0` / `Hello from SM (Build 819, Commit c450f539, Mar 10 2026)` | **DDR 训练由 SM 侧固件（DDR OEI）完成**，早于 A55 的 SPL |
-| COM17（A55） | `U-Boot SPL 2025.04-g99518e6b6f20` → `NOTICE: BL31: v2.12.0 (lf-6.18.2-1.0.0)` → `U-Boot 2025.04` → `Linux 6.18.2` | A55 链：SPL→ATF→U-Boot→Linux |
+| COM17（A55）    | `U-Boot SPL 2025.04-g99518e6b6f20` → `NOTICE: BL31: v2.12.0 (lf-6.18.2-1.0.0)` → `U-Boot 2025.04` → `Linux 6.18.2`                                             | A55 链：SPL→ATF→U-Boot→Linux                 |
 
 - `源码可以确认`：SM 配置里 `BOARD DEBUG_UART_INSTANCE=2` → SM 的调试口是 **LPUART2**，这就解释了为什么 SM 日志在 COM19 而不是 COM17。
 - `实机验证得到`：COM17 上 U-Boot 打印 `Loading Environment from MMC... bad CRC, using default environment`、`Model: NXP FRDM-IMX95-PRO board`、`DRAM: 15.8 GiB` —— DRAM 容量能在 U-Boot 阶段报出，说明**DDR 已在 SM 侧初始化完成**。
@@ -125,11 +125,11 @@ CPU_A55P  stop=1
 
 #### 1.3 三种启动别混淆（自查表）
 
-| 说法 | 主导者 | 触发时机 | 本项目实例 |
-|---|---|---|---|
-| 冷启动 | Boot ROM + ELE | 上电/复位 | SPL→BL31→U-Boot→Linux 全链 |
-| LM 启动 | M33 上的 SM | SM 启动序列或 SCMI 请求 | SM 拉起 A55 链、M7 |
-| 热启动 | Linux 等主体 | 运行期 | `remoteproc` 想拉起 M7（被权限挡住） |
+| 说法    | 主导者            | 触发时机             | 本项目实例                      |
+| ----- | -------------- | ---------------- | -------------------------- |
+| 冷启动   | Boot ROM + ELE | 上电/复位            | SPL→BL31→U-Boot→Linux 全链   |
+| LM 启动 | M33 上的 SM      | SM 启动序列或 SCMI 请求 | SM 拉起 A55 链、M7             |
+| 热启动   | Linux 等主体      | 运行期              | `remoteproc` 想拉起 M7（被权限挡住） |
 
 ---
 
@@ -137,12 +137,12 @@ CPU_A55P  stop=1
 
 #### 2.1 四层权限模型（从抽象到硬件）
 
-| 层 | 概念 | 在配置文件里的写法 | 硬件落点 |
-|---|---|---|---|
-| 1 | **域 Domain（DID）** | `DOM0 name="ELE", did=0`、`DOM12 name="V2X", did=12` | 总线上的 domain ID / 安全属性 |
-| 2 | **逻辑机 LM** | `LM0/LM1/LM2`（SM / M7 / AP） | 每个 LM 有自己的 EENV（执行环境）与安全态 |
-| 3 | **资源归属** | `OWNER` / `ACCESS` / `READONLY` / `test` | SM 据此生成 TRDC/RDC 与时钟/电源策略 |
-| 4 | **硬件访问控制** | `TRDC_A..TRDC_W`、DFMT（域格式）、`sa=`/`pa=`（安全/特权属性） | TRDC（外设与内存的域访问控制）、RDC、GPC 电源域 |
+| 层   | 概念                | 在配置文件里的写法                                           | 硬件落点                          |
+| --- | ----------------- | --------------------------------------------------- | ----------------------------- |
+| 1   | **域 Domain（DID）** | `DOM0 name="ELE", did=0`、`DOM12 name="V2X", did=12` | 总线上的 domain ID / 安全属性         |
+| 2   | **逻辑机 LM**        | `LM0/LM1/LM2`（SM / M7 / AP）                         | 每个 LM 有自己的 EENV（执行环境）与安全态     |
+| 3   | **资源归属**          | `OWNER` / `ACCESS` / `READONLY` / `test`            | SM 据此生成 TRDC/RDC 与时钟/电源策略     |
+| 4   | **硬件访问控制**        | `TRDC_A..TRDC_W`、DFMT（域格式）、`sa=`/`pa=`（安全/特权属性）     | TRDC（外设与内存的域访问控制）、RDC、GPC 电源域 |
 
 #### 2.2 SM 配置里实际写了什么（Pro 板，节选）
 
@@ -200,20 +200,20 @@ DDR    EXEC 0x08A000000-0x08DFFFFFF
 
 #### 2.3 三种归属语义怎么理解
 
-| 写法 | 含义 | 判断依据 |
-|---|---|---|
-| `OWNER` | 该 LM 独占该资源（可读写、可配置） | 源码中 `OWNER: perm=...` 定义的权限被套用 |
-| `ACCESS` | 可访问但不拥有（例如 `EDMA2_MP ACCESS` 给 ELE 域、`EDMA2_MP ACCESS` 给 A55） | 共享场景，注释里明确写了"Sharing MP access may not be safe if FuSa SW using EDMA2" |
-| `READONLY` | 只读（如 M7 对 `FSB`、V2X 对 DDR 大部分区） | 防止误改 |
-| `test` | 测试用途标记（如 `LPUART3 OWNER, test`、`PD_M7 test`） | 与正式归属并列 |
+| 写法         | 含义                                                            | 判断依据                                                                   |
+| ---------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `OWNER`    | 该 LM 独占该资源（可读写、可配置）                                           | 源码中 `OWNER: perm=...` 定义的权限被套用                                         |
+| `ACCESS`   | 可访问但不拥有（例如 `EDMA2_MP ACCESS` 给 ELE 域、`EDMA2_MP ACCESS` 给 A55） | 共享场景，注释里明确写了"Sharing MP access may not be safe if FuSa SW using EDMA2" |
+| `READONLY` | 只读（如 M7 对 `FSB`、V2X 对 DDR 大部分区）                               | 防止误改                                                                   |
+| `test`     | 测试用途标记（如 `LPUART3 OWNER, test`、`PD_M7 test`）                  | 与正式归属并列                                                                |
 
 #### 2.4 串口映射由此可解释（把历史结论钉死）
 
-| COM | 内核名 | 归属 LM | 配置依据 |
-|---|---|---|---|
-| COM17 | ttyLP0（LPUART1，0x44380000） | **LM2 / A55** | `LPUART1 OWNER` 在 A55 段 |
-| COM18 | ttyLP? （LPUART7，0x42690000） | **LM1 / M7** | `LPUART7 OWNER` 在 M7 段 |
-| COM19 | LPUART2（0x44390000） | **LM0 / SM(M33)** | `LPUART2 OWNER` 在 SM 段 + `BOARD DEBUG_UART_INSTANCE=2` |
+| COM   | 内核名                         | 归属 LM             | 配置依据                                                   |
+| ----- | --------------------------- | ----------------- | ------------------------------------------------------ |
+| COM17 | ttyLP0（LPUART1，0x44380000）  | **LM2 / A55**     | `LPUART1 OWNER` 在 A55 段                                |
+| COM18 | ttyLP? （LPUART7，0x42690000） | **LM1 / M7**      | `LPUART7 OWNER` 在 M7 段                                 |
+| COM19 | LPUART2（0x44390000）         | **LM0 / SM(M33)** | `LPUART2 OWNER` 在 SM 段 + `BOARD DEBUG_UART_INSTANCE=2` |
 
 这三条同时满足"软件链路（SM 配置）"和"实机（谁打印谁应答）"，可以当作定论使用。
 
@@ -232,14 +232,14 @@ SM 没给 LM2 的 API/资源，Linux 里任何操作都越不过去——所以�
 
 #### 3.1 逻辑机（LM）与域（DOM）全景
 
-| 群组 | 名称 | boot | did | safe | 角色 |
-|---|---|---|---|---|---|
-| LM0 | SM | 1 | 2 | feenv（first-execution env?） | 系统管理器，跑在 M33，管时钟/电源/引脚/权限 |
-| LM1 | M7 | 2 | 4 | seenv | 实时核（本板默认给实时任务） |
-| LM2 | AP | 3 | 3 | default | 应用核群（A55×6），默认跑 Linux |
-| DOM0 | ELE | — | 0 | — | 安全子系统（密钥、AHAB 校验、TRNG） |
-| DOM10 | ISP | — | 10 | — | 图像处理域 |
-| DOM12 | V2X | — | 12 | — | 车规 V2X 域（有独立 DDR 段与只读约束） |
+| 群组    | 名称  | boot | did | safe                        | 角色                        |
+| ----- | --- | ---- | --- | --------------------------- | ------------------------- |
+| LM0   | SM  | 1    | 2   | feenv（first-execution env?） | 系统管理器，跑在 M33，管时钟/电源/引脚/权限 |
+| LM1   | M7  | 2    | 4   | seenv                       | 实时核（本板默认给实时任务）            |
+| LM2   | AP  | 3    | 3   | default                     | 应用核群（A55×6），默认跑 Linux     |
+| DOM0  | ELE | —    | 0   | —                           | 安全子系统（密钥、AHAB 校验、TRNG）    |
+| DOM10 | ISP | —    | 10  | —                           | 图像处理域                     |
+| DOM12 | V2X | —    | 12  | —                           | 车规 V2X 域（有独立 DDR 段与只读约束）  |
 
 #### 3.2 与实机对照（交叉验证）
 
@@ -262,12 +262,12 @@ SM 没给 LM2 的 API/资源，Linux 里任何操作都越不过去——所以�
 
 i.MX95 上同一个物理存储，不同核看到的地址可能不同（TCM 尤其明显）：
 
-| 存储 | M7 本地视角 | 系统/其他核视角 | 证据 |
-|---|---|---|---|
-| M7 ITCM | `0x00000000` 起 | 系统别名 `0x203C0000`（SDK） | 历史项目实测 + SDK 头文件 |
-| M7 MIX / TCM 区 | — | `0x020380000-0x02047FFFF`（SM 配置给 LM1 的 DATA） | SM 配置 |
-| OCRAM | — | `0x020480000`（SM 给 A55 EXEC 256K；ELE 域另有 352K） | SM 配置 |
-| DDR | — | `0x080000000` 起（16GB 到 `0x87FFFFFFF`） | SM 配置 + U-Boot `DRAM: 15.8 GiB` |
+| 存储             | M7 本地视角        | 系统/其他核视角                                       | 证据                              |
+| -------------- | -------------- | ---------------------------------------------- | ------------------------------- |
+| M7 ITCM        | `0x00000000` 起 | 系统别名 `0x203C0000`（SDK）                         | 历史项目实测 + SDK 头文件                |
+| M7 MIX / TCM 区 | —              | `0x020380000-0x02047FFFF`（SM 配置给 LM1 的 DATA）   | SM 配置                           |
+| OCRAM          | —              | `0x020480000`（SM 给 A55 EXEC 256K；ELE 域另有 352K） | SM 配置                           |
+| DDR            | —              | `0x080000000` 起（16GB 到 `0x87FFFFFFF`）          | SM 配置 + U-Boot `DRAM: 15.8 GiB` |
 
 **要点：M7 用"本地 0 地址"访问自己的 TCM，A55 必须用"系统别名"地址访问同一块存储**——这是历史项目里
 "TCM 版 BIN 要先读进 DDR、再复制到 0x203C0000"的原因。
@@ -301,14 +301,14 @@ LM2 (A55)  : OCRAM EXEC 0x020480000 +256K ; DDR EXEC 0x08A000000-0x08DFFFFFF
 
 ### 五、这张图能不能解释我们踩过的坑（自检）
 
-| 历史现象 | 用本文模型解释 |
-|---|---|
-| `lmm(1) not under Linux Control` | LM2 的 API 列表里没有 `LMM_1`，A55 无权控制 M7 那个 LM |
-| U-Boot `prepaux` 写 M7 TCM 触发同步异常 | A55 对 M7MIX/TCM 无访问权限（TRDC） |
+| 历史现象                                       | 用本文模型解释                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `lmm(1) not under Linux Control`           | LM2 的 API 列表里没有 `LMM_1`，A55 无权控制 M7 那个 LM                          |
+| U-Boot `prepaux` 写 M7 TCM 触发同步异常           | A55 对 M7MIX/TCM 无访问权限（TRDC）                                        |
 | 把 GPIO2 从 A55 整块拿走导致 A55 起不来、WDOG3→FCCU 复位 | 动了 LM2 启动链依赖的资源，触发 LM2 的 fault 反应（`FAULT_WDOG3 reaction=lm_reset`） |
-| 改 SM 配置后 M7 才拿到 GPIO2 | `GPIO2 OWNER` 从 LM2 改到 LM1，同时保留 `PERLPI_GPIO2 ALL` 给 A55 |
-| Harpoon 的 inmate 控制台在 LPUART3 但看不到 | LPUART3 在 Pro 板配置里归 **LM1(M7)** 且是 `test` 性质，J22 也没引出该 UART |
-| 断电后 `jh_root_mem` 失效 | 它只是 U-Boot 环境变量，而环境区 CRC 损坏、每次用默认环境 |
+| 改 SM 配置后 M7 才拿到 GPIO2                      | `GPIO2 OWNER` 从 LM2 改到 LM1，同时保留 `PERLPI_GPIO2 ALL` 给 A55           |
+| Harpoon 的 inmate 控制台在 LPUART3 但看不到         | LPUART3 在 Pro 板配置里归 **LM1(M7)** 且是 `test` 性质，J22 也没引出该 UART        |
+| 断电后 `jh_root_mem` 失效                       | 它只是 U-Boot 环境变量，而环境区 CRC 损坏、每次用默认环境                                |
 
 ---
 
@@ -696,7 +696,7 @@ SM_LM_DEFAULT  = 2U          /* 调试监视器默认选中 LM2(AP) */
 
 ## 三、理解-03：外设归属与权限矩阵（FRDM-IMX95-PRO / mx95frdm-pro 配置）
 
-## 理解-03：外设归属与权限矩阵（FRDM-IMX95-PRO / mx95frdm-pro 配置）
+
 
 > 类型：项目档案 / 理解文档（要求 2 的硬产出）。
 > **数据来源**：`tools\imx-sm-src\imx-sm-master\configs\other\mx95frdm-pro.cfg`（1023 行）经 `build\tools\parse_sm_cfg.py` 自动解析，
@@ -708,6 +708,7 @@ SM_LM_DEFAULT  = 2U          /* 调试监视器默认选中 LM2(AP) */
 - 行 = 一个资源（外设/CPU/电源域/时钟/引脚/故障）；列 = 一个"执行环境"（EENV）：**域**（ELE/ISP/V2X）或**逻辑机**
   （SM=M33 / M7 / A55 安全侧 / A55 非安全侧）。
 - 单元格里是**权限动词**：
+
   | 动词 | 含义 |
   |---|---|
   | `OWNER` | 独占拥有（可读写、可配置） |
@@ -715,6 +716,8 @@ SM_LM_DEFAULT  = 2U          /* 调试监视器默认选中 LM2(AP) */
   | `READONLY` | 只读 |
   | `DATA` / `EXEC` | 该段内存可作为数据/可执行 |
   | `PRIV` / `ALL` / `SET` / `NOTIFY` / `TEST_MU` | **API 权限**（能否调用该 SCMI 接口、以什么级别） |
+
+
 - **空白 = 该执行环境在配置里没有对该资源的任何授权**。空白不代表"不能访问硬件"，而是"SM 不会为该 EENV
   打开对应通道"，实际访问还会被 TRDC/RDC 硬件规则二次拦截。
 
@@ -723,15 +726,15 @@ SM_LM_DEFAULT  = 2U          /* 调试监视器默认选中 LM2(AP) */
 
 ### 二、各区段概览（条目数）
 
-| 区段（.cfg 中的标题） | 简称 | 资源 | 内存 | 引脚 | API |
-|---|---|---|---|---|---|
-| `ELE Domain` | ELE | 3 | 3 | 0 | 0 |
-| `ISP Domain` | ISP | 0 | 0 | 0 | 0 |
-| `V2X Domain` | V2X | 1 | 3 | 0 | 0 |
-| `SM M33 EENV` | SM(M33) | 77 | 4 | 7 | 13 |
-| `M7 EENV` | M7 | 21 | 3 | 4 | 12 |
-| `A55 secure EENV` | A55-sec | 11 | 2 | 0 | 17 |
-| `A55 non-secure EENV` | A55-NS | 287 | 6 | 117 | 30 |
+| 区段（.cfg 中的标题）         | 简称      | 资源  | 内存  | 引脚  | API |
+| --------------------- | ------- | --- | --- | --- | --- |
+| `ELE Domain`          | ELE     | 3   | 3   | 0   | 0   |
+| `ISP Domain`          | ISP     | 0   | 0   | 0   | 0   |
+| `V2X Domain`          | V2X     | 1   | 3   | 0   | 0   |
+| `SM M33 EENV`         | SM(M33) | 77  | 4   | 7   | 13  |
+| `M7 EENV`             | M7      | 21  | 3   | 4   | 12  |
+| `A55 secure EENV`     | A55-sec | 11  | 2   | 0   | 17  |
+| `A55 non-secure EENV` | A55-NS  | 287 | 6   | 117 | 30  |
 
 ### 三、资源归属矩阵（全量）
 

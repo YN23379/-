@@ -373,7 +373,7 @@ echo c0100000.rpmsg-ca55 > /sys/bus/platform/drivers/imx-rpmsg/unbind
   - LPUART 分配写在 SM 配置里：**官方资料明确说明**（UG10170 §1.5）
 
 - **项目证据**：
-  - 完整复现过程与原始日志：[[10-项目/IMX95-EVK/Harpoon复现|Harpoon 复现：手把手操作]]
+  - 完整复现过程与原始日志：[[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现：手把手操作]]
   - 方案层面对比：[[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
   - 踩过的坑（`UNCLAIMED` 误读、引脚域归属）：[[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95 引脚控制]]
 

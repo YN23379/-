@@ -1046,23 +1046,23 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 
 ## 第五部分：卡住时的排查表
 
-| 现象 | 大概原因 | 怎么办 |
-|---|---|---|
-| 串口打不开，报 `Access to the port 'COM17' is denied` | 别的软件占着串口 | 关掉其他串口窗口（尤其 MobaXterm 的其他标签页） |
-| 板子上电后串口一直没反应 | 串口选错 / 没接好 | 挨个 COM 口试；按一下回车看有没有 login |
-| 第 3 步 eth0 没有 169.254 地址 | 网线没插好 / 网口没起来 | 确认网线两端插好；`ip link set eth0 up` 后等 5 秒再查 |
-| scp 卡住不动 | 网络不通 | 回第 3 步确认 eth0 有地址 |
-| **抢不到 U-Boot 提示符** | autoboot 只有 2 秒 | 上电同时就不停按回车；**别用 Ctrl-C** |
-| setenv 敲了但 MemTotal 还是 15GB | 停在 U-Boot 太久被看门狗复位了 | 抢到提示符后立刻敲三条命令 |
-| `jailhouse enable` 报错 | 内存参数没生效 | 检查第 9 步 MemTotal 是不是 4398132 |
-| `cell load` 报错 | 加载地址或文件路径不对 | 确认写的是 `-a 0xf0000000`，文件在 `/usr/share/harpoon/inmates/freertos/` |
-| `jailhouse cell stats` 报 `execvp: No such file or directory` | 工具目录没加进 PATH | 先敲 `export PATH=$PATH:/usr/share/jailhouse/tools` |
-| `jailhouse cell stats` 报 `_curses.error: setupterm` | 需要真正的终端 | 用 SSH 连板子（`ssh -tt root@板子IP`），或先 `export TERM=xterm` |
-| 串口突然完全没反应了 | 之前 Ctrl-C 刷太多，串口登录服务被刷死了 | 板子没死，改用 SSH 连；或断电重启 |
-| **cell 是 running、vmexits 在涨，但串口一个字都没有** | **console 配在 LPUART3，而 LPUART3 不归 Linux 域** | **正常现象，不是失败**；见「下一步」四条路，走**路径 0.5 或路径 2** |
-| **`jailhouse console -f` 只有 hypervisor 日志、没有 FreeRTOS 的字** | inmate 走 MMIO 直写，不经虚拟控制台 | **正常**，路径 1 已实测无效 |
-| 逻辑分析仪在 J15-8 上是**一条平直线** | 引脚没切到 UART3 功能（不归 Linux 域） | 不是仪器问题，见上文证据 1、2 |
-| `grep gpio14 .../pinmux-pins` 搜不到 | **搜错关键字了** | 该文件里引脚叫 `gpioio14`（无下划线），不是 `gpio14` |
+| 现象                                                           | 大概原因                                        | 怎么办                                                              |
+| ------------------------------------------------------------ | ------------------------------------------- | ---------------------------------------------------------------- |
+| 串口打不开，报 `Access to the port 'COM17' is denied`               | 别的软件占着串口                                    | 关掉其他串口窗口（尤其 MobaXterm 的其他标签页）                                    |
+| 板子上电后串口一直没反应                                                 | 串口选错 / 没接好                                  | 挨个 COM 口试；按一下回车看有没有 login                                        |
+| 第 3 步 eth0 没有 169.254 地址                                     | 网线没插好 / 网口没起来                               | 确认网线两端插好；`ip link set eth0 up` 后等 5 秒再查                          |
+| scp 卡住不动                                                     | 网络不通                                        | 回第 3 步确认 eth0 有地址                                                |
+| **抢不到 U-Boot 提示符**                                           | autoboot 只有 2 秒                             | 上电同时就不停按回车；**别用 Ctrl-C**                                         |
+| setenv 敲了但 MemTotal 还是 15GB                                  | 停在 U-Boot 太久被看门狗复位了                         | 抢到提示符后立刻敲三条命令                                                    |
+| `jailhouse enable` 报错                                        | 内存参数没生效                                     | 检查第 9 步 MemTotal 是不是 4398132                                     |
+| `cell load` 报错                                               | 加载地址或文件路径不对                                 | 确认写的是 `-a 0xf0000000`，文件在 `/usr/share/harpoon/inmates/freertos/` |
+| `jailhouse cell stats` 报 `execvp: No such file or directory` | 工具目录没加进 PATH                                | 先敲 `export PATH=$PATH:/usr/share/jailhouse/tools`                |
+| `jailhouse cell stats` 报 `_curses.error: setupterm`          | 需要真正的终端                                     | 用 SSH 连板子（`ssh -tt root@板子IP`），或先 `export TERM=xterm`            |
+| 串口突然完全没反应了                                                   | 之前 Ctrl-C 刷太多，串口登录服务被刷死了                    | 板子没死，改用 SSH 连；或断电重启                                              |
+| **cell 是 running、vmexits 在涨，但串口一个字都没有**                      | **console 配在 LPUART3，而 LPUART3 不归 Linux 域** | **正常现象，不是失败**；见「下一步」四条路，走**路径 0.5 或路径 2**                        |
+| **`jailhouse console -f` 只有 hypervisor 日志、没有 FreeRTOS 的字**   | inmate 走 MMIO 直写，不经虚拟控制台                    | **正常**，路径 1 已实测无效                                                |
+| 逻辑分析仪在 J15-8 上是**一条平直线**                                     | 引脚没切到 UART3 功能（不归 Linux 域）                  | 不是仪器问题，见上文证据 1、2                                                 |
+| `grep gpio14 .../pinmux-pins` 搜不到                            | **搜错关键字了**                                  | 该文件里引脚叫 `gpioio14`（无下划线），不是 `gpio14`                             |
 
 ---
 
@@ -1072,24 +1072,62 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 
 流程步骤很多，但**大部分细节不用记**。先看这张表，知道哪些该花时间：
 
-| 步骤 | 要不要懂原理 | 理由 |
-|---|---|---|
-| 传文件进板子 | ❌ 不用 | 就是拷贝，和方案无关 |
-| **U-Boot 设内存参数** | ✅ **必须** | 整个方案的地基：凭什么 Linux 会让出内存 |
-| Linux 三行环境配置 | ⚠️ 知道大概 | 只为实时性数据好看，不影响跑通 |
-| **`modprobe` + `enable`** | ✅ **必须** | hypervisor 怎么"上位" |
-| **`create` / `load` / `start`** | ✅ **必须** | cell 机制的核心 |
-| 传文件的路径、命令拼写、报错处理 | ❌ 不用 | 查文档就行 |
+| 步骤                              | 要不要懂原理   | 理由                      |
+| ------------------------------- | -------- | ----------------------- |
+| 传文件进板子                          | ❌ 不用     | 就是拷贝，和方案无关              |
+| **U-Boot 设内存参数**                | ✅ **必须** | 整个方案的地基：凭什么 Linux 会让出内存 |
+| Linux 三行环境配置                    | ⚠️ 知道大概  | 只为实时性数据好看，不影响跑通         |
+| **`modprobe` + `enable`**       | ✅ **必须** | hypervisor 怎么"上位"       |
+| **`create` / `load` / `start`** | ✅ **必须** | cell 机制的核心              |
+| 传文件的路径、命令拼写、报错处理                | ❌ 不用     | 查文档就行                   |
 
-**核心框架一句话**：
+### 一句话说清这个方案
 
-> **Linux 本来独占整台机器。Harpoon 做的事，是在 Linux 跑着的时候，从它手里"切"出一部分硬件
-> （1 个核 + 一段内存 + 一个串口），交给另一个操作系统（FreeRTOS）单独用。切完两边同时跑，互不干扰。**
+> **Harpoon 方案就是在 Linux 运行的时候，由 Jailhouse 接管硬件资源（CPU 核、内存、外设），
+> 把这些资源重新分配和隔离给不同的操作系统，让它们各自独占分到的那部分、并行运行、互不干扰。**
 >
-> **切蛋糕的工具是 Jailhouse，切的方案写在 `.cell` 文件里。**
+> **分配方案写在 cell 文件里，是静态的——改了要重新生成 cell 再加载。**
 
-**为什么必须"跑着的时候切"**：A55 上原本跑的就是 Linux，**没有"Linux 还没起来"的时刻**可以给你先安排 FreeRTOS。
-所以只能在 Linux 起来之后，由 Linux 里的 hypervisor 现切。
+**注意主语**：接管硬件的是 **Jailhouse 本体（`jailhouse.ko` 内核模块）**，
+`jailhouse` 那个命令行只是操作界面。所以是"**由** Jailhouse 接管"，不是"通过 Jailhouse 接管"。
+
+**为什么必须"Linux 跑着的时候"做**：A55 上原本跑的就是 Linux，
+**没有"Linux 还没起来"的时刻**可以给你先安排 FreeRTOS。所以只能在 Linux 起来之后现切。
+
+### "动态加载"到底指什么（容易误解，先说清）
+
+说这个方案是"**运行期动态加载**"时，**"动态"说的是 hypervisor 什么时候被装进去，不是指配置能随便改**。
+这两个层面必须分开：
+
+| 说的是什么 | 动态还是静态 | 说明 |
+|---|---|---|
+| **Jailhouse 什么时候被装进去** | **动态** | Linux 已经跑起来了，才 `modprobe` 把模块插进去。**不用重新烧板子** |
+| **资源怎么分配（cell 配置）** | **静态** | `.cpus`、内存段、外设都**编译进 cell 文件**，运行时改不了 |
+
+**对比你熟悉的 M7 方案就清楚了**：
+
+```text
+M7 方案：     FreeRTOS 固件打包进 flash.bin，开机时由 SM 加载
+              → 上电前就得决定好，改固件要重新烧录              静态
+
+Harpoon 方案： Linux 已经跑起来了，此时才敲命令把 Jailhouse 装进去
+              → 系统运行中才加载，不用重新烧板子                动态
+```
+
+> **一句话**：**hypervisor 是运行期动态加载的；加载之后，资源分配是静态的。**
+>
+> **这个"静态"正是本项目的卡点**：Harpoon 包里**只有编译好的 `.cell`，没有源码**，
+> 所以想改 console 串口或 CPU 核数，只能去 `harpoon-apps` 取源码重编
+> （见后文「路径 3」和「三个文件的来源」）。
+
+### 逐步理解：四条命令各自在干什么
+
+**核心框架**：
+
+> Linux 本来独占整台机器。Harpoon 做的事，是在 Linux 跑着的时候，从它手里"切"出一部分硬件
+> （1 个核 + 一段内存 + 一个串口），交给另一个操作系统（FreeRTOS）单独用。切完两边同时跑，互不干扰。
+>
+> **切蛋糕的是 Jailhouse，切的方案写在 `.cell` 文件里。**
 
 ### 第一块：U-Boot 阶段为什么要改内存
 
@@ -1134,12 +1172,12 @@ Linux 启动，只认这 4.375GB
 
 **为什么还有 `jh_clk`**：四个参数里只有**两个真正关键**：
 
-| 参数 | 作用 | 不做会怎样 |
-|---|---|---|
-| **`kvm-arm.mode=nvhe`** | 让 Linux 自带的 KVM **不占用**虚拟化硬件 | **Jailhouse 起不来**（两个 hypervisor 抢 EL2） |
-| **`cpuidle.off=1`** | 关掉 CPU 深度休眠 | **分给 FreeRTOS 的核睡死，叫不醒** |
-| `kvm.enable_virt_at_load=false` | 配套第一条 | 同上 |
-| `clk_ignore_unused` | 别自动关"没人用"的时钟 | 某些外设时钟被关 |
+| 参数                              | 作用                           | 不做会怎样                                  |
+| ------------------------------- | ---------------------------- | -------------------------------------- |
+| **`kvm-arm.mode=nvhe`**         | 让 Linux 自带的 KVM **不占用**虚拟化硬件 | **Jailhouse 起不来**（两个 hypervisor 抢 EL2） |
+| **`cpuidle.off=1`**             | 关掉 CPU 深度休眠                  | **分给 FreeRTOS 的核睡死，叫不醒**               |
+| `kvm.enable_virt_at_load=false` | 配套第一条                        | 同上                                     |
+| `clk_ignore_unused`             | 别自动关"没人用"的时钟                 | 某些外设时钟被关                               |
 
 **关键认知**：**ARM 的虚拟化扩展（EL2）是独占资源**。Linux 自己的 KVM 想用 EL2，Jailhouse 也要用 EL2——
 **必须让 Linux 的 KVM 让开**。这就是 `nvhe` 的用意。
@@ -1278,11 +1316,31 @@ Harpoon 不是凭空能切的，它**站在启动链的最后一环**：
 | 名词 | 是什么 | 类比 |
 |---|---|---|
 | **hypervisor** | 硬件"二房东"，让 Linux 以为独占硬件，实际由它分配 | 二房东 |
-| **cell** | 一份资源分配单（`.cell` 文件），写明哪个核、哪段内存归谁 | 租房合同 |
+| **cell** | 一份资源分配单（`.cell` 文件），写明哪个核、哪段内存归谁 | 租房合同 + **房间** |
 | **inmate** | 住进 cell 的程序，这里就是 FreeRTOS | 租客 |
 
 NXP 用的这个二房东程序叫 **Jailhouse**。原理细节见
 [[20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md|Jailhouse 分区式虚拟化原理]]。
+
+#### ⚠️ 一个容易理解错的点：cell 里没有"操作系统"
+
+**cell 只是一个资源容器（房间），里面是空的。** 常见误解是以为 `create` 建出了"一个操作系统环境"，
+于是会想"能不能进这个 cell 里装驱动、跑命令"——**不行**。
+
+| 命令 | 做的事 | 类比 | **不是**在做什么 |
+|---|---|---|---|
+| `create` | 按 cell 文件**划出资源容器**（哪个核、哪段内存、哪些外设） | 划房间 | ❌ 不是"安装操作系统" |
+| `load` | 把程序**搬到容器里的指定物理地址** | 搬家具 | ❌ 不是"装系统" |
+| `start` | 把分配的核**从 Linux 手里拿走**，让核跳到程序入口执行 | 开门营业 | ❌ 不是"按名字启动某个系统" |
+
+**房间一直是同一个房间，`load` 换的只是"住进去的人"。**
+
+> **这也正好解释本项目的现象**：我们 `load` 了官方的 `rt_latency.bin`，cell 起来了、
+> `vmexits_mmio` 也在涨——**说明程序真的在跑**。但它的串口打印出不来，
+> 这跟"cell 里有没有操作系统"**毫无关系**，而是 **cell 配置里声明的那个串口（LPUART3）
+> 在 Pro 板上不归 Linux 域**。
+>
+> **房间通了，出问题的是房间里的水管没接上。**
 
 ### 跟你 M7 方案的区别
 
@@ -1341,7 +1399,7 @@ setenv jh_clk kvm.enable_virt_at_load=false cpuidle.off=1 clk_ignore_unused kvm-
 ## 相关
 
 - 两条流程的本质区别、设计取舍 → [[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
-- 当时上板的完整记录和原始输出 → [[10-项目/IMX95-EVK/Harpoon验证与复现.md|Harpoon 验证与复现]]
+- 当时上板的完整记录和原始输出 → [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现|Harpoon 验证与复现]]
 - 判定"厂商包能不能用手头板子"的方法 → [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|Jailhouse 与 Harpoon 的分层与判定]]
 - 引脚所有权怎么查、`UNCLAIMED` 怎么读 → [[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95 引脚控制：IOMUXC 与 RGPIO 的分工]]
 - 要发给 NXP 的问题（已按实测 + UG10170 更新）→ [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]

@@ -56,7 +56,7 @@ updated: 2026-09-21
 ## 相关
 
 - [[10-项目/IMX95-EVK/EVK-19x19到手操作计划.md|EVK-19x19 到手操作计划]]
-- [[10-项目/IMX95-EVK/Harpoon复现.md|Harpoon 复现]]
+- [[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现]]
 - [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
 - [[10-项目/IMX95-EVK/资料清单表.md|资料清单表]]
 - [[10-项目/FRDM-IMX95-PRO/README.md|FRDM-IMX95-PRO（旧板留档）]]

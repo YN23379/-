@@ -24,8 +24,8 @@ updated: 2026-09-17
 | 笔记 | 一句话 | 依据 |
 |---|---|---|
 | [[10-项目/IMX95-EVK/EVK-19x19到手操作计划.md\|EVK-19x19到手操作计划]] | 拿到板子后按什么顺序做什么：开箱清点、装散热片、首次上电、Harpoon 复现、JTAG | 官方资料明确说明 |
-| [[10-项目/IMX95-EVK/Harpoon复现.md\|Harpoon复现]] | Linux 本来独占整台机器。Harpoon 做的事，是在 Linux 跑着的时候，从它手里"切"出一部分硬件 | 实机验证 |
-| [[10-项目/IMX95-EVK/Harpoon验证与复现.md\|Harpoon验证与复现]] | 目标由 M7 改为 A55 上跑 FreeRTOS 后，需要判断：从 NXP 下载的 Harpoon 包（HS_ | 实机验证 |
+| [[10-项目/FRDM-IMX95-PRO/Harpoon复现\|Harpoon复现]] | Linux 本来独占整台机器。Harpoon 做的事，是在 Linux 跑着的时候，从它手里"切"出一部分硬件 | 实机验证 |
+| [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现\|Harpoon验证与复现]] | 目标由 M7 改为 A55 上跑 FreeRTOS 后，需要判断：从 NXP 下载的 Harpoon 包（HS_ | 实机验证 |
 | [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md\|待向NXP确认的问题清单]] | NXP 已确认 Pro 板不在 Harpoon 支持范围，决定换 EVK（i.MX95 19x19） | 官方资料明确说明 |
 | [[10-项目/IMX95-EVK/A55-FreeRTOS任务与时间安排.md\|A55-FreeRTOS任务与时间安排]] | 合计可用工作日：21 天（含今天）。所以只分 3 个阶段，阶段内不再细分到天。 | 不适用 |
 | [[10-项目/IMX95-EVK/JTAG与SWD接口调研.md\|JTAG与SWD接口调研]] | Pro 板无 JTAG 座（只有测试点）；EVK 有 10-pin J30 座，引脚定义见 UM12022 Table 52 | 官方资料明确说明 |
