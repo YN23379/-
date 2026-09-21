@@ -1022,6 +1022,229 @@ F:\project\Learning\RTOS\Real-time_Edge_v3.3_IMX95-19X19-LPDDR5-EVK\
 
 ---
 
+## 换成自己编译的 bin 要改什么
+
+### 自己的 bin 怎么来
+
+**不需要打包，不需要加容器。** FreeRTOS 应用直接编成裸二进制，用 `jailhouse cell load` 装载。
+
+官方构建流程（UG10170 §6.2.2.1，`官方资料明确说明`）：
+
+```bash
+# 1. 取源码
+west init -m https://github.com/NXP/harpoon-apps --mr harpoon_3.3.0 hww
+cd hww && west update
+
+# 2. 装交叉工具链（A 核是 AArch64，不是 M 核那套）
+wget https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
+tar -C /opt/ -xvf arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz
+export ARMGCC_DIR=/opt/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64-none-elf
+
+# 3. 编译
+cd harpoon-apps/<应用>/freertos/boards/<板子>/armgcc_aarch64
+./build_ddr_release.sh
+# 产物：ddr_release/<应用>.bin
+```
+
+| 参数 | 取值 |
+|---|---|
+| `<应用>` | `hello_world`、`rt_latency`、`audio`、`industrial`、`virtio_net` |
+| `<板子>` | **`imx95lpd5evk19`**（19x19 EVK）、`imx95lp4xevk15`（15x15） |
+
+**关键点**：**工具链是 GNU Arm AArch64 的 GCC 13.2.Rel1**，不是 M7 那套 `arm-none-eabi`。A55 是 64 位 AArch64。
+
+**和 M7 的对比**：
+
+| | M7 方案 | Harpoon 方案 |
+|---|---|---|
+| 编译目标 | Cortex-M7（32 位） | **Cortex-A55（AArch64，64 位）** |
+| 要不要打包进容器 | **要**（`imx-mkimage` → `flash.bin`） | **不要**，直接是 `.bin` |
+| 怎么上板 | UUU 烧录 | `scp` 拷贝 + `cell load` |
+| 链接地址 | M7 的 TCM 地址 | **cell 规定的 `0xf0000000`** |
+
+**所以你的记忆没错：不需要容器。**
+
+### 自己的 bin 要注意什么（IMPORTANT）
+
+| 项 | 要求 |
+|---|---|
+| **链接地址** | 必须和 cell 里给 inmate 的内存段一致（现在是 `0xf0000000`） |
+| **架构** | AArch64，不是 ARM 32 位 |
+| **MMU/缓存配置** | 参考官方的 `app_mmu.h`——inmate 要自己建页表映射设备内存 |
+| **外设初始化** | inmate 要自己初始化用到的外设（时钟、引脚），**不能指望 Linux 帮它** |
+| **入口** | 裸机入口，FreeRTOS 的 `main` 之前那一段 |
+
+> **能不能用 IAR 编**：IAR 支持 AArch64，但**官方参考流程用的是 GCC + CMake**。
+> 用 IAR 要自己做链接脚本和启动代码，**建议先照官方 GCC 流程走通再考虑换工具链**。
+
+### cell 文件要改什么
+
+**只换 bin 的话，cell 一般不用改**，前提是新 bin 放得进原内存段、链接地址一致。
+
+如果**内存需求变了**（比如程序变大、想多要一段内存），要改 cell 里的 `mem_regions`：
+
+```c
+.mem_regions = {
+    {
+        .phys_start = 0xf0000000,     // 物理起始
+        .virt_start = 0xf0000000,     // 虚拟起始
+        .size       = 0x10000000,     // 大小
+        .flags      = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE
+                    | JAILHOUSE_MEM_EXECUTE | JAILHOUSE_MEM_LOADABLE,
+    },
+    /* 外设段，如串口、GIC 等 */
+}
+```
+
+**`-a` 和 `phys_start` 必须一致**，也要和 bin 的链接地址一致。
+
+### 改了 cell 之后还要注意
+
+如果改的是**外设归属**（不只是内存大小），**SM 配置可能也要一起改**。UG10170 §1.5 明说 guest cell 的 LPUART 分配写在 Harpoon 定制的 SM 配置里。
+
+---
+
+## .cell 是怎么编译出来的
+
+`.cell` **不是烧录时生成的，是编译期用普通 C 编译器编出来的二进制**。过程：
+
+```text
+configs/arm64/imx95-harpoon-freertos.c   ← C 源码（一个结构体初始化）
+        ↓ 普通 gcc/clang 编译成 .o
+        ↓ objcopy 抽成裸二进制
+imx95-harpoon-freertos.cell              ← 最终文件
+```
+
+**本质**：那个 `.c` 文件里就一个 `struct` 初始化，编译出来就是这个结构体的内存布局——这也是为什么我们前面能直接按偏移解出 `name`、内存段等内容。
+
+**编译工具**：Jailhouse 源码树自带的构建系统，在 `harpoon-apps` 里通过 Jailhouse recipe 的补丁嵌入。官方给出的是从 `west` 拿源码后按 Yocto 流程编。
+
+**实操建议**：拿到源码后，改 `configs/arm64/imx95-harpoon-freertos.c`，按 Harpoon 的构建流程重编，产物会落到 rootfs 的 `/usr/share/jailhouse/cells/`。
+
+---
+
+## 用什么调试
+
+### 先说结论：**Harpoon 方案下，"下载"和"调试"是两件独立的事**
+
+| | 怎么做 | 需要 JTAG 吗 |
+|---|---|---|
+| **跑起来** | `scp` 传文件 + `jailhouse cell load/start` | **不需要** |
+| **看输出** | 板子的调试串口（EVK 上 J31） | **不需要** |
+| **单步/断点调试** | JTAG | **需要** |
+
+**所以日常开发（改代码、编译、跑、看打印）完全不用 JTAG。**
+
+### 为什么"直接 IAR 编译烧录"不行
+
+你的直觉对的，原因有三层：
+
+**① 没有"烧录地址"这个概念了**
+
+M7 那套能"编译→下载→运行"，是因为调试器把程序写进 **TCM/Flash 的固定地址**，复位后 CPU 从那里执行。而 Harpoon 的 inmate：
+
+- 程序**不是烧进 Flash**，是运行期被 `jailhouse cell load` **搬进 DDR** 的
+- 谁搬、搬到哪，由 **cell 配置**决定，**不由调试器决定**
+- 而且**必须有 hypervisor 先建好 stage-2 页表**，那块内存才归 inmate 用
+
+**直接烧进 DDR 也没用**——没有 hypervisor 建立映射，CPU 访问会直接异常。
+
+**② IAR 编出来的是 ARM 32 位还是 AArch64，是两回事**
+
+M7 工程是 Cortex-M7（ARMv7-M，32 位），A55 是 **AArch64（64 位）**。**这不是换个选项就行的，启动代码、链接脚本、异常向量全不一样。**
+
+**③ 没有"复位后自动跑"的路径**
+
+inmate 的启动是 `cell start` 触发的——**hypervisor 把核从 Linux 手里拿过来，让核跳到 inmate 入口**。没有调试器参与这个流程。
+
+### 有 J-Link 怎么调
+
+**EVK 上有 JTAG 座 J30**（2×5-pin，标准 10-pin JTAG），这是 Pro 板没有的。接线和注意点见 [[10-项目/IMX95-EVK/JTAG与SWD接口调研.md|JTAG 与 SWD 接口调研]]。
+
+**能做的事**：
+
+| 能力 | 说明 |
+|---|---|
+| 连接 A55 核 | 需要 VTREF 接上（切到外部 JTAG） |
+| 看寄存器/内存 | halt 之后可以读 |
+| 断点/单步 | 取决于 EL 层和 ATF 配合 |
+
+**难点**：
+
+- **inmate 运行在 EL1，hypervisor 在 EL2**，调试器要看清楚在哪一层
+- **halt 时机**：在 `cell start` 之后再 halt，才能看到 inmate
+- 可能需要在 U-Boot 阶段就接管，或配合 ATF
+- **i.MX95 的 DAP 是否支持调试 A55 的 EL1/EL2，需要实测确认**
+
+### 没有 J-Link 怎么调
+
+**常规手段，而且大部分时候够用**：
+
+| 手段 | 用途 |
+|---|---|
+| **调试串口**（J31，115200-8N1） | 看 U-Boot / Linux / SM 的输出。**最重要的手段** |
+| **inmate 的 console** | inmate 自己的打印（Harpoon cell 配的是 LPUART3） |
+| **`jailhouse cell stats`** | 看 `vmexits` 等运行状态 |
+| **`dmesg` / `/proc`** | 看 Linux 侧状态 |
+| **逻辑分析仪** | 量引脚上到底有没有信号 |
+| **`jailhouse console -f`** | hypervisor 自己的日志 |
+
+**实践建议**：**先用串口把能看的都看了**，确认逻辑正确；真正需要单步查寄存器时再上 JTAG。
+
+---
+
+## 正常烧录 vs Harpoon 的"加载"
+
+你这个问题很关键，两者是**完全不同的机制**。
+
+### 正常烧录（你熟悉的，也是 M7 那套）
+
+```text
+IAR 编译 → .bin/.elf
+   ↓ 调试器或 UUU 把文件写入目标存储
+固定地址（Flash / TCM / DDR 的约定位置）
+   ↓
+复位后 CPU 从复位向量取指，执行它
+```
+
+**"地址"由谁定**：由**链接脚本**决定（.bin 里的代码是按某个地址编的），**烧录工具把文件放到那个地址**。你以前"直接编译下载就没事"，是因为 IDE 里链接脚本和烧录算法都配好了，你不用管。
+
+### Harpoon 的 load
+
+```text
+GCC 编译 → .bin（已按 0xf0000000 链接）
+   ↓ scp 拷贝到板上文件系统（不是烧进 Flash 的固定位置！）
+   ↓ jailhouse cell load freertos xxx.bin -a 0xf0000000
+hypervisor 把文件内容读出来、写进 inmate 的物理内存
+   ↓
+cell start → 核跳到入口开始执行
+```
+
+**关键区别**：
+
+| | 正常烧录 | Harpoon load |
+|---|---|---|
+| 谁写入 | 调试器 / UUU | **hypervisor** |
+| 写到哪 | Flash/TCM（持久） | **DDR（掉电即失）** |
+| 什么时候 | 上电前 | **系统运行中** |
+| 地址谁定 | 调试器按链接脚本放 | **`-a` 参数 + cell 配置** |
+| 要不要 hypervisor | 不要 | **必须要**（要先建 stage-2 映射） |
+| 掉电后 | 还在 | 没了，要重新 load |
+
+**`jailhouse cell start` 背后做了什么**（简单版）：
+
+```text
+1. 找到这个 cell 分配到的那颗核（CPU5）
+2. 把核从 Linux 调度器里摘出来
+3. 设置核的执行上下文（PC 指向 inmate 入口）
+4. 让核开始执行
+   ↓ 从此这颗核上跑的是 FreeRTOS，不是 Linux
+```
+
+**这就是为什么"start 之后 Linux 少一个核"**——那颗核的所有权真的转交了。
+
+---
+
 ## 第五部分：卡住时的排查表
 
 | 现象                                                           | 大概原因                                        | 怎么办                                                              |
