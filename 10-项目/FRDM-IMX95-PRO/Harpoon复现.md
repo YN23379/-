@@ -906,9 +906,7 @@ west update
 
 ## 三个文件的来源与用途（`imx95-harpoon-freertos.cell` / `hello_world.bin` / `rt_latency.bin`）
 
-### 短答
-
-**是的，三个文件都来自你下载的那个 Harpoon 包**（Real-Time Edge 3.3），但**不是直接躺在文件夹里**——
+**三个文件都来自你下载的那个 Harpoon 包**（Real-Time Edge 3.3），但**不是直接躺在文件夹里**——
 它们打包在 rootfs 压缩包里，需要解包才能拿到。
 
 ```text
@@ -1069,7 +1067,7 @@ FreeRTOS 需要一块自己的内存，但 Linux 启动时会把内存全部认�
   U-Boot > setenv jh_root_dtb imx95-19x19-evk-harpoon.dtb
   U-Boot > run jh_mmcboot
   ```
-  这份 dtb 的 `/memory` 节点已经是改小的，并且预留了 hypervisor 要用的内存。`jh_mmcboot` 这个宏里已经写好了 `jh_root_mem` 和 `jh_clk` 的值，所以只要指向它就行。
+  这份 dtb 是专为 Jailhouse 准备的版本，比普通版多出核间通信的预留内存段（`rpmsg-ca55`、`vdevbuffer-ca55`）和对应设备节点，并把 `linux,cma` 的范围收窄。**内存上限不是它改的**——反编译对比三份 dtb，`/memory` 节点完全一样，内存限制是 U-Boot 运行时用 `fdt_fixup_memory_banks()` 改的。`jh_mmcboot` 这个宏里已经写好了 `jh_root_mem` 和 `jh_clk` 的值，所以只要指向这份 dtb 就行。
 
 - **没有 dtb 时**（Pro 板就是这样，`jh_root_dtb` 指向的 `imx95-19x19-frdm-pro-root.dtb` 在板上不存在）：只能进 U-Boot 手工做 `jh_mmcboot` 里的事。
   ```bash

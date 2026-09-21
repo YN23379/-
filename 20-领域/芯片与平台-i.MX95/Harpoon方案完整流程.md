@@ -140,6 +140,33 @@ M7 是从核，SM 在启动早期（Linux 之前）就能加载并 release 它�
    （依据：Jailhouse 官方在其它板子的部署说明里同样要求用内核启动参数 `mem=` 预留内存，
    [setup-on-emtrion-emcon-rz-boards.md](https://raw.githubusercontent.com/siemens/jailhouse/44e19da09b6614146bec15ff1529359dddb02b0c/Documentation/setup-on-emtrion-emcon-rz-boards.md)；
    CPU 可运行期交接由本项目 `nproc` 6→5 实机验证；外设部分为推测。）
+
+   **2026-09-21 实测：`/memory` 节点并不在 dtb 里改**。把 `imx95-19x19-evk-harpoon.dtb`、
+   `imx95-19x19-evk.dtb`、`imx95-19x19-evk-root.dtb` 用 `dtc` 反编译后对比，
+   三者的 `/memory` 节点**完全相同**：
+
+   ```text
+   memory@80000000 {
+       device_type = "memory";
+       reg = <0x00 0x80000000 0x00 0x80000000>;   /* 2GB，三份 dtb 都一样 */
+   };
+   ```
+
+   也就是说**内存限制是 U-Boot 在启动时用 `fdt_fixup_memory_banks()` 动态改出来的**，
+   不是预先烧进 dtb。这印证了 `jh_root_mem` 的作用方式。
+   （反编译方法：`dtc -I dtb -O dts -o out.dts in.dtb`；产物在 `build\dts-diff\`。）
+
+   **那 `-harpoon.dtb` 到底改了什么**：对比后差异集中在四处，**都与内存无关**：
+
+   | 差异 | 具体内容 | 作用 |
+   |---|---|---|
+   | **多出 3 个 reserved-memory 段** | `0xc0000000`（4KB）、`0xc0100000`（64KB，`rpmsg-ca55`）、`0xc0200000`（1MB，`vdevbuffer-ca55`） | 给 Linux↔inmate 的 RPMsg 通信预留 |
+   | **多出 `rpmsg-ca55` 设备节点** | `compatible = "fsl,imx8mm-rpmsg"`，挂到 mailbox 上 | 提供核间通信通道 |
+   | **`linux,cma` 的 `alloc-ranges` 变小** | 从 `0x7f000000`（约 2GB）改成 `0x70000000`（1.75GB） | 让 CMA 不越过 Linux 可用内存边界 |
+   | **去掉 `__symbols__` 节点** | 普通 dtb 有、harpoon 与 root 都没有 | 裁剪体积，不影响运行 |
+
+   **结论**：`-harpoon.dtb` 主要做的是**加核间通信的预留和节点**，以及**收窄 CMA 范围**。
+   它**不负责**改内存上限（那是 U-Boot 干的），也**没有**禁用要交给 inmate 的外设节点。
 2. **inmate 的入口地址 `-a 0xf0000000` 不是随手写的**，它是 inmate cell 配置里给这块内存的起始地址；
    二进制必须按这个地址链接，否则 start 后直接跑飞。
 3. **inmate 控制台是独立串口**：Harpoon FreeRTOS cell 配置里控制台是 LPUART3（`0x42570000`），
@@ -174,13 +201,13 @@ modprobe -r jailhouse
 
 ## 七、证据等级
 
-| 结论 | 等级 | 出处 |
-|---|---|---|
-| `jh_harpoon.sh start` 的命令顺序 | 源码确认 | 读包内 `jh_harpoon.sh` 与 `harpoon.conf` |
-| 完整命令序列能在 Pro 板跑通 FreeRTOS inmate | **实机验证** | `jailhouse cell list` 显示 `1 freertos running 5`，见 [[10-项目/IMX95-EVK/Harpoon验证与复现.md|项目实证]] |
-| inmate 控制台 = LPUART3、入口 0xf0000000 | 源码确认 | 两份 cell 配置（`-freertos.cell`/`-industrial.cell`）内容一致 |
-| Pro 原厂自带 Jailhouse、Harpoon 包版本不匹配 | **实机验证** | `modinfo jailhouse`、包内 manifest 对比 |
-| `jh_root_mem` 改写 `/memory` 的机制 | 官方资料明确说明 | U-Boot `ft_board_setup`（`imx95_frdm.c`）源码 + Harpoon 文档 |
+| 结论                                 | 等级       | 出处                                                                                  |        |
+| ---------------------------------- | -------- | ----------------------------------------------------------------------------------- | ------ |
+| `jh_harpoon.sh start` 的命令顺序        | 源码确认     | 读包内 `jh_harpoon.sh` 与 `harpoon.conf`                                                |        |
+| 完整命令序列能在 Pro 板跑通 FreeRTOS inmate   | **实机验证** | `jailhouse cell list` 显示 `1 freertos running 5`，见 [[10-项目/IMX95-EVK/Harpoon验证与复现.md | 项目实证]] |
+| inmate 控制台 = LPUART3、入口 0xf0000000 | 源码确认     | 两份 cell 配置（`-freertos.cell`/`-industrial.cell`）内容一致                                 |        |
+| Pro 原厂自带 Jailhouse、Harpoon 包版本不匹配  | **实机验证** | `modinfo jailhouse`、包内 manifest 对比                                                  |        |
+| `jh_root_mem` 改写 `/memory` 的机制     | 官方资料明确说明 | U-Boot `ft_board_setup`（`imx95_frdm.c`）源码 + Harpoon 文档                              |        |
 
 ## 相关
 
