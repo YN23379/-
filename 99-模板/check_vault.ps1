@@ -52,6 +52,7 @@ $backslash = @()
 $noFm      = @()
 $noTitle   = @()
 $fmProblems = @()
+$truncated = @()
 
 $legalType     = @('项目档案','知识库','参考','索引','归档','学习方法','视频蒸馏')
 $legalStatus   = @('待整理','已整理','待验证','进行中','已归档')
@@ -142,6 +143,17 @@ foreach ($f in $mdFiles) {
             }
         }
     }
+    # ---- 疑似截断的段落（合并笔记时的残留）----
+    # 只认明确特征：行尾是未闭合的 $...^ （LaTeX 上标被截断），或行首出现孤立 n$,
+    # 注意排除 Makefile 自动变量（$@ $^ $< $(CC) 这类），否则会误报
+    $lines = $txt -split "`r?`n"
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $l = $lines[$i]
+        if ($l -match '\$[@\^<\?]' -or $l -match '\$\((CC|CXX|AR|LD)\)') { continue }
+        if ($l -match '\$[^$]*\^\s*$' -or $l -match '^\s*n\$,') {
+            $truncated += "$rel  L$($i+1): $($l.Trim())"
+        }
+    }
 }
 
 Write-Output "================ 知识库体检 ================"
@@ -152,6 +164,7 @@ Write-Output ("链接内反斜杠        : " + $backslash.Count)
 Write-Output ("缺 frontmatter      : " + $noFm.Count)
 Write-Output ("frontmatter 字段问题: " + $fmProblems.Count)
 Write-Output ("缺一级标题          : " + $noTitle.Count)
+Write-Output ("疑似截断段落        : " + $truncated.Count)
 Write-Output ""
 
 function Show($title, $items, $limit) {
@@ -168,5 +181,6 @@ Show "链接内反斜杠" $backslash 20
 Show "缺 frontmatter" $noFm 20
 Show "frontmatter 字段问题" $fmProblems 40
 Show "缺一级标题" $noTitle 50
+Show "疑似截断段落" $truncated 30
 
 if ($broken.Count -gt 0 -or $backslash.Count -gt 0) { exit 1 } else { exit 0 }
