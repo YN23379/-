@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/开发日志.md",
+                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "开发日志"
+              "title": "Harpoon复现"
             }
           }
         ]
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-项目/FRDM-IMX95-PRO/开发日志.md",
+                "file": "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -201,11 +201,22 @@
   },
   "active": "8b737600487f1838",
   "lastOpenFiles": [
+    "00-入口/MOC-资源.md~RF17631d2.TMP",
+    "30-资源/PLC-微波炉-工程与手册/README.md",
+    "30-资源/PLC-微波炉-工程与手册/PLC_嵌入式_微波炉/微波炉.txp",
+    "30-资源/PLC-微波炉-工程与手册/PLC_嵌入式_微波炉/PLC.xdp",
+    "30-资源/PLC-微波炉-工程与手册/工程文件版本管理.png",
+    "30-资源/PLC-微波炉-工程与手册/TouchWin编辑软件用户手册（HC 02 20240527 1.2）-2024.5.27.pdf",
+    "30-资源/PLC-微波炉-工程与手册/PLC_嵌入式_微波炉",
+    "30-资源/PLC-微波炉-工程与手册/1. 软件手册.pdf",
+    "30-资源/PLC-微波炉-工程与手册",
+    "99-模板/_v.py",
+    "10-项目/FRDM-IMX95-PRO/开发日志.md",
+    "99-模板/_check_pdf_dup.py",
     "00-入口/整理记录-2026-09-21.md",
     "10-项目/FRDM-IMX95-PRO/问题记录.md",
     "10-项目/FRDM-IMX95-PRO/开发疑问.md",
     "99-模板/check_vault.ps1",
-    "10-项目/FRDM-IMX95-PRO/开发日志.md",
     "10-项目/FRDM-IMX95-PRO/Harpoon复现.md",
     "00-入口/待解疑问.md",
     "10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md",
@@ -220,23 +231,13 @@
     "30-资源/视频蒸馏/2026-09-20-视频蒸馏-现在学RTOS还是Linux.md",
     "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md",
     "30-资源/视频蒸馏/README.md",
-    "30-资源/视频蒸馏",
     "40-归档/合并前原件/Linux面试题2.md",
     "10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.f179deaf28c1",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.ad50bd986207",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.56e7fd3621eb",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.e4e669dcf9a1",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.5be2a6b52ddf",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.e2b0c783c242",
-    "20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md.tmp.29120.b200c6b7420d",
     "10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md",
     "README.md",
     "10-项目/面试项目/系统健康监测平台.md",
     "20-领域/Linux/Linux系统编程/内存管理.md",
     "10-项目/IMX95-EVK/README.md",
-    "10-项目/IMX95-EVK/MCUXpresso-SDK获取.md",
-    "10-项目/IMX95-EVK/JTAG与SWD接口调研.md",
     "90-附件/RTOS/ucosii任务状态.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png"
