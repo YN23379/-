@@ -11,7 +11,7 @@ updated: 2026-09-17
 # i.MX95 上 Jailhouse 与 Harpoon 的分层与判定方法
 
 > 适用范围：判断“厂商给的预编译实时/虚拟化软件包，能不能用在我手上这块板子上”，以及理解 Cortex-A 上跑 RTOS 的架构。示例来自 i.MX95 + FRDM-IMX95-PRO，但方法可迁移到 i.MX8M/i.MX93/i.MX943 等。
-> 产生该结论的项目证据：[2026-09-17-Harpoon可用性验证](10-项目/FRDM-IMX95-PRO/Harpoon验证与复现.md)。
+> 产生该结论的项目证据：[Harpoon 复现操作手册](10-项目/FRDM-IMX95-PRO/Harpoon复现.md)。
 
 ## 一、先把“能用”拆成两层
 
@@ -137,12 +137,3 @@ Cortex-A 上跑 inmate 时，**inmate 很可能占用调试串口（甚至抢走
 - `github.com/NXP/meta-nxp-harpoon` `recipes-bsp/harpoon-apps/harpoon-apps-freertos.inc`（机器映射表）（`源码可以确认`）
 - `github.com/nxp-imx/imx-jailhouse` `configs/arm64/imx95.c`（`源码可以确认`）
 - 项目实测：容器内 U-Boot 环境变量、DTB `model`/`compatible`、rootfs manifest、板载 `/lib/firmware/jailhouse.bin`（`实机/镜像确认`，见项目档案）
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md|i.MX95在A55上运行FreeRTOS的路径]]

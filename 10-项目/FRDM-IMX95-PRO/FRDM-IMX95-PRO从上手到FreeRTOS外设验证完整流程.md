@@ -1060,12 +1060,3 @@ GPIO OUT=1, IN=1
 `AN14120 Rev.5.0（2026-06-29）`明确覆盖i.MX95，主题是使用VS Code、MCUXpresso for VS Code和J-Link调试Cortex-M。它可用于以后配置J-Link Server、导入SDK工程、附加M7、设置断点、单步、查看变量、寄存器、调用栈和内存，也讨论了仅运行Cortex-M或跳过Cortex-A镜像的调试场景。
 
 它不是本次SD卡写入教程。当前SD持久化的直接依据是UM12527的SW4启动模式、AN14748的M7启动容器流程和UUU内置`sd`脚本。由于Pro板JTAG/SWD只引到TP测试点且当前没有J-Link，AN14120先作为后续硬件调试资料保存，不影响现在使用UUU和SD卡启动。
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md|FRDM-IMX95-PRO开发记录]]
-- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]

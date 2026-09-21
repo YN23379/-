@@ -49,12 +49,3 @@ SDK_25_12_00_IMX95LPD5EVK-19.zip
 UUU 1.5.243已经通过`uuu.exe -lsusb`识别USB Serial Downloader模式下的i.MX95，协议为`SDPS`，VID为`0x1FC9`，PID为`0x015D`。这只说明USB下载通道正常，不表示已经烧写程序。
 
 与板载系统匹配的Linux BSP版本为`6.18.2_1.0.0`。下载完整BSP不是为了获得FreeRTOS源码，而是为了取得Pro板匹配的System Manager、AHAB、OEI、DDR初始化、U-Boot和恢复镜像。这些文件用于制作`flash.bin`或在eMMC损坏时恢复系统。当前先使用eMMC内已有的M7 BIN验证`bootaux`，暂不需要下载体积较大的完整BSP。
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/FRDM-IMX95-PRO/SD启动GPIO权限问题结论.md|SD启动GPIO权限问题结论]]
-- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]
-- [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md|A55运行FreeRTOS的方向调整]]

@@ -2,8 +2,8 @@
 type: 视频蒸馏
 scope: 嵌入式软件技术路线
 doc_type: 参考
-status: 已蒸馏
-evidence: 页面章节摘要；个人观点
+status: 已整理
+evidence: 个人观点
 tags: [视频蒸馏, 嵌入式, RTOS, Linux, FreeRTOS, Zephyr, MCU, MPU, MMU]
 updated: 2026-09-20
 source_url: https://v.douyin.com/DSYkrHIRT7M/

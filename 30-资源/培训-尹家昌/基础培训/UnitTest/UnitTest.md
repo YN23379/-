@@ -110,8 +110,8 @@ VS2019 自带的 CppUnitTestFramework 中，一个测试文件的基本结构如
 
 ```cpp
 初始单元测试的.cpp:
-#include "pch.h"
-#include "CppUnitTest.h"
+# include "pch.h"
+# include "CppUnitTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -129,8 +129,8 @@ namespace UnitTest
 
 
 
-#include "pch.h"   			// 预编译头
-#include "CppUnitTest.h"	// 测试框架
+# include "pch.h"   			// 预编译头
+# include "CppUnitTest.h"	// 测试框架
 
 // 引入被测 C 代码的头文件（用 extern "C" 包裹，告知 C++ 编译器按 C 链接方式处理）
 extern "C" {

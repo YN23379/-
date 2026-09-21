@@ -3,7 +3,7 @@ type: 知识库
 scope: 虚拟化与隔离
 doc_type: 原理
 status: 已整理
-evidence: 官方资料明确说明
+evidence: 官方资料
 tags: [虚拟化, 安全与隔离, 多核与异构, 架构]
 updated: 2026-09-21
 ---
@@ -256,11 +256,3 @@ guest 物理地址 (IPA, Intermediate Physical Address)   ← guest 以为这是
 - **项目证据**：
   - 实机上 `vmexits_mmio` 远多于其他类型，印证"非法 MMIO 访问会被硬件拦截"：[[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现：手把手操作]]
   - `kvm-arm.mode=nvhe` 的实测背景：[[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md|Jailhouse 分区式虚拟化原理]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|i.MX95 上 Jailhouse 与 Harpoon 的分层与判定方法]]

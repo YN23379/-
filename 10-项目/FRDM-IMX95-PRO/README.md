@@ -51,13 +51,3 @@ Pro 板阶段的完整现场记录，**不改写成通用教材**。内容覆盖
 > **只对 FRDM-IMX95-PRO 和当时的构建环境负责**。
 > 换到 EVK 后：启动开关是 **SW7**（不是 SW4）、调试口是 **J31**、
 > 有 **JTAG 座 J30**、电源是 **J5 + SW4 开关**。
-
-<!-- related-generated -->
-## 相关
-
-- [[10-项目/IMX95-EVK/EVK-19x19到手操作计划.md|EVK-19x19 到手操作计划（当前主线）]]
-- [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md|理解：启动逻辑、资源隔离与权限]]
-- [[10-项目/FRDM-IMX95-PRO/开发日志.md|开发日志（按时间）]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|从上手到外设验证完整流程]]
-- [[10-项目/FRDM-IMX95-PRO/SD启动GPIO权限问题结论.md|SD 启动 GPIO 权限问题结论]]
-- [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md|A55 运行 FreeRTOS 的方向调整]]

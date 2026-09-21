@@ -132,13 +132,13 @@ main()
 
 ```text
 devices/MIMX9596/system_MIMX9596_cm7.h
-#define DEFAULT_SYSTEM_CLOCK 800000000u
+# define DEFAULT_SYSTEM_CLOCK 800000000u
 ```
 
 并由`system_MIMX9596_cm7.c`初始化`SystemCoreClock`。FreeRTOS再通过：
 
 ```c
-#define configCPU_CLOCK_HZ (SystemCoreClock)
+# define configCPU_CLOCK_HZ (SystemCoreClock)
 ```
 
 使用这个值配置节拍和时间换算。这个`800 MHz`是SDK对该M7工程的默认核心时钟声明；实际芯片时钟还要与启动时的System Manager时钟配置一致，不能仅凭宏就断言所有启动场景都一定是800 MHz。之前实时性测试中用DWT周期数反推约800 MHz，与该默认值相互吻合。

@@ -862,7 +862,7 @@ SM 源码里，每个电源域有一个 slice 索引和一个 flags 字段（`de
 而它的定义处直接写了注释（`devices/MIMX95/sm/dev_sm_power.h:72`，**源码可以确认**）：
 
 ```c
-#define DEV_SM_PD_AON  PWR_MIX_SLICE_IDX_AON  /*!< 1: Always-on domain */
+# define DEV_SM_PD_AON  PWR_MIX_SLICE_IDX_AON  /*!< 1: Always-on domain */
 ```
 
 > **"常开"不是一句口号，而是 `flags` 里少了 `PWR_MIX_FLAG_SWITCHABLE` 这一位。**
@@ -1333,7 +1333,7 @@ SW4不是“选择Linux或FreeRTOS”的开关，它只在芯片复位时向Boot
 官方i.MX95 SM源码明确将故障号19定义为：
 
 ```c
-#define DEV_SM_FAULT_WDOG3 19U  /* WDOG3 timeout (Watchdog reset request) */
+# define DEV_SM_FAULT_WDOG3 19U  /* WDOG3 timeout (Watchdog reset request) */
 ```
 
 Pro配置明确包含：
@@ -1535,17 +1535,3 @@ F:\project\Learning\RTOS\build\pro-gpio\flash-m7-gpio.parse.txt
 | Container header、偏移和SHA384摘要 | 描述每个映像的类型、核心、加载地址和完整性 | `imx-mkimage`根据以上输入生成 |
 
 其中本次项目直接修改或生成的是M7应用源码及其BIN、SM权限cfg及其M33 BIN、集成构建脚本和最终组合镜像。ELE、V2X、DDR、SPL、BL31、U-Boot和TEE没有重新开发，均复用匹配FRDM-IMX95-PRO的NXP组件。
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95引脚控制-IOMUXC与RGPIO分工]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md|i.MX95在A55上运行FreeRTOS的路径]]
-
-**相关主题**
-
-- [[20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md|i.MX95官方启动配置与ELE文件]]
-- [[20-领域/芯片与平台-i.MX95/启动与烧录/STM32与i.MX95启动和开发流程对比.md|STM32与i.MX95启动和开发流程对比]]

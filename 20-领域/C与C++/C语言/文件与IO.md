@@ -8,7 +8,7 @@ tags: [C语言, 文件系统, 进程与线程, 内存管理]
 updated: 2026-09-17
 ---
 
-#文件
+# 文件
 
 ## 文件权限
 ```bash
@@ -96,13 +96,13 @@ mkdir -p 的特性：
 
 ### remove
 ```
-#include <stdio.h>
+# include <stdio.h>
 ```
 
 
 ### rename
 ```c
-#include <stdio.h>
+# include <stdio.h>
 int rename(char * oldname, char * newname);
 ```
 参数:oldname为旧文件名，newname为新文件名。  
@@ -118,9 +118,9 @@ int rename(char * oldname, char * newname);
 ### stat
 ![[90-附件/stat结构体.png|1000]]
 ```c
-#include <sys/types.h> 
-#include <sys/stat.h> 
-#include <unistd.h> 
+# include <sys/types.h> 
+# include <sys/stat.h> 
+# include <unistd.h> 
  
 int stat(const char *pathname, struct stat *buf); 
 
@@ -221,14 +221,3 @@ stk[0] = malloc(sizeof(struct TreeNode));
 - 数组名是常量，不能作为左值被赋值
     
 - 只能在定义时初始化，不能后续赋值
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/C与C++/C语言/函数_编译链接与宏.md|函数_编译链接与宏]]
-- [[20-领域/C与C++/C语言/基础与进阶总览.md|基础与进阶总览]]
-- [[20-领域/C与C++/C语言/数据类型与存储类型.md|字符串]]
-
-**导航**：[[20-领域/C与C++/C语言/README.md|C语言]]

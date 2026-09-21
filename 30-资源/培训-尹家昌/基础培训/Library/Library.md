@@ -123,12 +123,12 @@ C/C++ 程序从源码到可执行文件经历的四个阶段:
 右键项目 → `添加` → `新建项` → `头文件(.h)`：
 
 ```c
-#ifndef ADD_H   //防止重复包含
-#define ADD_H
+# ifndef ADD_H   //防止重复包含
+# define ADD_H
 
 int Add(int a, int b);  //静态库函数
 
-#endif
+# endif
 ```
 
 <img src="pictures\新建文件.png" style="zoom:67%;" />
@@ -138,7 +138,7 @@ int Add(int a, int b);  //静态库函数
 右键项目 → `添加` → `新建项` → `C++ 文件(.cpp)`：
 
 ```c
-#include "add.h"  //包含静态库自己的头文件
+# include "add.h"  //包含静态库自己的头文件
 
 int Add(int a, int b) //静态库函数实现
 {
@@ -281,11 +281,11 @@ int Add(int a, int b) //静态库函数实现
 
 ```cpp
 // MyDll.h
-#ifdef MYDLL_EXPORTS
+# ifdef MYDLL_EXPORTS
     #define MYDLL_API __declspec(dllexport)   // 生成 DLL 时
-#else
+# else
     #define MYDLL_API __declspec(dllimport)   // 调用 DLL 时
-#endif
+# endif
 
 MYDLL_API int Add(int a, int b);
 MYDLL_API int Subtract(int a, int b);
@@ -417,7 +417,7 @@ xcopy /y /d "$(SolutionDir)MyDll\$(Configuration)\MyDll.dll" "$(OutDir)"
 不依赖工程配置，通过 Windows API 在运行时手动控制 DLL 的加载与释放：
 
 ```cpp
-#include <windows.h>
+# include <windows.h>
 
 HMODULE hDll = LoadLibrary(L"MyDll.dll");
 if (hDll == NULL) {
@@ -566,18 +566,18 @@ FreeLibrary(hDll);
 右键项目 → `添加` → `新建项` → `头文件(.h)`：
 
 ```c
-#ifndef ADD_H   //防止重复包含
-#define ADD_H
+# ifndef ADD_H   //防止重复包含
+# define ADD_H
 
 int Add(int a, int b);  //静态库函数
 
-#endif
+# endif
 ```
 
 右键项目 → `添加` → `新建项` → `C++ 文件(.cpp)`：
 
 ```c
-#include "add.h"
+# include "add.h"
 
 int Add(int a, int b)
 {
@@ -608,26 +608,26 @@ int Add(int a, int b)
 添加 `sub.h`：
 
 ```c
-#ifndef SUB_H
-#define SUB_H
+# ifndef SUB_H
+# define SUB_H
 
-#ifdef DLLSUB_EXPORTS
+# ifdef DLLSUB_EXPORTS
     #define DLLSUB_API __declspec(dllexport)
-#else
+# else
     #define DLLSUB_API __declspec(dllimport)
-#endif
+# endif
 //防御措施，提高安全性
 
 
 DLLSUB_API int Sub(int a, int b);
 
-#endif
+# endif
 ```
 
 添加 `sub.c`：
 
 ```c
-#include "sub.h"
+# include "sub.h"
 
 int Sub(int a, int b)
 {
@@ -660,18 +660,18 @@ int Sub(int a, int b)
 添加 `mul.h`：
 
 ```c
-#ifndef MUL_H
-#define MUL_H
+# ifndef MUL_H
+# define MUL_H
 
 int Mul(int a, int b);
 
-#endif
+# endif
 ```
 
 添加 `mul.c`：
 
 ```c
-#include "mul.h"
+# include "mul.h"
 
 int Mul(int a, int b)
 {
@@ -712,18 +712,18 @@ EXPORTS
 添加 `div.h`：
 
 ```c
-#ifndef DIV_H
-#define DIV_H
+# ifndef DIV_H
+# define DIV_H
 
 float Div(int a, int b);
 
-#endif
+# endif
 ```
 
 添加 `div.c`：
 
 ```c
-#include "div.h"
+# include "div.h"
 
 float Div(int a, int b)
 {
@@ -735,8 +735,8 @@ float Div(int a, int b)
 添加 `main.c`（先写个简单的，后面几步逐渐扩展）：
 
 ```c
-#include <stdio.h>
-#include "div.h"
+# include <stdio.h>
+# include "div.h"
 
 int main(void)
 {
@@ -774,9 +774,9 @@ int main(void)
 **（4）修改 main.c，调用 Add**
 
 ```c
-#include <stdio.h>
-#include "add.h"
-#include "div.h"
+# include <stdio.h>
+# include "add.h"
+# include "div.h"
 
 int main(void)
 {
@@ -809,10 +809,10 @@ int main(void)
 **（3）修改 main.c**
 
 ```c
-#include <stdio.h>
-#include "add.h"
-#include "sub.h"
-#include "div.h"
+# include <stdio.h>
+# include "add.h"
+# include "sub.h"
+# include "div.h"
 
 int main(void)
 {
@@ -844,11 +844,11 @@ xcopy /y /d "$(SolutionDir)DllSub\Debug\DllSub.dll" "$(OutDir)"
 **（1）修改 main.c，加入 Mul 的动态加载**
 
 ```c
-#include <stdio.h>
-#include <windows.h>
-#include "add.h"
-#include "sub.h"
-#include "div.h"
+# include <stdio.h>
+# include <windows.h>
+# include "add.h"
+# include "sub.h"
+# include "div.h"
 
 int main(void)
 {
@@ -931,11 +931,11 @@ xcopy /y /d "$(SolutionDir)DllMul\Debug\DllMul.dll" "$(OutDir)"
 打开 `UnitTest1.cpp`，替换为：
 
 ```cpp
-#include "pch.h"
-#include "CppUnitTest.h"
+# include "pch.h"
+# include "CppUnitTest.h"
 
 extern "C" {          // 关键：被测代码是 C，测试是 C++，必须加 extern "C"
-#include "div.h"
+# include "div.h"
 }
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;

@@ -2,7 +2,7 @@
 type: 索引
 scope: 视频蒸馏
 doc_type: 参考
-status: 已建立
+status: 已整理
 evidence: 不适用
 tags: [视频蒸馏, 技术路线, 嵌入式]
 updated: 2026-09-20

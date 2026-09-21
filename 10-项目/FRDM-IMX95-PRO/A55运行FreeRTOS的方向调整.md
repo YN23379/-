@@ -59,12 +59,3 @@ M7 FreeRTOS：已端到端跑通（串口/GPIO/实时性/抢占验证）
 A55 FreeRTOS：未开始，等待方案确认
 方向调整：已明确（M7 -> A55）
 ```
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]]

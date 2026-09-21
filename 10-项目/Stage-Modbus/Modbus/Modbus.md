@@ -395,10 +395,3 @@ TCP是面向字节流的协议，接收方不能假设一次`recv`就得到一�
 | CRC错还返回异常 | CRC错应静默丢弃，不能返回异常 |
 | 把TCP包边界当Modbus边界 | TCP要按MBAP Length字段拆包 |
 | 混用RTU、ASCII、TCP封装 | 三者PDU思想相近，但ADU、帧边界和校验不同 |
-
-<!-- related-generated -->
-## 相关
-
-**相关主题**
-
-- [[10-项目/Stage-Modbus/Modbus_Project/Modbus_Project_Learning.md|Modbus_Project_Learning]]

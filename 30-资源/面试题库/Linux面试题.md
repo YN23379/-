@@ -394,7 +394,7 @@ $ diskusage () { df -h ; }
 ## 35、判断一文件是不是字符设备文件，如果是将其拷贝到 /dev 目录下？
 
 ```c
-#!/bin/bash
+# !/bin/bash
 read -p "Input file name: " FILENAME
 if [ -c "$FILENAME" ];then
 　　cp $FILENAME /dev
@@ -404,7 +404,7 @@ fi
 ## 36、添加一个新组为 class1 ，然后添加属于这个组的 30 个用户，用户名的形式为 stdxx ，其中 xx 从 01 到 30 ？
 
 ```c
-#!/bin/bash
+# !/bin/bash
 groupadd class1
 for((i=1;i<31;i++))
 do
@@ -1251,10 +1251,10 @@ awk 详解。
 #### 答案：
 
 awk '{pattern + action}' {filenames}<br>
-#cat /etc/passwd |awk -F ':' '{print 1"\t"7}' //-F 的意思是以':'分隔 root /bin/bash<br>
+# cat /etc/passwd |awk -F ':' '{print 1"\t"7}' //-F 的意思是以':'分隔 root /bin/bash<br>
 daemon /bin/sh 搜索/etc/passwd 有 root 关键字的所有行<br>
 
-#awk -F: '/root/' /etc/passwd root:x:0:0:root:/root:/bin/bash
+# awk -F: '/root/' /etc/passwd root:x:0:0:root:/root:/bin/bash
 
  
 
@@ -1432,14 +1432,3 @@ linux命令’hash’管理着一个内置的哈希表，记录了已执行过�
     [root@localhost ~]# whatis zcat
 
     zcat [gzip] (1) – compress or expand files
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[30-资源/面试题库/操作系统面试题.md|操作系统面试题]]
-- [[30-资源/面试题库/计算机网络面试题.md|计算机网络面试题]]
-- [[30-资源/面试题库/面试八股.md|面试八股]]
-
-**导航**：[[30-资源/面试题库/README.md|面试题库]]

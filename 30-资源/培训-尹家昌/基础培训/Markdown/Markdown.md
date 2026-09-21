@@ -267,7 +267,7 @@ int a = 10;
 
 ~~~c
 ```c
-#include <stdio.h>
+# include <stdio.h>
 int main() {
     printf("Hello, World!\n");
     return 0;
@@ -278,7 +278,7 @@ int main() {
 效果：
 
 ```c
-#include <stdio.h>
+# include <stdio.h>
 int main() {
     printf("Hello, World!\n");
     return 0;

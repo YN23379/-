@@ -26,7 +26,6 @@ updated: 2026-09-17
 
 ## 一、理解-01：i.MX95 启动逻辑、资源隔离与权限（FRDM-IMX95-PRO）
 
-## 理解-01：i.MX95 启动逻辑、资源隔离与权限（FRDM-IMX95-PRO）
 
 > 类型：项目档案 / 理解文档。板型：FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）。
 > 对应要求：1（启动逻辑）、2（资源隔离与权限）、5（群组分布）；3、4（地址空间/内存分布）给出初稿与待补清单。
@@ -335,7 +334,6 @@ SDK 头文件（基址）      : SDK_26_06_00_IMX95LPD5EVK-19\devices\MIMX9596\M
 
 ## 二、理解-02：i.MX95 上电启动全流程（超详细）
 
-## 理解-02：i.MX95 上电启动全流程（超详细）
 
 > 类型：项目档案 / 理解文档（要求 1 的正文）。板型：FRDM-IMX95-PRO（i.MX95 B0，19x19，LPDDR5 16GB，eMMC 32GB）。
 > 记录时间：2026-09-17。
@@ -1618,12 +1616,3 @@ SM_LM_DEFAULT  = 2U          /* 调试监视器默认选中 LM2(AP) */
 
 - `2026-09-17-理解-启动逻辑与资源隔离.md`（四层权限模型、串口归属）
 - `2026-09-17-理解-02-上电启动全流程超详细.md`（启动顺序与启动命令表）
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO开发记录.md|FRDM-IMX95-PRO开发记录]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]]

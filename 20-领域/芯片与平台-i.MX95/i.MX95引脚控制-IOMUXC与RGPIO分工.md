@@ -42,7 +42,7 @@ i.MX95把这两件事拆成两个外设：
 ### IOMUXC_BASE是什么
 
 ```c
-#define IOMUXC_BASE (0x443C0000u)
+# define IOMUXC_BASE (0x443C0000u)
 ```
 
 它只是**IOMUXC外设寄存器块在CPU地址空间里的起始地址**。外设寄存器是内存映射的，CPU访问这段地址就等于读写IOMUXC的寄存器。
@@ -230,16 +230,3 @@ J15-10 另一个物理针脚
   - `components/sm/pinctrl/sm_pinctrl.c`：SM版，经SCMI发请求
   - `components/pinctrl/porting/platform/imx95/hal_pinctrl_platform.h`：pad功能宏
 - 项目证据：[FRDM-IMX95-PRO FreeRTOS任务创建与LED代码理解](../../10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md)
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/芯片与平台-i.MX95/i.MX95时钟-IOMUX与板级串口选择方法.md|i.MX95时钟-IOMUX与板级串口选择方法]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95多核与程序启动.md|i.MX95多核与程序启动]]
-- [[20-领域/芯片与平台-i.MX95/i.MX95在A55上运行FreeRTOS的路径.md|i.MX95在A55上运行FreeRTOS的路径]]
-
-**相关主题**
-
-- [[20-领域/芯片与平台-i.MX95/启动与烧录/i.MX95官方启动配置与ELE文件.md|i.MX95官方启动配置与ELE文件]]

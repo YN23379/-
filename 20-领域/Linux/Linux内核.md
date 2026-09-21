@@ -97,7 +97,7 @@ Linux 是宏内核，但通过**模块**吸收微内核的灵活性：
 - 模块骨架：
 
 ```c
-#include <linux/module.h>
+# include <linux/module.h>
 static int __init my_init(void)  { pr_info("loaded\n");  return 0; }
 static void __exit my_exit(void) { pr_info("unloaded\n"); }
 module_init(my_init);
@@ -133,17 +133,3 @@ Linux内核是操作系统的核心，采用宏内核架构，但通过模块化
 - jiffies/HZ、time_before 回绕安全比较依据 [《Linux Kernel Development》第 11 章 Timers and Time Management](https://raw.githubusercontent.com/firmianay/Life-long-Learner/a7e6ccfe8bd1d15985b45ab0188c91113faa3312/linux-kernel-development/chapter-11.md)
 - 内核模块骨架与 insmod/modprobe 行为依据内核文档 [Documentation/kernel-hacking](https://kernel.googlesource.com/pub/scm/fs/xfs/xfs-linux/+/0f8aeef1a56cf815637f50f218681245701c3920/Documentation/kernel-hacking/hacking.rst)
 - 原笔记自带的宏内核/微内核、五大管理、六个关键数据结构保留
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/Linux/嵌入式Linux.md|嵌入式Linux]]
-- [[20-领域/Linux/Android系统架构.md|Android系统架构]]
-
-**相关主题**
-
-- [[20-领域/Linux/Linux系统编程/Linux基础与开发环境.md|Linux基础与开发环境]]
-
-**导航**：[[20-领域/Linux/README.md|Linux]]

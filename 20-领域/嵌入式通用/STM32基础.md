@@ -225,15 +225,15 @@ STM32F407 只使用 4 位优先级字段，因此需要将边界值左移 4 位�
 `OS_ENTER_CRITICAL()` 的实现方式如下：
 
 ```
-#define OS_ENTER_CRITICAL()  do { cpu_sr = OS_CPU_SR_Save(CPU_CFG_KA_IPL_BOUNDARY << (8u - CPU_CFG_NVIC_PRIO_BITS)); } while (0)
-#define OS_EXIT_CRITICAL()   do { OS_CPU_SR_Restore(cpu_sr); } while (0)
+# define OS_ENTER_CRITICAL()  do { cpu_sr = OS_CPU_SR_Save(CPU_CFG_KA_IPL_BOUNDARY << (8u - CPU_CFG_NVIC_PRIO_BITS)); } while (0)
+# define OS_EXIT_CRITICAL()   do { OS_CPU_SR_Restore(cpu_sr); } while (0)
 ```
 
 相关配置通常为：
 
 ```
-#define CPU_CFG_NVIC_PRIO_BITS       4u
-#define CPU_CFG_KA_IPL_BOUNDARY      4u
+# define CPU_CFG_NVIC_PRIO_BITS       4u
+# define CPU_CFG_KA_IPL_BOUNDARY      4u
 ```
 
 保存和恢复的核心过程为：
@@ -382,12 +382,3 @@ uC/OS 的任务调度依赖 SysTick 定时器，SysTick 的时钟来自 AHB（72
 4. 工程选项 → C/C++ → Include Paths 内声明所有包含头文件的文件夹。
 5. 工程选项 → C/C++ → Define 内定义 `USE_STDPERIPH_DRIVER`。
 6. 工程选项 → Debug，下拉列表选择对应调试器 → Settings → Flash Download，勾选 `Reset and Run`。
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/嵌入式通用/嵌入式系统基础.md|嵌入式系统基础]]
-- [[20-领域/嵌入式通用/原理图基础与阅读方法.md|原理图基础与阅读方法]]
-- [[20-领域/嵌入式通用/ARM架构.md|ARM架构]]

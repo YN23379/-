@@ -610,8 +610,8 @@ OSTimeDly(50) → 延时 50 ticks = 500ms
 本工程使用**方式 3**（Cortex-M3 推荐方式）：
 
 ```c
-#define OS_ENTER_CRITICAL()  { cpu_sr = OS_CPU_SR_Save(); }  // 读 PRIMASK → 关中断
-#define OS_EXIT_CRITICAL()   { OS_CPU_SR_Restore(cpu_sr); }  // 恢复 PRIMASK
+# define OS_ENTER_CRITICAL()  { cpu_sr = OS_CPU_SR_Save(); }  // 读 PRIMASK → 关中断
+# define OS_EXIT_CRITICAL()   { OS_CPU_SR_Restore(cpu_sr); }  // 恢复 PRIMASK
 ```
 
 OS_CPU_SR_Save 用汇编实现：
@@ -896,16 +896,16 @@ BSP (**B**oard **S**upport **P**ackage) 将所有硬件操作封装为简单宏�
 **LED 宏设计** (高电平=亮，因为 LED 阳极接 IO，阴极接 GND)：
 
 ```c
-#define LED0_ON()     GPIO_SetBits(GPIOA, GPIO_Pin_0)    // 输出 3.3V → LED 亮
-#define LED0_OFF()    GPIO_ResetBits(GPIOA, GPIO_Pin_0)  // 输出 0V   → LED 灭
-#define LED0_TOGGLE() (GPIO_ReadOutputDataBit(..., Pin_0) \
+# define LED0_ON()     GPIO_SetBits(GPIOA, GPIO_Pin_0)    // 输出 3.3V → LED 亮
+# define LED0_OFF()    GPIO_ResetBits(GPIOA, GPIO_Pin_0)  // 输出 0V   → LED 灭
+# define LED0_TOGGLE() (GPIO_ReadOutputDataBit(..., Pin_0) \
                         ? LED0_OFF() : LED0_ON())          // 翻转
 ```
 
 **按键读取宏**：
 ```c
 // 上拉输入 — 松手=HIGH, 按下=LOW
-#define INPUT1_IS_HIGH() (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_12) == Bit_SET)
+# define INPUT1_IS_HIGH() (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_12) == Bit_SET)
 ```
 
 #### 6.2 主函数启动流程
@@ -1150,10 +1150,3 @@ MSP (主栈):              ~1.0 KB
 
 > **工程地址**: `F:\project\ucos2\`
 > **最后更新**: 2026-06-29
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/RTOS/FreeRTOS.md|FreeRTOS]]

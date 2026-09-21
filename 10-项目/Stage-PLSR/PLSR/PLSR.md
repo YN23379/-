@@ -474,10 +474,3 @@ Backup SRAM由VBAT保持，访问接近普通RAM，不需要擦除，没有Flash
 预加载包含实际脉冲数、方向、曲线计划和边界频率，不只是下一频率。中断只接管已确认计划，不重新解析业务参数。
 
 =
-
-<!-- related-generated -->
-## 相关
-
-**相关主题**
-
-- [[10-项目/Stage-PLSR/PLSR_Project/PLSR_Project_Learning.md|PLSR_Project_Learning]]

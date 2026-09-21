@@ -25,7 +25,7 @@ updated: 2026-09-21
 |---|---|
 | `EVK-19x19到手操作计划.md` | 操作计划（开箱、上电、复现、JTAG、安全注意事项） |
 | `Harpoon复现.md` | Harpoon 手把手流程 + **原理速览**（该懂什么、三块核心原理） |
-| `Harpoon验证与复现.md` | 可用性判定、全流程记录、无输出问题的根因排查 |
+
 | `待向NXP确认的问题清单.md` | 问题清单 + **已确认换 EVK 的记录** |
 | `A55-FreeRTOS任务与时间安排.md` | 阶段级计划（含换板后的调整） |
 | `JTAG与SWD接口调研.md` | Pro 板无 JTAG 座的结论 + **EVK J30 座与引脚定义** |
@@ -51,12 +51,3 @@ updated: 2026-09-21
 
 `C:\Users\chen\Desktop\资料\IMX95_19_19_EVK\`
 （QSG、UM12022、底板/SOM 原理图与 BOM、布局文件）
-
-<!-- related-generated -->
-## 相关
-
-- [[10-项目/IMX95-EVK/EVK-19x19到手操作计划.md|EVK-19x19 到手操作计划]]
-- [[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现]]
-- [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
-- [[10-项目/IMX95-EVK/资料清单表.md|资料清单表]]
-- [[10-项目/FRDM-IMX95-PRO/README.md|FRDM-IMX95-PRO（旧板留档）]]

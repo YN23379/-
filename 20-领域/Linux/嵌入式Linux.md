@@ -150,7 +150,7 @@ make ARCH=arm CROSS_COMPILE=arm-linux- dtbs
 - 示例：
 
 ```sh
-#!/bin/bash
+# !/bin/bash
 for i in {1..5}
 do
    echo "Test $i"
@@ -455,17 +455,3 @@ uint32_t SecureService_Call(uint32_t service_id, uint32_t param1, uint32_t param
 ## 🔚 小结
 
 嵌入式 Linux 是从单片机迈向高性能系统开发的核心门槛，掌握其启动流程、设备树结构与驱动框架是后续学习内核裁剪、系统移植与 IoT 平台开发的基础。
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[20-领域/Linux/Linux内核.md|Linux内核]]
-- [[20-领域/Linux/Android系统架构.md|Android系统架构]]
-
-**相关主题**
-
-- [[20-领域/Linux/Linux系统编程/Linux基础与开发环境.md|Linux基础与开发环境]]
-
-**导航**：[[20-领域/Linux/README.md|Linux]]

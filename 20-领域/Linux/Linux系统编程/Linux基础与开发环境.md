@@ -66,8 +66,8 @@ unset VAR       # 删除变量
 
 ### 程序里获取环境变量
 ```c
-#include <stdio.h>
-#include <stdlib.h>
+# include <stdio.h>
+# include <stdlib.h>
 
 void env_demo() {
     // 1. 获取环境变量
@@ -112,10 +112,10 @@ nano ~/.bashrc
 # 或者使用 vim
 vim ~/.bashrc
 
-#末尾添加，然后保存退出
+# 末尾添加，然后保存退出
 export PATH=$PATH:/sbin:/usr/sbin
 
-#保存并退出后，让配置立即生效
+# 保存并退出后，让配置立即生效
 source ~/.bashrc
 # 或者重新登录，或者新开一个终端
 ```
@@ -267,7 +267,7 @@ shell的一种（**Bourne-Again SHell**）
 是**最流行、最常用**的一种，是大多数Linux发行版和macOS的默认Shell。
 **Bash脚本就是把在终端里输入的命令，写进一个文件里，让它自动执行。**
 ```
-#!/bin/bash
+# !/bin/bash
 
 - 告诉系统用哪个解释器来执行这个脚本。
     

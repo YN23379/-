@@ -63,7 +63,7 @@ F:\project\Learning\RTOS\SDK_26_06_00_IMX95LPD5EVK-19\boards\imx95lpd5evk19\free
 修复只针对GPIO2_IO14和GPIO2_IO15：
 
 ```c
-#define GPIO_PIN_MASK ((1UL << 14U) | (1UL << 15U))
+# define GPIO_PIN_MASK ((1UL << 14U) | (1UL << 15U))
 
 static void gpio_reclaim_pins(void)
 {
@@ -119,12 +119,3 @@ GPIO OUT=1, IN=1, PDIR=00008000
 ## 后续产品化注意点
 
 当前稳定实现不是无条件反复写寄存器，而是按需检测后恢复。产品化时更整洁的方案仍是修改匹配版本BL31，在启动时直接将GPIO2的PCNS和PCNP按位设置为`0xFFFF3FFF`，并对A55/Linux和M7的引脚占用做完整回归。在BL31重新编译和回归完成前，继续使用M7侧按需reclaim方案。
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向NXP确认的问题清单]]
-- [[10-项目/FRDM-IMX95-PRO/理解-i.MX95启动与资源隔离.md|理解-i.MX95启动与资源隔离]]
-- [[10-项目/FRDM-IMX95-PRO/MCUXpresso-SDK获取.md|MCUXpresso-SDK获取]]

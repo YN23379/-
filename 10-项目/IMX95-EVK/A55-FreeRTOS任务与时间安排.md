@@ -138,12 +138,3 @@ updated: 2026-09-17
 
 - 理解正文：`2026-09-17-理解-02-上电启动全流程超详细.md`、`2026-09-17-理解-启动逻辑与资源隔离.md`
 - 实机证据：`2026-09-17-Harpoon全过程与复现步骤.md`、`2026-09-17-FRDM-IMX95-PRO开发日志.md`
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md|A55运行FreeRTOS的方向调整]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解.md|FRDM-IMX95-PRO-FreeRTOS任务创建与LED代码理解]]
-- [[10-项目/FRDM-IMX95-PRO/FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程.md|FRDM-IMX95-PRO从上手到FreeRTOS外设验证完整流程]]

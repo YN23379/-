@@ -175,13 +175,3 @@ jailhouse cell start freertos
 | inmate 分几个核 | **CPU5 单核**，与官方定义一致；UG10170 §1.4 原文 `.cpus = { 0b100000, }` | UG10170 §1.4（**官方资料明确说明**）+ 实机 `cell list`（**实机验证**） |
 | 官方支持哪些板子 | 只有 **i.MX 95 15x15 LPDDR4x EVK** 和 **i.MX 95 19x19 LPDDR5 EVK**，**不含 FRDM-IMX95-PRO** | UG10170 §3.1（**官方资料明确说明**） |
 | 官方预期应该有输出 | 跑 `hello_world` 时 inmate cell console 应打印 `INFO: hello_func : Hello world.` / `tic tac tic tac ...` | UG10170 §4.3（**官方资料明确说明**）——所以"看不到输出"确实是异常 |
-
-
-<!-- related-generated -->
-## 相关
-
-**同目录**
-
-- [[10-项目/IMX95-EVK/资料清单表.md|资料清单表]]
-- [[10-项目/FRDM-IMX95-PRO/SD启动GPIO权限问题结论.md|SD启动GPIO权限问题结论]]
-- [[10-项目/FRDM-IMX95-PRO/A55-FreeRTOS任务与时间安排.md|A55-FreeRTOS任务与时间安排]]

@@ -9,7 +9,7 @@ tags:
   - Jailhouse
   - 启动
   - 多核与异构
-updated: 2026-09-20
+updated: 2026-09-21
 ---
 
 # Harpoon 复现操作手册（从头到尾照做）
@@ -24,6 +24,11 @@ updated: 2026-09-20
 > | **[电脑]** | 你的 Windows 笔记本 | `PS F:\...>` |
 > | **[板子-U-Boot]** | 板子的引导程序（Linux 还没起来） | `u-boot=>` |
 > | **[板子-Linux]** | 板子里已经跑起来的 Linux | `root@frdm-imx95:~#` |
+
+> **2026-09-21 合并说明**：原 `Harpoon验证与复现.md`（可用性判定 + 上板全记录）
+> 与本篇内容高度重复，已合并到这里。原文件中独有的三部分保留为附录：
+> 附三（串口探测脚本与 SDPS 启动）、附四（踩过的坑与规避），
+> 可用性判定与五条证据见第一部分与"为什么看不到输出"一节。
 
 ---
 
@@ -1511,11 +1516,56 @@ cell 是资源容器，不是系统环境。不要以为 `create` 建出了"一�
 ## 相关
 
 - 两条流程的本质区别、设计取舍 → [[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
-- 当时上板的完整记录和原始输出 → [[10-项目/FRDM-IMX95-PRO/Harpoon验证与复现|Harpoon 验证与复现]]
 - 判定"厂商包能不能用手头板子"的方法 → [[20-领域/芯片与平台-i.MX95/i.MX95上Jailhouse与Harpoon的分层与判定方法.md|Jailhouse 与 Harpoon 的分层与判定]]
 - 引脚所有权怎么查、`UNCLAIMED` 怎么读 → [[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95 引脚控制：IOMUXC 与 RGPIO 的分工]]
 - 要发给 NXP 的问题（已按实测 + UG10170 更新）→ [[10-项目/IMX95-EVK/待向NXP确认的问题清单.md|待向 NXP 确认的问题清单]]
 - 全部资料索引 → [[10-项目/IMX95-EVK/资料清单表.md|资料清单表]]
+
+## 附三：串口探测脚本与 SDPS 启动（Pro 板时期用过的工具）
+
+排查"到底有没有输出"时，先用脚本把**所有可能的 COM 口同时抓一遍**，
+避免只盯一个口、结果那个口根本不是目标核的。
+
+```text
+脚本位置（Pro 板时期）：
+  F:\project\Learning\RTOS\build\harpoon-test\serial-probe.ps1
+  F:\project\Learning\RTOS\build\harpoon-test\serial-capture.ps1
+  F:\project\Learning\RTOS\build\harpoon-test\boot-evk-container.uuu
+串口抓取日志：F:\project\Learning\RTOS\build\logs\
+UUU         ：F:\project\Learning\RTOS\tools\uuu-1.5.243\uuu.exe
+```
+
+```powershell
+# 单口探测：发空串、等 2.5 秒看有无回显
+.\serial-probe.ps1 -Port COM17 -Send @('') -WaitMs 2500
+
+# 多口并发抓取：四个口一起录 10 分钟
+.\serial-capture.ps1 -Ports COM16,COM17,COM18,COM19 -DurationSec 600 -OutDir F:\project\Learning\RTOS\build\logs
+
+# SDPS 内存启动 EVK 容器（需提权；板子需 SW4=x001 并冷复位）
+& F:\project\Learning\RTOS\tools\uuu-1.5.243\uuu.exe -lsusb
+& F:\project\Learning\RTOS\tools\uuu-1.5.243\uuu.exe F:\project\Learning\RTOS\build\harpoon-test\boot-evk-container.uuu
+```
+
+> Pro 板上 J22 是 Type-C + CH9114F 四通道转串口，官方建议四个 COM 口都打开，
+> 因为 A55/M33/M7 的端口映射**不固定**。J22 没有裸针脚可夹，
+> 逻辑分析仪要夹的是 J15（2×20 EXPI 排针）。
+
+## 附四：踩过的坑与规避（都可复现）
+
+排查过程中踩到的坑，每条都写清现象、根因和规避方法。
+
+| # | 现象 | 根因 | 规避 |
+|---|---|---|---|
+| 1 | `Access to the port 'COMxx' is denied` | MobaXterm 占着串口（Windows 串口独占） | 关掉终端软件的串口会话 |
+| 2 | `uuu.exe`/`tar.exe`/`python.exe` 一律 Access denied | 沙箱策略限制新进程创建 | 按规则单次提权；能不用外部程序就改用纯 PowerShell/.NET |
+| 3 | 抢 U-Boot 失败、命令落在 ATF 阶段 | 脚本用文本匹配判断"到提示符了"，误判提前停手 | 整个窗口持续轮发，不做提前判断 |
+| 4 | A55 控制台彻底静默，像板子挂了 | 连续 28 秒 Ctrl-C 把 `serial-getty@ttyLP0` 反复杀死，触发 systemd `StartLimitBurst=5/StartLimitIntervalSec=10s` 后不再重启（内核正常） | **只用回车（CR）抢 autoboot**；限制发送时长；用独立通道（M33 SM 控制台）交叉判断板子是否存活 |
+| 5 | `setenv` 明明执行成功但没生效 | 停在 `u-boot=>` 不操作，1 分多钟后被看门狗复位、自启回 Linux | 抢到提示符后**在同一进程内立刻** setenv + 启动 |
+| 6 | 脚本挂死、看着像板子卡死 | 读取函数只按"多久没有新数据"退出，遇到 inmate 每秒上百行刷屏永远等不到安静 | 读取函数加绝对超时上限并截断输出 |
+| 7 | inmate 一跑起来 Linux 就没法输入 | `uart-demo.bin` 占用 LPUART1 及其中断，Linux 控制台失去输入 | 换 inmate 控制台到独立 UART；或接受"跑起来就靠复位收回控制" |
+| 8 | PowerShell 脚本报除零/变量为 null | 无 BOM 的 UTF-8 脚本被 PS 5.1 按 ANSI 解码，中文注释吞掉下一行 | 交互脚本一律纯 ASCII |
+| 9 | FreeRTOS inmate 跑起来但串口一个字节都没有 | FreeRTOS 写 LPUART3（`0x42570000`），而 LPUART3 不在 Linux 域、引脚也没复用到 UART3 | 见上文"为什么看不到输出"一节；短期待验证方案是换 LPUART4/5 |
 
 ## 附一：官方文档的关键结论（UG10170 Rev 3.3）
 
