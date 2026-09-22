@@ -36,7 +36,38 @@ updated: 2026-09-21
 
 1. **[[10-项目/IMX95-EVK/Harpoon复现.md|Harpoon 复现操作手册]]** —— 从头到尾怎么做，含原理和排查表
 2. **[[10-项目/IMX95-EVK/开发流程-改代码到上板.md|开发流程：改代码到上板]]** —— 跑通之后怎么改、改哪一层、要不要重烧
-3. **[[10-项目/IMX95-EVK/开发日志.md|开发日志]]** —— 板子到货后按日期的实际操作、问题和结果
+3. **[[10-项目/IMX95-EVK/UART与GPIO验证方案.md|UART 与 GPIO 验证方案]]** —— 下一步要验什么、能验到什么程度
+4. **[[10-项目/IMX95-EVK/开发日志.md|开发日志]]** —— 板子到货后按日期的实际操作、问题和结果
+
+## 下一步：验 UART 收 + GPIO（产物已就绪，待上板）
+
+`imx95-harpoon-freertos.cell` 已逐段解完（见 [[10-项目/IMX95-EVK/UART与GPIO验证方案.md|UART 与 GPIO 验证方案]]）：
+
+- **UART 收发**：LPUART3 的寄存器窗口（`0x42570000`，`R|W|IO`）和中断号（`LPUART3_IRQn = 96`）**都在 cell 里**，
+  引脚也已经在 `board.c` 里配好收发两个方向。**不用改任何配置文件**，只是要加一段读 `LPUART3->DATA` 的代码。
+- **GPIO**：原 cell 的 16 个内存段里**没有任何 RGPIO**。SM 侧（`mx95rte.cfg` 的 A55 non-secure 段）已经写了
+  `GPIO2..5 OWNER`，**所以只缺 cell 这一段**。
+
+已经做好的产物：
+
+| 产物 | 路径 |
+|---|---|
+| 带 RGPIO2 的新 cell（名字 `freertos-gpio`，17 段） | `build\a55-bin\imx95-harpoon-freertos-gpio.cell` |
+| 测试程序（UART 收 + GPIO 输入 + GPIO 输出，STEP 分步上报） | `build\a55-bin\hello_world.bin` |
+| cell 生成脚本（自带结构自检） | `build\tools\cell_add_gpio.py` |
+| 测试程序源码 | `build\tools\verify_uart_gpio_main.c` |
+| **app_mmu.h（一级页表补丁，必须一起装）** | `build\tools\verify_app_mmu.h` |
+| 一键安装+编译 | `build\tools\install_and_build_verify.sh` |
+
+**2026-09-22 第一次上板踩到的坑**：只改 cell 不够。jailhouse 的 cell 是 **stage-2**，
+inmate 启动时自己建的**一级页表（stage-1）是另一张白名单**（`mmu.c` 的 `mmu_regions[]`），
+里面没有 GPIO2，所以一读 `0x43810000` 就是 translation fault，cell 当场被打死。
+补法是照抄 NXP 自己的 `industrial/.../app_mmu.h`（它给 CAN2 就是这么补的），
+在应用板级目录放一个 `app_mmu.h`，**不用改公共文件**。
+详见 [[10-项目/IMX95-EVK/UART与GPIO验证方案.md|验证方案]] 3.4 节。
+
+上板步骤在验证方案那篇的第五节。EVK 上**没有用户 LED 也没有用户按键**，
+所以 GPIO 输入/输出都用 `GPIO_IO14/15`（即 LPUART3 的 TX/RX 脚）配合 PC 串口来观察，不需要额外器件。
 
 ## 目录内容
 
@@ -44,6 +75,7 @@ updated: 2026-09-21
 |---|---|
 | **`Harpoon复现.md`** | **复现操作手册 + 原理 + 排查表**（当前最完整的一篇） |
 | **`开发流程-改代码到上板.md`** | **七层代码分工、六条改动路线、什么情况要重烧** |
+| **`UART与GPIO验证方案.md`** | **inmate 到底拿到了哪些资源（cell 逐段解码）、UART 收发怎么验、GPIO 缺什么** |
 | **`开发日志.md`** | **板子到货后的实际操作、问题与结果（按日期）** |
 | `rt_latency原始日志.md` | rt_latency TC 1–6 的完整原始输出（附录） |
 | `A55交叉编译环境-WSL2.md` | WSL2 环境搭建、工具链、网络坑 |
