@@ -304,6 +304,82 @@ SM 资源表（TRDC/RDC）→ jailhouse cell（stage-2）→ inmate 一级页表
 
 ### 3.5 引脚选哪根、怎么观察
 
+#### 先说 GPIO_IO14 / GPIO_IO15 在板上的确切位置
+
+**它在 J3 这个板对板连接器（CPU 板 ↔ 底板）的第 42、44 脚上，没有引到任何用户排针。**
+这就是"在引脚图上找不到"的原因 —— 用户能插线的排针上确实没有它。
+
+`UM12022` Table 58「J3 connector pin description」（p.71）原文：
+
+```text
+42  UART3_TXD  I  UART3 transmit signal multiplexed with GPIO_IO14
+44  UART3_RXD  O  UART3 receive  signal multiplexed with GPIO_IO15
+```
+
+同一张表上还有别的"复用成 GPIO"的脚，**全部都在 J3 上**，
+也就是说这块 EVK 上**没有一个用户可插线的通用 GPIO 排针**：
+
+| J3 脚位 | 板手册上的名字 | 可复用为 |
+|---|---|---|
+| 28 / 30 / 32 / 34 | `SPI7_SS0` / `MISO` / `MOSI` / `SCLK` | GPIO_IO04/05/06/07 |
+| 38 | `DSICSI_PWM_MCLK_3V3` | GPIO_IO12 |
+| 40 | `AQR_PF5103_INT_B` | GPIO_IO13 |
+| **42 / 44** | **`UART3_TXD` / `UART3_RXD`** | **GPIO_IO14 / GPIO_IO15** |
+| 48 / 50 | `SAI3_RXD` / `SAI3_TXD` | GPIO_IO20 / GPIO_IO21 |
+| 52 / 54 | `I2C5_SDA_3V3` / `I2C5_SCL_3V3` | GPIO_IO22 / GPIO_IO23 |
+| 58 | `LVDS0_TS_nINT_3V3` | GPIO_IO28 |
+
+> **别和 Pro 板混**：Pro 板上 `GPIO_IO14/15` 是引到 **J15 排针**（J15-8 / J15-10）的，
+> 可以直接插回环线；**EVK 上没有这个条件**。两块板的设计符号还重名（EVK 的 J15 是 Mini-SAS）。
+
+#### 那它接到哪去 → 接的就是你的 COM 口
+
+`GPIO_IO14`/`GPIO_IO15` 在板上是 `UART3_TXD`/`UART3_RXD`，它们走
+**FT4232H（U70）的通道 A**（`UM12022` Table 50，p.61）原文：
+
+```text
+Channel A  JTAG interface / UART port
+  Note: This channel uses UART3 in the processor. UART3
+  TXD and RXD signals are muxed with GPIO_IO14 and
+  GPIO_IO15, respectively.
+```
+
+再往下就是 **USB Type-C（J31）→ 主机枚举出 4 个 COM 口，通道 A 就是其中一个** ——
+也就是你一直看着、inmate 控制台输出所在的那个口。
+
+```text
+SoC 的 GPIO_IO14 ──┐
+                   ├── J3 pin 42/44 ── FT4232H(U70) 通道 A ── USB-C(J31) ── PC 的 COM 口
+SoC 的 GPIO_IO15 ──┘
+```
+
+#### 所以"怎么测"：PC 的串口就是它的负载，不需要另找引脚
+
+这正是一直没在板上飞线的原因：
+
+| 测什么 | 谁当负载 | 你看到的现象 |
+|---|---|---|
+| **GPIO_IO15 输入** | PC 串口的 **TXD**（你按键时它会拉低） | 不按键 `samples==0 : 0`；按住键 `samples==0 : 2768`、`edges : 84` |
+| **GPIO_IO14 输出** | PC 串口的 **RXD**（接收） | 程序位翻转的字被终端收到：`[[GPIO-TX]] bit-banged on GPIO2_IO14 @115200 [END]` |
+
+**你在终端里敲键，就是往 GPIO_IO15 上灌电平；终端上出现的那行字，就是 GPIO_IO14 驱动的。**
+引脚的另一端就是电脑，不需要第三个器件。
+
+#### 那如果想用万用表/示波器"看见"实物
+
+只有三个地方能探，都不好操作，板子是借的不建议动：
+
+1. 板对板连接器 **J3 的第 42/44 脚**（要拆开 SOM 和底板，连接器很密）
+2. **FT4232H（U70）** 对应的引脚
+3. 串在 `UART3_TXD`/`UART3_RXD` 上的 **D24 / D25 指示灯**
+   （`UM12022` Table 6：D24 = "UART3 data transmitted to host computer"）。
+   **推测**这两颗灯就在这两根线上，**但不确定是 SoC 侧驱动还是 FT4232H 侧驱动**，未证实。
+   想顺手验证的话，在 `[2]` 采样那 13 秒里按住键，看 D25 会不会闪。
+
+**最省事、最可靠的"看得见"就是电脑终端本身** —— 证据已经齐了。
+
+#### 板本身的用户控件情况
+
 EVK 上**没有用户可控的 LED，也没有接到 SoC 的用户按键**（`UM12022` §1.7/§1.8 逐条列出）：
 
 - LED：D2–D5 电源指示、D12/D13 CAN 收发器 INH、D22/D23 Wi-Fi/BT 状态、D24/D25 UART3 收发指示、D38–D40 FT4232H/PMIC 状态——**全部由硬件或 PHY 驱动**。
@@ -630,6 +706,19 @@ static uint32_t scmi_mux(uint32_t muxRegister, uint32_t muxMode, ...)
 
 v4 产物：74,192 字节，入口 `0xf0000000`，
 sha256 `cfa89895b73f35dfa45f50eeeb9d16eb869e181a98e990caf6199a187cfbe25c`。
+
+> **v5（最终版）**：v4 的"5 秒没命令就自动全跑"是**每轮都触发**的，结果不管就会一直刷屏、
+> 而且每轮都把 IO14/IO15 掰来掰去。v5 改成**只自动跑一次**，之后无限等命令：
+>
+> ```text
+> first time: no command within 5s -> run all three tests ONCE
+> ...
+> ===== all tests done. 现在等你发命令，不会再自动跑了 =====
+> ```
+>
+> v5 产物：74,192 字节，入口 `0xf0000000`，
+> sha256 `8199730b364ad3734fb9a42eda946bd8598638597f15fa1a0a78bc5cd57a9991`。
+> **v5 只改了自动跑的触发逻辑，四项目标的测试代码一字未动，实测结论沿用 v4。**
 
 #### v4 实测结果：全部 SUCCESS
 
