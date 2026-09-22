@@ -358,7 +358,89 @@ echo c0100000.rpmsg-ca55 > /sys/bus/platform/drivers/imx-rpmsg/unbind
 - **"root cell 也是一份普通 cell 配置"**：它的签名（`JHSY`）和内容都不同，还额外描述 hypervisor 自身内存。
 - **"cell 文件是加密的/看不懂"**：**没有加密**，就是 C 结构体的二进制 dump，结构公开。
 
-## 九、适用范围与依据
+## 九、给 inmate 新增一个外设要过哪几关
+
+在 jailhouse 下给 inmate 加一个外设（比如 GPIO2），**不是改一处就行**。要按顺序过三层，
+每一层管的事不一样：
+
+```text
+① SM 资源表（TRDC/RDC）
+     SM 配置 .cfg 里这个外设属于哪个 LM/agent
+     -> 决定"这个域的 CPU 能不能访问这个外设的寄存器"
+     -> 不过：总线层面被拒（SIGBUS / 访问无效），改 cell 没用
+
+② jailhouse cell（stage-2 页表）
+     .cell 文件里的 memory_regions
+     -> 决定"hypervisor 放不放行这段物理地址"
+     -> 不过：stage-2 fault，hypervisor 杀掉整个 cell
+     -> 现象：cell list 里 CPU 变 failed，"程序突然没了"
+
+③ inmate 自己的一级页表（stage-1 MMU）
+     mmu.c 的 mmu_regions[]，或应用侧的 app_mmu.h
+     -> 决定"inmate 的虚拟地址空间里有没有这段映射"
+     -> 不过：EL1 translation fault，同样被 hypervisor 杀掉
+     -> 现象和 ② 一模一样
+```
+
+**② 和 ③ 的现象完全一样**，都是"程序直接没了"，所以光看现象分不出来。
+区分办法：**让 inmate 用不依赖控制台的顺序"先报再做"**（每步先直接写串口一句，再做危险操作），
+看到最后停在哪一步就知道是哪一层，或者干脆先只加 ② 上板、再加 ③ 上板。
+
+### 为什么 ③ 容易被漏掉
+
+因为 ② 在 `.cell` 里明确列了地址，看起来"已经给过了"。但 inmate 是**裸机程序**，
+它自己启动时建了一张一级页表，`mmu_regions[]` 是一张**白名单**——
+只映射 GIC、控制台串口、和 SM 通信的 MU、用到的定时器。**新外设不在这张白名单里，就没有映射。**
+
+这两张表的分工：
+
+| | jailhouse cell（stage-2） | inmate 一级页表（stage-1） |
+|---|---|---|
+| 谁建 | hypervisor 建 | inmate 自己的 `BOARD_InitMemory()` 建 |
+| 在哪 | `.cell` 文件（二进制） | 源码里的 `mmu_regions[]` |
+| 管什么 | hypervisor 允不允许这段地址 | inmate 的地址空间有没有这段映射 |
+| 漏了的后果 | stage-2 fault，cell 被杀 | translation fault，cell 被杀 |
+| 能不能靠 cell 兜住 | — | **不能，两张表都要有** |
+
+### NXP 自己怎么补的
+
+harpoon-apps 里 `mmu.c` 留了口子，**不用改公共文件**：
+
+```c
+/* common/freertos/boards/imx95lpd5evk19/mmu.c */
+#if __has_include("app_mmu.h")
+#include "app_mmu.h"
+#endif
+...
+#ifdef APP_MMU_ENTRIES
+	APP_MMU_ENTRIES
+#endif
+```
+
+应用只要在自己板级目录下放一个 `app_mmu.h`。NXP 的 `industrial` 应用就是这么加 CAN2 的：
+
+```text
+industrial/freertos/boards/imx95lpd5evk19/app_mmu.h
+    #define APP_MMU_ENTRIES		\
+        MMU_REGION_FLAT_ENTRY("CAN2", CAN2_BASE, KB(64), \
+                              MT_DEVICE_nGnRE | MT_P_RW_U_RW | MT_NS),  \
+```
+
+设备类外设用 `MT_DEVICE_nGnRE | MT_P_RW_U_RW | MT_NS`；
+共享内存类（不可缓存）用 `MT_NORMAL_NC`（见 `MU3_SRAM` 那条）。
+
+### 一个附带坑：控制台是非阻塞的
+
+harpoon 的 `flags.cmake` 里定义了 `DEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1`，
+调试控制台的 printf 走 `SerialManager_WriteNonBlocking`，**输出先进环形缓冲，异步排空**。
+
+后果：**inmate 一崩，缓冲里没排空的字全部丢掉。** 崩溃点之前刚打的那些诊断信息一行都看不到，
+看起来就像"程序什么都没执行"。
+
+所以定位这类问题时，关键输出要**直接调 `LPUART_WriteBlocking(BOARD_DEBUG_UART_BASEADDR, ...)`**，
+绕开缓冲。这一条对 ② 和 ③ 的排查都是前提。
+
+## 十、适用范围与依据
 
 - **适用范围**：Jailhouse 的通用机制（cell 模型、四条命令、vmexit、文件格式）适用于所有平台。
   本文第五节的**具体地址值只适用于 i.MX95 / 本项目的 cell 文件**。
@@ -371,11 +453,18 @@ echo c0100000.rpmsg-ca55 > /sys/bus/platform/drivers/imx-rpmsg/unbind
   - **"哪个偏移对应哪个字段"属于推断**：本文只给能验证的部分，字段归属未逐一对齐，已在上文标注
   - `vmexits_mmio` 1515 / `vmexits_management` 2：**实机验证**
   - LPUART 分配写在 SM 配置里：**官方资料明确说明**（UG10170 §1.5）
+  - **第九节的三层模型（SM 资源表 / cell stage-2 / 一级页表 stage-1）：实机验证**
+    （2026-09-22 给 inmate 加 GPIO2，只改 cell 就上板，程序一读 `0x43810000` 就死；
+    补了 `app_mmu.h` 之后程序能跑到 `STEP3`。`cell create` 成功说明 ② 通了）
+  - 控制台非阻塞：**源码确认**（harpoon `flags.cmake` 的 `-DDEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1`，
+    实现走 `SerialManager_WriteNonBlocking`）
 
 - **项目证据**：
   - 完整复现过程与原始日志：[[10-项目/FRDM-IMX95-PRO/Harpoon复现|Harpoon 复现：手把手操作]]
   - 方案层面对比：[[20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md|Harpoon 方案完整流程]]
   - 踩过的坑（`UNCLAIMED` 误读、引脚域归属）：[[20-领域/芯片与平台-i.MX95/i.MX95引脚控制-IOMUXC与RGPIO分工.md|i.MX95 引脚控制]]
+  - **第九节的实测过程**：[[10-项目/IMX95-EVK/UART与GPIO验证方案.md|A55 inmate 的 UART 收发与 GPIO 验证方案]]（第三节 3.4、3.4.1）
+    与 [[10-项目/IMX95-EVK/开发日志.md|开发日志]] 2026-09-22 一节
 
 - **参考资料**：
   - [Jailhouse 官方仓库（Siemens）](https://github.com/siemens/jailhouse)

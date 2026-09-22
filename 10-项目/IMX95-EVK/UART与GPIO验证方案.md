@@ -449,6 +449,70 @@ sha256 `da8fca32f62cb1da0cda43c77f4dd86710c9b2956cde62499b47efe5fb2b1e25`。
 **关于 `2` 的采样方式**：不是慢慢轮询，而是 40 轮"忙采样 100 ms + 让出 100 ms"，
 总共约 8 秒。忙采样期间一秒能取几十万次样本，所以 115200 下 87 µs 的起始位能被抓到。
 
+### 4.4 v2 的形态（实际在板上跑的那一版）
+
+上面 4.1–4.3 描述的是 v1。v1 上板后一读 GPIO2 就死，原因是输出走了非阻塞缓冲 +
+一级页表缺 GPIO2（见 3.4.1）。v2 改了两件事：
+
+1. **所有关键输出改成 `say()`**，直接 `LPUART_WriteBlocking(LPUART3, ...)`，绕开环形缓冲：
+
+```c
+static void say(const char *s)
+{
+    (void)LPUART_WriteBlocking(LPUART3, (const uint8_t *)s, strlen(s));
+}
+```
+
+   数值打印也自己写了 `say_hex` / `say_dec`（手写 16 进制 / 10 进制），不依赖 `printf`。
+
+2. **启动自检改成"先报再做"**，每步一个 `STEPn`：
+
+```text
+==================================================
+===== A55 inmate UART / GPIO verify (v2)     =====
+==================================================
+STEP0: banner ok -> LPUART3 TX works
+STEP1: reading cntfrq_el0 ...
+STEP1: cntfrq = 0x016E3600
+STEP1: bit_ticks per bit = 208
+STEP2: enabling LPUART3 RX ...
+STEP2: done
+STEP3: reading RGPIO2 @0x43810000 (cell + MMU check) ...
+STEP3: VERID = 0x02010001
+STEP3: GPIO2 reachable -> cell entry AND MMU entry both OK
+STEP4: RGPIO2 register dump
+   VERID=0x02010001  PARAM=0x00000002
+   PDDR =0x00000010  PDOR =0x00000010  PDIR =0x00000034
+   PIDR =0x00000000  PCNS =0xFFFFFFFF  PCNP =0xFFFFFFFF
+commands: 1=UART RX  2=GPIO IN  3=GPIO OUT  4=all  5=dump regs
+>
+```
+
+| STEP | 做什么 | 过了说明什么 |
+|---|---|---|
+| 0 | 打横幅 | LPUART3 发送通 |
+| 1 | `mrs cntfrq_el0` | generic timer 可读（位翻转的时间基准） |
+| 2 | `LPUART_EnableRx(LPUART3, true)` | 打开了 `CTRL[RE]`（调试控制台自己没开接收） |
+| 3 | 读 `GPIO2->VERID` | **cell（stage-2）+ 一级页表（stage-1）都通了** |
+| 4 | 读全部 RGPIO2 寄存器 | 寄存器可读，顺便看 `PCNS`/`PCNP` |
+
+**STEP3 是关键分界点**：没补 `app_mmu.h` 时会停在 `STEP3: reading ...` 那一行不动。
+
+v2 还把 `hello_func` 去掉了（只留 `verify_task` 一个任务），
+免得两个同优先级任务的执行顺序不确定、把输出搅乱。
+
+### 4.5 v3（已做，待上板）
+
+v2 的菜单只认 `1`–`5`，实测时在提示符下随手按键（收到 `0x61`/`0x44`/`0x77`/`0x64`/`0x39`）
+全都回 `unknown command`。**输入本身是好的**（16 个字节值都对），是菜单太窄。v3 改了：
+
+- 加字母别名：`r`=UART RX、`i`=GPIO 输入、`o`=GPIO 输出、`a`=全跑、`d`=dump 寄存器
+- 加超时兜底：进菜单 5 秒没有有效命令就**自动把三个测试全跑一遍**
+- GPIO 输入测试改成"先提示、等 5 秒、再采样 8 秒"，原来只提示一次来不及按住键
+
+v3 产物：70,096 字节，入口 `0xf0000000`，
+sha256 `ac3b158481bb3ba801951caaa452741484ffbb0818aea34258109744b98ea260`。
+
 ## 五、傻瓜式上板步骤（待执行）
 
 ### 5.0 准备
@@ -535,6 +599,73 @@ commands: 1=UART RX  2=GPIO IN  3=GPIO OUT  4=all  5=dump regs
 | `STEP3: reading ...` 之后没了 | **GPIO2 访问还是被拦** | 检查 bin 是不是新的（`STEP0` 里有 `v2` 字样）、`app_mmu.h` 有没有装 |
 | `STEP3: VERID = 0x00000000` 或全 `F` | 地址通了但读出来不对 | 记数值，查 RGPIO2 的时钟有没有开 |
 | `STEP3: GPIO2 reachable ...` | **cell + 一级页表都通了** | 继续 5.4 |
+
+#### 第二次上板实测结果（2026-09-22，`实机验证`）
+
+```text
+STEP1: cntfrq = 0x016E3600              <- 24 MHz，和 SDK 一致
+STEP1: bit_ticks per bit = 208          <- 24e6 / 115200 = 208.3
+STEP3: VERID = 0x02010001               <- ★ GPIO2 读到了
+STEP3: GPIO2 reachable -> cell entry AND MMU entry both OK
+STEP4: RGPIO2 register dump
+   VERID=0x02010001
+   PARAM=0x00000002
+   PDDR =0x00000010
+   PDOR =0x00000010
+   PDIR =0x31040400
+   PIDR =0x00000000
+   PCNS =0xFFFFFFFF
+   PCNP =0xFFFFFFFF
+```
+
+**结论：cell（stage-2）和一级页表（stage-1）两层都通了，GPIO2 寄存器可以自由读写。**
+
+逐项读这几个寄存器：
+
+| 寄存器 | 值 | 怎么读 |
+|---|---|---|
+| `VERID` | `0x02010001` | FEATURE=0x0001、MINOR=0x01、MAJOR=0x02。**不是 0 也不是全 F，说明是真寄存器**，cell + MMU 都对 |
+| `PARAM` | `0x00000002` | 参数寄存器，字段含义**待查** |
+| `PDDR` | `0x00000010` | bit4 已经是**输出**方向——不是我们设的，是别的启动组件留下的 |
+| `PDOR` | `0x00000010` | bit4 输出为 1，和 `PDDR` 一致 |
+| `PDIR` | `0x31040400` | 读到高的脚：bit29/28/24/18/10。**bit14/15 = 0** |
+| `PIDR` | `0x00000000` | 没有任何一根脚被禁止输入 |
+| `PCNS` | `0xFFFFFFFF` | **所有脚被标成非安全**——和 Pro 板 M7 那次一模一样 |
+| `PCNP` | `0xFFFFFFFF` | **所有脚被标成非特权** |
+
+两点注意：
+
+- **`PDIR` 的 bit14/15 是 0**，因为这时候 IO14/IO15 还复用成 LPUART3，pad 的输入没有接到 GPIO。
+  等测试 `3` 把 IO15 切成 `GPIO2_IO15` 之后，这一位才会跟着线电平走（空闲应为 1）。
+- **`PCNS`/`PCNP` 都是 `0xFFFFFFFF`**，说明 BL31 确实把 GPIO2 全部设成了非安全/非特权。
+  Pro 板上 M7 是**安全特权态**，被这两条拦住（读 0、写无效）。
+  A55 上的 Linux/inmate 是**非安全态**，按 "非安全能访问的，安全也能访问" 的模型预计不拦
+  ——但这仍是**推测**，要看测试 `3` 能不能真的翻动引脚。
+
+#### UART 收也通了
+
+在提示符后面随手按键，程序逐个回显：
+
+```text
+got 0x00000061     <- 'a'
+got 0x00000044     <- 'D'
+got 0x00000077     <- 'w'
+got 0x00000064     <- 'd'
+got 0x00000039     <- '9'
+...
+    unknown command
+```
+
+**收到 16 个字节、内容与按键一致，UART 收方向验证通过。**
+菜单没分发是因为按的键不在 `1`–`5` 里（见 4.5）。
+
+| 要求 | 状态 |
+|---|---|
+| UART 发 | ✅ 已验证（横幅、STEP 全部正常打出） |
+| UART 收 | ✅ 已验证（按键被逐个收到并回显） |
+| GPIO 寄存器访问 | ✅ 已验证（`VERID=0x02010001`） |
+| GPIO 输入 | ⏳ 待验（菜单命令 `2`，或 v3 自动跑） |
+| GPIO 输出 | ⏳ 待验（菜单命令 `3`，或 v3 自动跑） |
 
 > 第一版（没有 `STEPn`、没有 `app_mmu.h`）就停在 `STEP0` 之前：只看到 `INFO: verify build running`，
 > 之后什么都没有，敲键也没反应。原因见 3.4.1。
