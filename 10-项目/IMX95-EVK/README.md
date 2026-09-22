@@ -18,7 +18,7 @@ updated: 2026-09-21
 
 **2026-09-22 实机验证通过**：
 - **hello_world**：FreeRTOS 在 A55 CPU5 上运行，COM9 输出 `Hello world.` + `tic tac`
-- **rt_latency**：延迟基准跑通，irq delay 平均 **791 ns**、irq to sched 平均 **2045 ns**（测试用例 1，无额外负载），与 UG10170 Table 22 官方值对得上
+- **rt_latency**：六个测试用例（TC 1–6）全部跑完。无负载时 irq delay 平均 **791 ns**、irq to sched 平均 **2045 ns**；IRQ 负载下 irq to sched 涨到 **9214 ns**（4.5 倍）。**与 UG10170 Table 22 官方值最大偏差 25 ns**
 
 **关键结论：必须用 SD 卡上的 Real-Time Edge 系统，不能用原厂 eMMC 系统。**
 
@@ -41,6 +41,7 @@ updated: 2026-09-21
 |---|---|
 | **`Harpoon复现.md`** | **复现操作手册 + 原理 + 排查表**（当前最完整的一篇） |
 | **`开发日志.md`** | **板子到货后的实际操作、问题与结果（按日期）** |
+| **`rt_latency原始日志.md`** | **rt_latency TC 1–6 的完整原始输出**（开发日志的附录，只放日志不做分析） |
 | `EVK-19x19到手操作计划.md` | 操作计划（开箱、上电、复现、JTAG、安全注意事项） |
 | `待向NXP确认的问题清单.md` | 问题清单 + 已确认换 EVK 的记录 |
 | `A55-FreeRTOS任务与时间安排.md` | 阶段级计划（含换板后的调整） |
