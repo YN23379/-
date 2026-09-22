@@ -19,6 +19,7 @@ updated: 2026-09-21
 **2026-09-22 实机验证通过**：
 - **hello_world**：FreeRTOS 在 A55 CPU5 上运行，COM9 输出 `Hello world.` + `tic tac`
 - **rt_latency**：六个测试用例（TC 1–6）全部跑完。无负载时 irq delay 平均 **791 ns**、irq to sched 平均 **2045 ns**；IRQ 负载下 irq to sched 涨到 **9214 ns**（4.5 倍）。**与 UG10170 Table 22 官方值最大偏差 25 ns**
+- **TC5 补跑（Linux 侧 `stress-ng --cpu 4 --vm 2` 压满）**：irq to sched 均值 **2025 → 2027 ns**，**Linux 重载对 RTOS 延迟几乎无影响**——因为 CPU5 是静态分区独占的，Linux 抢不到
 
 **关键结论：必须用 SD 卡上的 Real-Time Edge 系统，不能用原厂 eMMC 系统。**
 

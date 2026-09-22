@@ -160,10 +160,11 @@ INFO print_stats           :
 
 ---
 
-## TC 5：CPU + Linux 负载
+## TC 5：CPU + Linux 负载（第一次，Linux 侧没加压）
 
 > **注意**：这个用例**不会自己加 Linux 负载**，需要手动在 Linux 侧另外压。
-> 本次没有压，所以数据实际等同于 TC2。
+> 第一次跑的时候没压，所以这一轮数据实际等同于 TC2。
+> 加压后的补跑见下一节。
 
 ```text
 INFO start_test_case       : Running test case 5:
@@ -187,6 +188,124 @@ INFO rtos_apps_hist_print  : 0 0 160662 90 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 INFO print_stats           : late alarm scheduling: 0
 INFO print_stats           :
 ```
+
+---
+
+## TC 5（补跑）：Linux 侧压满 4 核 + 2 VM
+
+Linux 侧：
+
+```text
+root@imx95-19x19-lpddr5-evk:~# stress-ng --cpu 4 --vm 2
+stress-ng: info:  [835] defaulting to a 1 day run per stressor
+stress-ng: info:  [835] dispatching hogs: 4 cpu, 2 vm
+^Cstress-ng: info:  [835] skipped: 0
+stress-ng: info:  [835] passed: 6: cpu (4) vm (2)
+stress-ng: info:  [835] failed: 0
+stress-ng: info:  [835] metrics untrustworthy: 0
+stress-ng: info:  [835] successful run completed in 47.11 secs
+root@imx95-19x19-lpddr5-evk:~# ^C
+root@imx95-19x19-lpddr5-evk:~# harpoon_ctrl latency -s
+command success
+```
+
+inmate 侧（COM9），连续采集约 98 秒：
+
+```text
+INFO start_test_case       : Running test case 5:
+WARN rt_latency_init       : Linux load must be run manually!
+INFO benchmark_task        : running
+INFO cpu_load_task         : running
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 792 max 1541 rms^2 627639 stddev^2 180 absmin 500 absmax 1541
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 93710 100 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2025 max 4166 rms^2 4105693 stddev^2 3328 absmin 2000 absmax 4166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 0 93754 55 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 792 max 1500 rms^2 627528 stddev^2 156 absmin 500 absmax 1541
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 193613 197 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2025 max 3958 rms^2 4105382 stddev^2 3232 absmin 2000 absmax 4166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 0 193690 119 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 792 max 1541 rms^2 627621 stddev^2 181 absmin 500 absmax 1541
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 293517 293 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 1958 mean 2025 max 4333 rms^2 4106027 stddev^2 3430 absmin 1958 absmax 4333
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 293624 181 4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 792 max 1500 rms^2 627606 stddev^2 150 absmin 500 absmax 1541
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 393414 396 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2025 max 3958 rms^2 4105796 stddev^2 3302 absmin 1958 absmax 4333
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 393570 235 4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 793 max 1750 rms^2 629983 stddev^2 392 absmin 500 absmax 1750
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 493161 649 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2027 max 6166 rms^2 4113157 stddev^2 3772 absmin 1958 absmax 6166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 493494 309 5 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 793 max 1708 rms^2 629827 stddev^2 387 absmin 500 absmax 1750
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 592906 904 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2026 max 4000 rms^2 4111356 stddev^2 3513 absmin 1958 absmax 6166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 593414 388 6 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 793 max 1541 rms^2 630810 stddev^2 380 absmin 500 absmax 1750
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 692671 1139 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2026 max 4416 rms^2 4111741 stddev^2 3014 absmin 1958 absmax 6166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 693352 449 7 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 793 max 1500 rms^2 630565 stddev^2 383 absmin 500 absmax 1750
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 792399 1411 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2028 max 3958 rms^2 4118368 stddev^2 3646 absmin 1958 absmax 6166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 793273 528 7 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 792 max 1625 rms^2 629075 stddev^2 269 absmin 500 absmax 1750
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 892226 1584 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2027 max 4291 rms^2 4112716 stddev^2 3620 absmin 1958 absmax 6166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 893210 589 9 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+INFO rtos_apps_stats_print : stats(F0762308) irq delay (ns) min 500 mean 792 max 1458 rms^2 627523 stddev^2 153 absmin 500 absmax 1750
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 981230 1672 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO rtos_apps_stats_print : stats(F0762500) irq to sched (ns) min 2000 mean 2025 max 4000 rms^2 4106367 stddev^2 3474 absmin 1958 absmax 6166
+INFO rtos_apps_hist_print  : n_slot 20 slot_size 1000
+INFO rtos_apps_hist_print  : 0 1 982245 645 10 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+INFO print_stats           : late alarm scheduling: 0
+INFO print_stats           :
+```
+
+**怎么看出加压的起止**：直方图是**累计值**，把每 10 秒窗口的增量算出来，
+看 `irq delay` 落在 1–2 μs 槽（每行第 2 个数）的样本数：
+
+| 窗口 | 该窗口落在 1–2 μs 的样本数 | 阶段 |
+|---|---|---|
+| 1–4 | 100 / 97 / 96 / 99 | 加压前 |
+| 5–9 | 253 / 255 / 235 / 272 / 173 | **加压中** |
+| 10 | 88 | 加压后 |
 
 ---
 
