@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "10-项目/IMX95-EVK/开发流程-改代码到上板.md",
+                "file": "10-项目/IMX95-EVK/Harpoon复现.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "开发流程-改代码到上板"
+              "title": "Harpoon复现"
             }
           }
         ]
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "10-项目/IMX95-EVK/开发流程-改代码到上板.md",
+                "file": "10-项目/IMX95-EVK/Harpoon复现.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -201,6 +201,8 @@
   },
   "active": "8b737600487f1838",
   "lastOpenFiles": [
+    "10-项目/IMX95-EVK/UART与GPIO验证方案.md~RF231c74e.TMP",
+    "10-项目/IMX95-EVK/开发流程-改代码到上板.md",
     "10-项目/IMX95-EVK/UART与GPIO验证方案.md.tmp.6148.542823a3ea76",
     "10-项目/IMX95-EVK/开发日志.md~RF1e1e386.TMP",
     "10-项目/IMX95-EVK/UART与GPIO验证方案.md",
@@ -213,9 +215,7 @@
     "10-项目/IMX95-EVK/开发流程-改代码到上板.md.tmp.40916.bdd88e960032",
     "10-项目/IMX95-EVK/开发流程-改代码到上板.md.tmp.40916.e082917d118f",
     "10-项目/IMX95-EVK/Harpoon复现.md",
-    "10-项目/IMX95-EVK/开发流程-改代码到上板.md",
     "10-项目/IMX95-EVK/开发日志.md",
-    "10-项目/IMX95-EVK/README.md.tmp.10472.58cb7315c2a8",
     "10-项目/IMX95-EVK/rt_latency原始日志.md",
     "20-领域/Linux/Linux常用命令.md",
     "10-项目/IMX95-EVK/EVK-19x19到手操作计划.md",

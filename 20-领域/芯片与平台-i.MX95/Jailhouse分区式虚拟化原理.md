@@ -440,6 +440,33 @@ harpoon 的 `flags.cmake` 里定义了 `DEBUG_CONSOLE_TRANSFER_NON_BLOCKING=1`�
 所以定位这类问题时，关键输出要**直接调 `LPUART_WriteBlocking(BOARD_DEBUG_UART_BASEADDR, ...)`**，
 绕开缓冲。这一条对 ② 和 ③ 的排查都是前提。
 
+### 实测结论：三层都要查，但不一定三层都要改（2026-09-22）
+
+在 IMX95LPD5EVK-19 上给 A55 inmate 加 GPIO2，实测结果是**只改了 ② 和 ③**：
+
+| 层 | 要不要改 | 实测依据 |
+|---|---|---|
+| ① SM 资源表 | **不用改** | harpoon 的 SM 配置里 A55 non-secure 段本来就写了 `GPIO2 OWNER`；三个 SCMI 请求（含把引脚切成 GPIO 功能）全部返回 `SUCCESS` |
+| ② jailhouse cell | 要加一段 RGPIO2 | 不加就 EL1 translation fault，cell 当场被杀 |
+| ③ inmate 一级页表 | 要加一条 | 不加同样 translation fault，现象和 ② 一模一样 |
+
+**所以排查顺序应该是**："先看 ① 是不是已经放行（查 SM 配置 + 看 SCMI 状态码），再补 ② 和 ③"，
+而不是一上来就假定要重烧 SM。**重烧启动容器的代价远大于改 cell 和加一条页表条目。**
+
+**但为什么还要先查 ③ 的那张白名单**：它不写在 `.cell` 里，也不写在 SM 配置里，
+而是躺在 inmate 自己的 `mmu.c` 里，**很容易被漏掉**。
+
+### 另一个容易混的点：`PCNS`/`PCNP` 拦不拦，取决于主设备的**安全态**
+
+i.MX95 的 RGPIO 每个引脚有 `PCNS`（非安全）/`PCNP`（非特权）两个属性位。
+实测 `PCNS = PCNP = 0xFFFFFFFF`（所有引脚都标成非安全、非特权）时：
+
+- **A55 上的非安全态 inmate：不拦**，GPIO 输出照样驱动引脚。
+- Pro 板上的**安全特权态** M7：被拦成"读 0、写无效"。
+
+原因是非安全资源本来就不该拦非安全主设备；被拦是因为主设备处在更"高"的安全态。
+**所以看到 `PCNS/PCNP` 全 `F` 不要直接下"引脚不能用"的结论，要先看是谁在访问。**
+
 ## 十、适用范围与依据
 
 - **适用范围**：Jailhouse 的通用机制（cell 模型、四条命令、vmexit、文件格式）适用于所有平台。

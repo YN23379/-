@@ -39,16 +39,30 @@ updated: 2026-09-21
 3. **[[10-项目/IMX95-EVK/UART与GPIO验证方案.md|UART 与 GPIO 验证方案]]** —— 下一步要验什么、能验到什么程度
 4. **[[10-项目/IMX95-EVK/开发日志.md|开发日志]]** —— 板子到货后按日期的实际操作、问题和结果
 
-## 下一步：验 UART 收 + GPIO（产物已就绪，待上板）
+## ★ UART 收发 + GPIO 输入输出：四项全部实机验证通过（2026-09-22）
 
-`imx95-harpoon-freertos.cell` 已逐段解完（见 [[10-项目/IMX95-EVK/UART与GPIO验证方案.md|UART 与 GPIO 验证方案]]）：
+在 A55 inmate 上，UART 收发和 GPIO 输入输出四项全部跑通：
 
-- **UART 收发**：LPUART3 的寄存器窗口（`0x42570000`，`R|W|IO`）和中断号（`LPUART3_IRQn = 96`）**都在 cell 里**，
-  引脚也已经在 `board.c` 里配好收发两个方向。**不用改任何配置文件**，只是要加一段读 `LPUART3->DATA` 的代码。
-- **GPIO**：原 cell 的 16 个内存段里**没有任何 RGPIO**。SM 侧（`mx95rte.cfg` 的 A55 non-secure 段）已经写了
-  `GPIO2..5 OWNER`，**所以只缺 cell 这一段**。
+| 要求 | 证据 |
+|---|---|
+| UART 发 | `STEP0`–`STEP4` 全部正常打出 |
+| UART 收 | 按键被逐个回显，`-> UART RX OK` |
+| GPIO 输入 | 不按键 `samples==0 : 0`；按住键 `samples==0 : 2768`、`edges : 84` |
+| GPIO 输出 | 软件位翻转的字被 PC 正确收到：`[[GPIO-TX]] bit-banged on GPIO2_IO14 @115200 [END]` |
 
-已经做好的产物：
+**核心结论：给 inmate 加一个 GPIO 只要动两处，不用改 SM、不用重烧启动容器。**
+
+1. `.cell` 里加一段 RGPIO2（jailhouse stage-2）
+2. inmate 的一级页表加一条（stage-1，用应用自己的 `app_mmu.h`）
+
+SM 那一层（`mx95rte.cfg` 的 A55 non-secure 段）**本来就写了 `GPIO2 OWNER`**，`PIN_GPIO_IO15` 的 `ACCESS`
+也够用来申请改成 GPIO 功能 —— 三个 SCMI 请求全部返回 `SUCCESS`。
+
+完整过程、寄存器逐项解读、踩过的四个坑（一级页表白名单、非阻塞控制台吃掉输出、SDK 死循环、
+`/tmp` 断电清空导致 entry=0 的 0x200 instruction abort）都在
+[[10-项目/IMX95-EVK/UART与GPIO验证方案.md|UART 与 GPIO 验证方案]]。
+
+产物：
 
 | 产物 | 路径 |
 |---|---|
@@ -59,15 +73,9 @@ updated: 2026-09-21
 | **app_mmu.h（一级页表补丁，必须一起装）** | `build\tools\verify_app_mmu.h` |
 | 一键安装+编译 | `build\tools\install_and_build_verify.sh` |
 
-**2026-09-22 第一次上板踩到的坑**：只改 cell 不够。jailhouse 的 cell 是 **stage-2**，
-inmate 启动时自己建的**一级页表（stage-1）是另一张白名单**（`mmu.c` 的 `mmu_regions[]`），
-里面没有 GPIO2，所以一读 `0x43810000` 就是 translation fault，cell 当场被打死。
-补法是照抄 NXP 自己的 `industrial/.../app_mmu.h`（它给 CAN2 就是这么补的），
-在应用板级目录放一个 `app_mmu.h`，**不用改公共文件**。
-详见 [[10-项目/IMX95-EVK/UART与GPIO验证方案.md|验证方案]] 3.4 节。
-
-上板步骤在验证方案那篇的第五节。EVK 上**没有用户 LED 也没有用户按键**，
-所以 GPIO 输入/输出都用 `GPIO_IO14/15`（即 LPUART3 的 TX/RX 脚）配合 PC 串口来观察，不需要额外器件。
+> **上板三个反复咬人的点**：`/tmp` 是 tmpfs（断电清空，必须重传）；harpoon 开机自动建 `freertos` cell
+> 占着 CPU5（先 `cell destroy freertos`）；`cell load` 失败但 `cell start` 照样执行（会从地址 0 跑，
+> 报 `instruction abort at 0x200`）。**`cell load` 必须看到 `can be loaded` 再 `start`。**
 
 ## 目录内容
 

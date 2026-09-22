@@ -13,16 +13,32 @@ updated: 2026-09-22
 > 板型：IMX95LPD5EVK-19（19x19 LPDDR5 EVK）
 > 软件：Real-Time Edge 3.3 SD 镜像 + Harpoon（jailhouse v0.12）
 > 证据等级：第一节到第四节若无特别标注，均为**源码确认**（cell 解码 + SDK 头 + harpoon-apps 源码 + SM 配置源码）。
-> 第五节的操作**尚未实机执行**（`待上板`）。
+> 第五节的操作**已实机执行完毕**（2026-09-22）。四项验证全部通过，见下面的「实测结论」。
 
 ## 一句话结论
 
-**UART 收发现成条件就够，GPIO 缺 cell 里的一段 RGPIO2。** 两件事都已经准备好了产物：
+**UART 收发、GPIO 输入、GPIO 输出四项已在 IMX95LPD5EVK-19 上实机验证通过。**
+
+| 要求 | 状态 | 证据 |
+|---|---|---|
+| UART 发 | ✅ | 横幅和全部 `STEPn` 正常打出 |
+| UART 收 | ✅ | 按键被逐个收到并回显（`got 0x00000077` 等） |
+| GPIO 输入 | ✅ | 不按键时 `samples==0 : 0`；按住键时 `samples==0 : 2768`、`edges : 84` |
+| GPIO 输出 | ✅ | 软件位翻转的字串被 PC 正常收到：`[[GPIO-TX]] bit-banged on GPIO2_IO14 @115200 [END]` |
+
+**关键结论：加 GPIO 不需要改 SM 配置、不需要重烧启动容器。** 只要两处：
+
+1. `.cell` 里加一段 RGPIO2（stage-2）
+2. inmate 的一级页表加一条（stage-1，用 `app_mmu.h`）
+
+SM 那一层（`mx95rte.cfg` 的 A55 non-secure 段）**本来就写了 `GPIO2 OWNER`**，不用动。
+
+产物：
 
 | 产物 | 路径 | 说明 |
 |---|---|---|
 | 新 cell | `build\a55-bin\imx95-harpoon-freertos-gpio.cell` | 在原 cell 基础上追加 1 段 RGPIO2 |
-| 测试程序 | `build\a55-bin\hello_world.bin` | UART 收 + GPIO 输入 + GPIO 输出，菜单驱动 |
+| 测试程序 | `build\a55-bin\hello_world.bin` | UART 收 + GPIO 输入 + GPIO 输出，菜单驱动 + 超时自动全跑 |
 | cell 生成脚本 | `build\tools\cell_add_gpio.py` | 可重复执行，自带结构自检 |
 | 程序源码 | `build\tools\verify_uart_gpio_main.c` | 安装到 `harpoon-apps/hello_world/freertos/main.c` |
 | **app_mmu.h** | `build\tools\verify_app_mmu.h` | **必须一起装**，给 inmate 的一级页表补 GPIO2 |
@@ -30,7 +46,7 @@ updated: 2026-09-22
 
 > **踩坑记录（2026-09-22 第一次上板失败）**：只加了 cell 一段，程序一读 `GPIO2` 就死，
 > COM 口上只剩崩溃前已经排空的一行。原因是 **jailhouse 的 cell 只是 stage-2，inmate 自己的
-> 一级页表（stage-1 MMU）是另一张白名单**。详见第三节 3.6。
+> 一级页表（stage-1 MMU）是另一张白名单**。详见第三节 3.4。
 
 ## 一、inmate 到底拿到了什么
 
@@ -143,7 +159,10 @@ mcux-sdk/components/sm/porting/platform/imx95/ca55/sm_platform.h:22  #define SM_
 正是 cell irqchip[1] 授权的那个号。两边完全对上。
 
 **判断**：inmate 以 `dup=2` 方式继承 A55 non-secure 段的资源权限，所以 **GPIO2 在 SM/TRDC 层已经可用**。
-（`dup=2` 是否严格等于"完整继承 agent0 的资源表"，属于**推测**，上板时用测试 [0] 验证。）
+
+> **2026-09-22 实机验证：判断成立。** 测试 `[2a]`/`[2b]`/`[2c]` 三个 SCMI 请求
+> （含把 `GPIO_IO15` 切成 GPIO 功能）全部返回 `SUCCESS`，说明 SM 这一层确实已经放行，
+> **不用改 SM 配置，也不用重烧启动容器**。
 
 ### 3.2 jailhouse 这一层缺 RGPIO 的地址段
 
@@ -513,6 +532,127 @@ v2 的菜单只认 `1`–`5`，实测时在提示符下随手按键（收到 `0x
 v3 产物：70,096 字节，入口 `0xf0000000`，
 sha256 `ac3b158481bb3ba801951caaa452741484ffbb0818aea34258109744b98ea260`。
 
+### 4.6 v3 实测卡住 → 发现 NXP SDK 的死循环，做 v4
+
+v3 自动跑的结果：`[1] UART RX` 通过（收到 `0x32`），走到
+
+```text
+-- [2] GPIO IN: mux GPIO_IO15 -> GPIO2_IO15 --
+```
+
+**就再没有任何输出，也不回菜单。**
+
+#### 根因：`sm_pinctrl.c` 出错时死循环
+
+`mcux-sdk/components/sm/pinctrl/sm_pinctrl.c`：
+
+```c
+/* 第 55-57 行，SM_PINCTRL_SetPinMux 里 */
+status = SCMI_PinctrlSettingsConfigure(channel, ..., configs);
+/* Find something wrong ASAP(components/scmi/scmi_common.h: scmi error code) */
+while (status != SCMI_ERR_SUCCESS);          /* ← status 再也不会被更新 */
+
+/* 第 88-90 行，SM_PINCTRL_SetPinCfg 里同样 */
+status = SCMI_PinctrlSettingsConfigure(channel, ..., &configs);
+while (status != SCMI_ERR_SUCCESS);
+```
+
+**只要 SCMI 返回的不是 `SUCCESS`，这里就是死循环**——不返回、不打印、不超时。
+现象就是"打完标题就没了"，而且 cell **还活着**（没有被 hypervisor 杀），占着 CPU 空转。
+
+这解释了 v3 为什么卡在 `[2]`：`HAL_PinctrlSetPinMux(PIN_IO15_AS_GPIO2_IO15, 0U)` 里那次
+SCMI 请求没成功。
+
+#### 但为什么启动时的 LPUART3 请求没事
+
+`board.c:26-35` 的 `pin_mux_lpuart3()` 也调同一个函数。**如果它也失败，程序在启动时就挂了，
+我们连横幅都看不到。** 所以启动时那几次请求是 `SUCCESS` 的。
+
+那么问题就变成二选一：
+
+| 假设 | 现象会是什么 |
+|---|---|
+| A. SM 只肯给 LPUART3 功能，**不肯给 GPIO 功能**（`PIN_GPIO_IO15` 在 SM 配置里对 A55 只有 `ACCESS`，M7 才是 `OWNER`） | 启动成功、切 GPIO 失败。**要改 SM 配置并重烧启动容器** |
+| B. SCMI 通路偶发失败（inmate 和 Linux **共用 MU3** 这个 SCMI agent，抢同一条 SMT 通道） | 时好时坏，重试可能就过 |
+
+**两个假设的现象不一样，但都被那个死循环吞掉了**，必须把状态码打出来才能分辨。
+
+#### v4 怎么改
+
+1. **不再用 `HAL_PinctrlSetPinMux` / `HAL_PinctrlSetPinCfg`**，自己实现 `scmi_mux()` / `scmi_cfg()`。
+   逻辑和 `sm_pinctrl.c` 一样（同样的 `scmi_pin_config_t`、同样的 attributes 算法），
+   但**把状态码 return 出来**，并且打印成人能读的名字：
+
+```c
+static uint32_t scmi_mux(uint32_t muxRegister, uint32_t muxMode, ...)
+{
+    ...
+    return SCMI_PinctrlSettingsConfigure(SM_PLATFORM_A2P, ..., attrs, configs);
+}
+```
+
+2. **每一步先报再做**，并且把 SCMI 状态码打出来。关键是 `[2a]` 这个**校准点**：
+   它发的是和启动时**一模一样**的 LPUART3 请求，所以它必须是 `SUCCESS`；
+   如果它也失败，说明是假设 B（通路问题），而不是权限问题。
+
+```text
+-- [2] GPIO IN: mux GPIO_IO15 -> GPIO2_IO15 --
+    [2a] scmi mux IO15 -> LPUART3_RX (same as boot) ...
+    [2a] status = 0x00000000
+             = SUCCESS
+    [2b] scmi mux IO15 -> GPIO2_IO15 ...
+    [2b] status = 0x........        <- 关键就看这一行
+             = ...
+```
+
+3. **所有"切回去"的地方也改用安全版**。原来 `test_gpio_output()` 结尾用
+   `HAL_PinctrlSetPinMux(PIN_IO14_AS_LPUART3_TX, 0U)` 把控制台切回来——
+   **这一步要是死循环，控制台就永远回不来了**。v4 全改成 `scmi_mux()`。
+
+4. 状态码翻译表（`components/imx_sm/components/scmi/scmi_common.h`）：
+
+| 值 | 名字 | 含义 |
+|---|---|---|
+| 0 | `SCMI_ERR_SUCCESS` | 成功 |
+| -1 | `NOT_SUPPORTED` | 不支持这个命令/特性 |
+| -2 | `INVALID_PARAMETERS` | 参数不对 |
+| -3 | `DENIED` | **没有权限** —— 假设 A 就是它 |
+| -4 | `NOT_FOUND` | **SM 不认识这个引脚** —— SM 配置里没这一项 |
+| -5 | `OUT_OF_RANGE` | 超出合法范围 |
+| -6 | `BUSY` | 平台资源忙 |
+| -7 | `COMMS_ERROR` | 消息没能正确传输 —— 假设 B |
+| -8 | `GENERIC_ERROR` | 通用失败 |
+| -9 | `HARDWARE_ERROR` | 硬件错 |
+| -10 | `PROTOCOL_ERROR` | 协议错 |
+| -11 | `IN_USE` | 资源被平台占用 |
+| -129 | `CRC_ERROR` | CRC 校验失败 —— 假设 B |
+| -133 | `SEQ_ERROR` | 收发序列错 —— 假设 B |
+
+v4 产物：74,192 字节，入口 `0xf0000000`，
+sha256 `cfa89895b73f35dfa45f50eeeb9d16eb869e181a98e990caf6199a187cfbe25c`。
+
+#### v4 实测结果：全部 SUCCESS
+
+```text
+[2a] scmi mux IO15 -> LPUART3_RX (same as boot) ...  status = SUCCESS
+[2b] scmi mux IO15 -> GPIO2_IO15 ...                 status = SUCCESS
+[2c] scmi cfg IO15 pull-down ...                     status = SUCCESS
+[2d] write GPIO2->PDDR ...                           PDDR = 0x00000010
+```
+
+三个请求全 `SUCCESS`，所以：
+
+- **假设 A 不成立**（SM 并没有拒绝 GPIO 功能）——`PIN_GPIO_IO15` 的 `ACCESS` 权限**够用**，
+  不需要改 SM 配置、不需要重烧启动容器。
+- **假设 B 也不能证实**（不是传输错）。
+- 那么 v3 那次卡住的原因**没有查实**。可能是一次偶发的 SCMI 错误被那个死循环吞掉了。
+  **结论不变：会死循环的函数不能用**；但"为什么会出错"仍是**未解**（见第六节）。
+
+> **这个 SDK 死循环是真 bug，值得反馈给 NXP**：出错路径应该是有限次重试 + 返回状态码，
+> 而不是 `while (status != SUCCESS);` 空转。它把"权限不足"这种可能遇到的正常错误
+> 表现成了"程序卡死且无任何提示"。
+> 本方案**没有改 SDK 文件**（`sm_pinctrl.c` 保持原样），只在应用侧绕开它。
+
 ## 五、傻瓜式上板步骤（待执行）
 
 ### 5.0 准备
@@ -531,26 +671,148 @@ cd F:\project\Learning\RTOS\build\a55-bin
 scp hello_world.bin imx95-harpoon-freertos-gpio.cell root@<板子IP>:/tmp/
 ```
 
+#### 5.1.1 断电重启之后必须重做两件事（踩过）
+
+**2026-09-22 记录**：断电重启后再走 5.2，报了两个错：
+
+```text
+jailhouse cell destroy  freertos-gpio -> JAILHOUSE_CELL_DESTROY: No such file or directory
+jailhouse cell create /tmp/...cell     -> JAILHOUSE_CELL_CREATE: Device or resource busy
+jailhouse cell load freertos-gpio ...  -> JAILHOUSE_CELL_LOAD: No such file or directory
+```
+
+两件事各自独立，都不是代码问题：
+
+| 错 | 原因 | 怎么办 |
+|---|---|---|
+| `LOAD: No such file or directory` | **`/tmp` 是 tmpfs，断电就没了。** 上次 scp 过去的 `.bin` 和 `.cell` 都不在了 | 重新 scp（就是 5.1 那两条） |
+| `CREATE: Device or resource busy` | **CPU5 还被原来的 `freertos` cell 占着。** 重启后 harpoon 的流程会自己把 `freertos` 建起来（或上次留下的还在），我们的新 cell 也要 CPU5，`cell create` 就会 EBUSY | 先把 `freertos` 停掉再建；`jailhouse cell list` 能直接看到它 |
+
+**所以重启后的正确顺序是**：先 `jailhouse cell list` 看清现状 → 停掉 `freertos` → 再建 `freertos-gpio`。
+
+**另外**：这几条命令要**一条一条贴、一条一条等提示符**。
+整段粘贴到串口终端上很容易串行（这次的日志里 `jailhouse cell load ...` 和结果就交错了，
+中间还夹着上一次没执行完的半条命令）。
+
+#### 5.1.2 `FATAL: instruction abort at 0x200` 的排查（踩过）
+
+**2026-09-22 记录**：断电重启后重跑，`jailhouse cell start freertos-gpio` 报：
+
+```text
+FATAL: instruction abort at 0x200
+FATAL: forbidden access (exception class 0x20)
+Cell state before exception:
+ pc: 0000000000000200   lr: 0000000000000000 spsr: 000003c5     EL1
+ sp: 0000000000000000  elr: 0000000000000200  esr: 20 1 0000006
+ x0..x29 全是 0
+Parking CPU 5 (Cell: "freertos-gpio")
+```
+
+**这不是 U-Boot / 设备树的问题，是 cell 的入口地址不对。**
+
+##### 怎么从这几个数字读出来
+
+`esr = 0x20_1_0000006`：EC=0x20 = "Instruction Abort from a lower EL"，ISS=0x06 = 二级页表 translation fault。
+`pc = elr = 0x200`：出错的那条指令在 `0x200`。
+
+对照 jailhouse 源码 `hypervisor/arch/arm64/control.c` 的 `arm_cpu_reset()`：
+
+```c
+arm_write_sysreg(SP_EL0, 0);
+arm_write_sysreg(SP_EL1, 0);
+arm_write_sysreg(SPSR_EL1, 0);
+...
+arm_write_sysreg(VBAR_EL1, 0);
+...
+arm_write_sysreg(SPSR_EL2, RESET_PSR_AARCH64);   /* = 0x3c5 */
+arm_write_sysreg(ELR_EL2, pc);
+memset(&this_cpu_data()->guest_regs, 0, sizeof(union registers));
+```
+
+- `spsr = 0x3c5` 正是 `RESET_PSR_AARCH64`（EL1h + DAIF 全屏蔽）
+- `sp = 0`、`x0..x29 = 0` 正是 `arm_cpu_reset` 的清零结果
+- `VBAR_EL1` 被写成 **0**
+
+**所以 CPU 是"刚复位"状态，而它的复位入口是 `0`，不是 `0xf0000000`。**
+
+`0x200` 是 ARM64 异常向量表里的固定偏移 —— **"同步异常 / 当前 EL / 用 SP_ELx"** 那一项。
+完整链条：
+
+```text
+1. cell 入口 = 0（不是 0xf0000000）
+2. CPU 从 0x0 取指
+   但 cell 只把物理 0x0 映射到【虚拟】0x80000000（cell 内存段 [15]）
+   所以虚拟 0x0 没映射 -> 取指异常
+3. 这个异常发生在 EL1 内部，走 VBAR_EL1(=0) 的向量表
+   -> 跳到 0 + 0x200 = 0x200
+4. 0x200 同样没映射 -> 第二次异常，这次被 hypervisor 抓到
+   -> 打印 "instruction abort at 0x200"
+```
+
+**第一次异常在 cell 内部就被消化了**，所以只看到 0x200 这一条，看不到 0x0 那一条。
+
+##### 入口为什么是 0
+
+入口不是从 `.cell` 的 `cpu_reset_address` 来的，而是 **`jailhouse cell load ... -a <地址>` 记下来的**。
+**`cell load` 没成功，入口就保持 0。**
+
+这次的原因在前面那一段输出里已经写着了：
+
+```text
+jailhouse cell load freertos-gpio /tmp/hello_world.bin -a 0xf0000000
+JAILHOUSE_CELL_LOAD: No such file or directory
+```
+
+**`/tmp/hello_world.bin` 不在** —— `/tmp` 是 tmpfs，断电重启就清空。后面再 `cell start`，
+jailhouse 照样会启动 CPU，只是从 0 开始。
+
+##### 怎么避免
+
+**每次上板先确认文件在，而且 load 有回显。** 用 `&&` 串起来，任何一步失败就停：
+
+```bash
+ls -l /tmp/hello_world.bin /tmp/imx95-harpoon-freertos-gpio.cell ; \
+jailhouse cell destroy freertos ; \
+jailhouse cell destroy freertos-gpio ; \
+jailhouse cell create /tmp/imx95-harpoon-freertos-gpio.cell && \
+jailhouse cell load freertos-gpio /tmp/hello_world.bin -a 0xf0000000 && \
+jailhouse cell start freertos-gpio
+```
+
+**必须看到 `Cell "freertos-gpio" can be loaded` 这一行**（这是 `cell load` 成功的回显），
+再往下走 `cell start`。看不到就别 start。
+
+文件正确性用哈希核对（`实机验证`前的静态核对）：
+
+| 文件 | 大小 | SHA256 |
+|---|---|---|
+| `hello_world.bin`（v4） | 74,192 | `cfa89895b73f35dfa45f50eeeb9d16eb869e181a98e990caf6199a187cfbe25c` |
+| `imx95-harpoon-freertos-gpio.cell` | 804 | `b9467715a34fced2a10eaf3471af84687aca1077f5fe768f67b334cf76367d8d` |
+
 ### 5.2 换 cell 并跑起来（在板子的串口终端里）
 
 ```bash
-# 1) 把正在跑的旧 cell 停掉
+# 1) 先看现状：cell 0 是 root cell，别的都是已经建出来的
+jailhouse cell list
+
+# 2) 把占着 CPU5 的旧 cell 停掉（重启后 harpoon 会自己建一个叫 freertos 的）
 jailhouse cell shutdown freertos || true
-jailhouse cell destroy  freertos || true
+jailhouse cell destroy  freertos
+#    如果它自己又回来了，先停服务：
+#    systemctl stop harpoon
 
-# 2) 看一眼还有哪些 cell 在
+# 3) 确认 CPU5 空出来了
 jailhouse cell list
 
-# 3) 用带 GPIO 的新 cell 建一个（名字是 freertos-gpio，从文件里读的）
+# 4) 用带 GPIO 的新 cell 建一个（名字 freertos-gpio 是从文件里读的）
 jailhouse cell create /tmp/imx95-harpoon-freertos-gpio.cell
-
-# 4) 确认建出来的 cell 名字和内存段
-jailhouse cell list
 
 # 5) 装载 + 启动
 jailhouse cell load freertos-gpio /tmp/hello_world.bin -a 0xf0000000
 jailhouse cell start freertos-gpio
 ```
+
+**一条一条执行，每条等到提示符出来再贴下一条。**
 
 命令行的前提条件（之前实测过）：**cell 必须先 shutdown/destroy 再 load**，否则报 busy；
 `-a 0xf0000000` 必须和 ELF 入口、cell 的 `mem_regions` 三者一致。
@@ -664,8 +926,99 @@ got 0x00000039     <- '9'
 | UART 发 | ✅ 已验证（横幅、STEP 全部正常打出） |
 | UART 收 | ✅ 已验证（按键被逐个收到并回显） |
 | GPIO 寄存器访问 | ✅ 已验证（`VERID=0x02010001`） |
-| GPIO 输入 | ⏳ 待验（菜单命令 `2`，或 v3 自动跑） |
-| GPIO 输出 | ⏳ 待验（菜单命令 `3`，或 v3 自动跑） |
+| GPIO 输入 | ✅ 已验证（见 5.4.1） |
+| GPIO 输出 | ✅ 已验证（见 5.4.1） |
+
+#### 5.4.1 v4 实测全过程（2026-09-22，`实机验证` —— 四项全过）
+
+```text
+STEP3: VERID = 0x02010001
+STEP3: GPIO2 reachable -> cell entry AND MMU entry both OK
+STEP4: VERID=0x02010001 PARAM=0x00000002
+       PDDR =0x00000010 PDOR =0x00000010 PDIR =0x31040400
+       PIDR =0x00000000 PCNS =0xFFFFFFFF PCNP =0xFFFFFFFF
+
+commands: 1/r=UART RX  2/i=GPIO IN  3/o=GPIO OUT  4/a=all  5/d=dump
+          no command within 5s -> run all three tests automatically
+>
+no command in 5s -> running all three tests
+
+-- [1] UART RX: type any key in this terminal within 10s --
+    nothing in 10s -> UART RX FAIL          <- 自动跑时没来得及按键，后面手动补验
+
+-- [2] GPIO IN: mux GPIO_IO15 -> GPIO2_IO15 --
+    [2a] scmi mux IO15 -> LPUART3_RX (same as boot) ...
+    [2a]00000000
+             = SUCCESS
+    [2b] scmi mux IO15 -> GPIO2_IO15 ...
+    [2b]00000000
+             = SUCCESS                       <- ★ SM 接受了 GPIO 功能
+    [2c] scmi cfg IO15 pull-down ...
+    [2c]00000000
+             = SUCCESS
+    [2d] write GPIO2->PDDR (clear bit15) ...
+    [2d] ok, PDDR = 0x00000010               <- ★ 写 RGPIO2 成功，bit15 清零，bit4 不受影响
+    level right after mux = 0x00000001       <- ★ bit15 = 1，说明 mux 真的生效了
+    HOLD DOWN any key on the keyboard. Sampling starts in 5s ...
+    sampling 8s ...
+    samples==1 : 16218560
+    samples==0 : 2768                        <- ★ 按住键时出现低电平
+    edges      : 84                          <- ★ 有 84 次跳变
+    -> GPIO IN OK
+    [2e] scmi mux IO15 -> LPUART3_RX ...
+    [2e]00000000
+             = SUCCESS
+    [2e] done
+
+-- [3] GPIO OUT: mux GPIO_IO14 -> GPIO2_IO14, bit-bang --
+    [3a] scmi mux IO14 -> GPIO2_IO14 ...
+                                             <- [3a] 的状态行、[3b]/[3c]/[3d] 全部看不到
+[[GPIO-TX]] bit-banged on GPIO2_IO14 @115200 [END]
+                                             <- ★ 位翻转出来的字被 PC 正确收到
+    [3e]00000000
+             = SUCCESS
+    [3e] 控制台已恢复
+    bit_ticks per bit : 208
+
+===== all tests done (auto) =====
+>
+got 0x00000032                               <- 手动敲 '2'
+...
+got 0x00000077
+    -> UART RX OK                            <- ★ 手动补验 UART 收
+```
+
+##### 每一项为什么算通过
+
+| 项 | 关键证据 | 说明 |
+|---|---|---|
+| **UART 发** | `STEP0`–`STEP4` 全部正常打出 | LPUART3 TX 通 |
+| **UART 收** | 手动敲键 → `got 0x00000077` / `-> UART RX OK` | LPUART3 RX 通 |
+| **GPIO 输入** | 不按键：`samples==0 : 0`；按住键：`samples==0 : 2768`、`edges : 84` | 引脚电平真的跟着 PC 发数据在动 |
+| **GPIO 输出** | `[[GPIO-TX]] bit-banged on GPIO2_IO14 @115200 [END]` | 软件位翻转的 8N1 帧被 FT4232H 正确解码 |
+
+##### 几个"没出现的东西"同样是证据
+
+`test_gpio_output()` 的设计是：切成 GPIO 之后**再往 LPUART3 写一遍** `[[LPUART3-TX]]`。
+两段字哪段出现，就能区分"mux 生效了"还是"mux 没生效"：
+
+| 观察 | 判定 |
+|---|---|
+| `[[GPIO-TX]]` 出现、`[[LPUART3-TX]]` **不**出现 | ✅ mux 生效 + GPIO 输出正确（**这次就是这个**） |
+| 两段都出现 | mux 没生效，引脚一直是 LPUART3_TX |
+| 两段都不出现 | 位翻转代码或时序有问题 |
+
+同理，`[3a]` 的状态行和 `[3b]`/`[3c]`/`[3d]` 这几行**看不到**也是证据 ——
+它们是在 IO14 已经切成 GPIO 之后才打印的，**打不到终端正好说明控制台 TX 真的被切走了**。
+
+##### 另外两个意外收获
+
+- **`PCNS`/`PCNP = 0xFFFFFFFF` 没有拦住 A55。** 说明 i.MX95 的 PCNS/PCNP 对
+  **非安全态**主设备不起阻挡作用（非安全资源，非安全态本来就能访问）。
+  和 Pro 板 M7 那次（安全特权态，被拦成"读 0、写无效"）是**两回事**，不能类比。
+- **位翻转的时序是对的。** `bit_ticks per bit : 208` = 24 000 000 / 115 200 = 208.3。
+  PC 能正确解出全部字符，说明"用 `CNTVCT_EL0` + `CNTFRQ_EL0` 做时间基准"这条路可行，
+  而且每个字节期间关中断（`taskENTER_CRITICAL`）确实挡住了 1 ms 的 tick 干扰。
 
 > 第一版（没有 `STEPn`、没有 `app_mmu.h`）就停在 `STEP0` 之前：只看到 `INFO: verify build running`，
 > 之后什么都没有，敲键也没反应。原因见 3.4.1。
@@ -724,20 +1077,26 @@ rm -f boards/imx95lpd5evk19/app_mmu.h  # 去掉一级页表补丁
 bash /mnt/f/project/Learning/RTOS/build/tools/build_a55.sh hello_world release
 ```
 
-## 六、上板时要回答的问题
+## 六、问题与答案（2026-09-22 全部有结论）
 
-1. `STEP3` 能不能读出 RGPIO2 的 VERID —— 直接判定 cell + 一级页表是否都生效。
-2. `mx95rte.cfg` 里的 `dup=2` 是否严格让 `AP-NS-agent1/2` 继承 `AP-NS-agent0` 的全部资源权限。
-3. `PIN_xxx ACCESS` 和 `OWNER` 在 SM 里行为差多少——inmate 只有 `GPIO_IO14/15` 的 `ACCESS`，
-   能不能成功请求改成 GPIO 功能（测试 `3` 的 marker 会给出答案）。
-4. ~~往 `.cell` 里自己加一段 RGPIO 会不会被 jailhouse 拒绝~~ → **已答（2026-09-22）**：
-   `jailhouse cell create /tmp/imx95-harpoon-freertos-gpio.cell` 成功，
-   打印 `Created cell "freertos-gpio"` / `Page pool usage after cell creation: mem 150/993`。
-   说明**MMIO 段的增加不会被判与 root cell 重叠**（root cell 配置里并没有逐条列 MMIO）。
-5. A55 非安全态下 `PCNS`/`PCNP` 是否还拦——`STEP4` 打印的原始值就是答案。
-6. `0x445d1000` 是 SMT 共享内存还是 MU 的扩展窗口（cell 把它标成 `ROOTSHARED`，只能从现象反推）。
-7. **新的**：inmate 的一级页表还漏了哪些外设？现在只补了 GPIO2。
-   要用 TPM2 做计数器（`rt_latency` 走的就是 TPM）或别的外设时，同样要检查 `mmu.c` 白名单。
+| # | 问题 | 答案 |
+|---|---|---|
+| 1 | `STEP3` 能不能读出 RGPIO2 的 VERID | **能。** `VERID = 0x02010001`，cell（stage-2）+ 一级页表（stage-1）都生效 |
+| 2 | `dup=2` 是否让 `AP-NS-agent1/2` 完整继承 `AP-NS-agent0` 的权限 | **不需要回答了。** inmate 走 MU3（= agent0），SCMI 请求全部返回 `SUCCESS`，说明权限已经够用 |
+| 3 | `PIN_xxx ACCESS` 够不够申请改成 GPIO 功能 | **够。** `[2b] scmi mux IO15 -> GPIO2_IO15` 返回 `SUCCESS`。**这是本次最重要的结论之一** |
+| 4 | 自己往 `.cell` 加 MMIO 段会不会被 jailhouse 拒绝 | **不会。** `cell create` 成功（`Created cell "freertos-gpio"`）。root cell 配置里并没有逐条列 MMIO |
+| 5 | A55 非安全态下 `PCNS`/`PCNP = 0xFFFFFFFF` 还拦不拦 | **不拦。** 读到全 `F`（所有脚非安全、非特权），但 GPIO 输出照样驱动了引脚。**非安全态能访问非安全资源**——和 Pro 板 M7（安全特权态）被拦是两回事 |
+| 6 | `0x445d1000` 是 SMT 共享内存还是 MU 扩展窗口 | **仍未定。** 从现象反推不出来，需要 SM 源码或 RM |
+| 7 | inmate 的一级页表还漏了哪些外设 | **开放。** 现在只补了 GPIO2。要用别的外设（TPM 做计数器等）同样要检查 `mmu.c` 白名单 |
+
+### 第六条之外的残余问题
+
+- **v3 为什么卡死还没最终确定。** v4 绕开 `sm_pinctrl.c` 的死循环之后，同样的三个请求
+  （`[2a]`/`[2b]`/`[2c]`）全部返回 `SUCCESS`。所以 v3 那次要么是偶发（SCMI 传输错，被死循环吞掉），
+  要么是那个函数在某个条件下走到了不同分支。**结论不变：出错时会死循环的函数不能用**，
+  但"为什么会出错"这个根因没有查实。
+- **GPIO 输入测试的判据可以再收紧。** 这次是"按住键 → 2768 个低电平样本、84 次跳变"，
+  足够证明通路，但如果要把 duty 也验准，应该用 PC 端发送固定码型（例如连续 0x00）+ 逻辑分析仪同时看。
 
 ## 相关
 
