@@ -201,6 +201,7 @@
   },
   "active": "8b737600487f1838",
   "lastOpenFiles": [
+    "10-项目/IMX95-EVK/SAM9X60培训提问清单.md",
     "10-项目/IMX95-EVK/第二阶段资源与硬件方案.md",
     "10-项目/IMX95-EVK/UART与GPIO验证方案.md~RF231c74e.TMP",
     "10-项目/IMX95-EVK/开发流程-改代码到上板.md",
@@ -237,7 +238,6 @@
     "20-领域/芯片与平台-i.MX95/Harpoon方案完整流程.md",
     "20-领域/芯片与平台-i.MX95/Jailhouse分区式虚拟化原理.md",
     "20-领域/虚拟化与隔离/Hypervisor虚拟化原理.md",
-    "10-项目/FRDM-IMX95-PRO/A55运行FreeRTOS的方向调整.md",
     "90-附件/RTOS/ucosii任务状态.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/断点设置.png",
     "30-资源/培训-尹家昌/基础培训/IAR/pictures/单步调试.png"
