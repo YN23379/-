@@ -504,6 +504,124 @@ SOM 原理图 p7（调试串口电路）
 A55 上的 Linux/inmate 是**非安全**态，和 BL31 设的属性方向一致，**预计不会撞**。这是**推测**，
 所以测试 [0] 会把 `PCNS`/`PCNP` 原样打出来，实机一看就知道。
 
+### 3.7 需要别的外设怎么办（以 PWM 为例）
+
+**先分清两件事**：
+
+| | 状态 |
+|---|---|
+| **GPIO 功能本身** | ✅ **已经通了**（输入、输出、位翻转都实测过） |
+| **GPIO 引出到能插线的地方** | ❌ 板上就是没有，改不了 |
+
+**所以"没有 GPIO 排针"限制的是"接外部器件"，不是"用 GPIO 功能"。** 要在这块板上做需要 GPIO/PWM 的功能，走下面几条路。
+
+#### 路线一：PWM —— NXP 官方有现成做法
+
+**NXP 在这块板上的 PWM 例程，用的是 `I2C2_SCL` 焊盘复用成 `TPM2_CH2`。**
+
+依据（`源码可确认`）：把 SDK 里 `boards/imx95lpd5evk19/` 下**所有** `pin_mux.c` 搜一遍，TPM 相关的引脚复用只有两条：
+
+```text
+I2C2_SCL__TPM2_CH2
+I2C2_SDA__TPM2_CH3
+```
+
+来自 `driver_examples/tpm/simple_pwm/cm7/pin_mux.c`，MCUXpresso Config Tools 生成的注释写得很明确：
+
+```text
+- {pin_num: E43, peripheral: TPM2, signal: 'tpm_ch, 2', pin_signal: I2C2_SCL}
+```
+
+**用哪路 TPM、哪个通道、哪个焊盘，NXP 已经替你选好了。**
+
+#### ★ cell 里本来就有 TPM2 和 TPM4
+
+查一下 harpoon 那个 freertos cell 的 16 个内存段（见 §3.2 的表）：
+
+| 段号 | 地址 | 大小 | 权限 | 是什么 |
+|---|---|---|---|---|
+| 8 | `0x424f0000` | 0x10000 | R\|W\|IO | **TPM4** |
+| 10 | `0x44320000` | 0x10000 | R\|W\|IO | **TPM2** |
+
+中断也已经给了：`TPM2_IRQn = 30` → GIC 62，`TPM4_IRQn = 74` → GIC 106。
+
+**所以做 PWM 不用改 cell。** 这和 GPIO 那次的处境完全不同（那次 cell 里一段 RGPIO 都没有）。
+
+#### 那要改什么
+
+| 改什么 | 文件 | 说明 |
+|---|---|---|
+| **一级页表** | 应用自己的 `app_mmu.h`（照 `verify_app_mmu.h` 的写法） | **★ 必做**。cell 里有 TPM2 不等于 inmate 能访问 —— 这是第一次上板踩过的坑 |
+| **链接驱动** | `<应用>/freertos/boards/imx95lpd5evk19/armgcc_aarch64/CMakeLists.txt` | 加 `set(CONFIG_USE_driver_tpm true)` 和 `include(driver_tpm)` |
+| **程序逻辑** | `<应用>/freertos/main.c` | 调 `TPM_Init()` / `TPM_SetupPwm()` / `TPM_UpdatePwmDutycycle()` / `TPM_StartTimer()` |
+| **引脚复用** | 走 `SM_PINCTRL_SetPinMux()`（和现在配 LPUART3 一样） | **不用改 cell 里的 IOMUXC**，见 §2 |
+
+驱动本体在 `mcux-sdk/drivers/tpm/`（`fsl_tpm.c` / `fsl_tpm.h`），**A55 可用** —— harpoon-apps 本来就是链 mcux-sdk 的。
+
+**参考代码**：`SDK_26_06_00_IMX95LPD5EVK-19/boards/imx95lpd5evk19/driver_examples/tpm/simple_pwm/cm7/tpm_simple_pwm.c`
+（**CM7 版**，驱动 API 通用，板级初始化和工程配置要换成 A55 那套）
+
+那条例程做的事：输出 **24 kHz 中心对齐 PWM**，占空比从 10% 起，手动调值。
+
+#### 物理观察点在哪
+
+`I2C2` 在板上连到哪些地方（`UM12022` §2.5 Table 19，`官方文档`）：
+
+| 设备 | 接在哪 |
+|---|---|
+| MIPI-DSICSI 模块 | **J14**（Mini-SAS 2x18-pin） |
+| LVDS1 模块 | **J16**（Mini-SAS 2x18-pin） |
+| U81 ADP5585（I2C 扩展器） | **DNP，没焊** |
+
+**所以 PWM 波形要量的话，在 J14 或 J16 的 I2C2 引脚上取。** 两个都是 Mini-SAS 高密度座，得先做个转接。
+
+**`待验证`**：J14/J16 上 I2C2 那两个脚的具体针号没逐脚核过；而且**不插模块时 I2C2 总线上有没有别的器件在拽线**也要实测确认。
+
+#### 路线二：GPIO 位翻转（已经通了，最省事）
+
+**要的只是"输出一个受控波形"的话，`GPIO_IO14/15` 位翻转就够了** —— §3.5 里那个 `[[GPIO-TX]] bit-banged on GPIO2_IO14 @115200` 就是实测跑通的。
+
+**优点**：不用改 cell、不用改 MMU、不用新驱动，已经在 COM9 上能看。
+**缺点**：精度受任务调度影响，适合低频（几十 kHz 以内）。要精确的高频 PWM 还得用 TPM。
+
+#### 路线三：J22 接外部扩展
+
+**J22 是板上唯一已焊的通用 I2C 排针**（8-pin `SSM-104-L-DV`，走 I2C6）。
+
+接一片外部的 I2C GPIO/PWM 扩展器（PCAL6408 / PCA9685 之类）就能扩出任意多路 GPIO 和 PWM。**代价是要外接器件。**
+
+**J22 的完整分析（引脚、SM 权限、I2C6 控制器地址、怎么接线）在
+[[10-项目/IMX95-EVK/第二阶段资源与硬件方案.md|第二阶段资源与硬件方案]]里，那篇专门讲这件事，这里不重复。**
+
+#### 路线四：J33 风扇座
+
+**J33 是 4-pin 风扇座，第 3 脚是 `FAN_PWM`**（`UM12022` §2.23.2）。这是板上少有的"PWM 直接到可插连接器"的地方。
+
+**`待查`**：`FAN_PWM` 的驱动源没追出来 —— 底板原理图上它是 `FAN_PWM_3V3` 经一级缓冲/电平转换过来的，而这张网络从 J1–J4 连接器来，**SOM 原理图里却没有 `FAN_PWM` 这个名字**，说明它在底板上被改名了。**要确定它归哪个域、能不能从 A55 控制，得先在两边原理图上把这个网络对上。**
+
+#### 路线五：重新做硬件
+
+如果项目最终要用的外设确实需要引出来，**这块 EVK 不是终点** —— EVK 的定位就是"验证 SoC 功能"，不是"给用户接线的开发板"。真要做产品，是**自己做一块底板**，把需要的 `GPIO_IOxx` 从 J1–J4 那类连接器引出来。
+
+参考文档：`UG10210` *i.MX 95 Hardware Design Guide*（硬件设计指南，`UM12022` §5 列为相关文档）。
+
+#### 官方资料清单（这类问题去哪查）
+
+| 想查什么 | 文档 |
+|---|---|
+| 板上器件怎么接、连接器是什么 | **`UM12022`** IMX95LPD5EVK-19 Board User Manual |
+| 某个外设在这块板上用哪个引脚 | **MCUXpresso SDK 的 `pin_mux.c`** —— Config Tools 生成的注释里直接写了 pin/ball 和复用 |
+| 外设驱动怎么用 | **`mcux-sdk/drivers/<外设>/fsl_<外设>.h`** + SDK 的 `driver_examples/` |
+| SoC 外设有哪些、寄存器怎么定义 | **`IMX95RM`** 参考手册（需 NXP 账号） |
+| 引脚复用有哪些可选 | **`MIMX9596*_COMMON.h`** + MCUXpresso Config Tools（图形化选引脚） |
+| 自己做板怎么设计 | **`UG10210`** i.MX 95 Hardware Design Guide |
+| RTOS 在 A55 上怎么跑 | **`UG10170`** Harpoon User's Guide |
+| 信号在板上走哪 | **原理图** `SPF-87753_B.pdf`（底板）/ `SPF-87754_B1.pdf`（SOM），按网络名全文搜 |
+
+**一条实践经验**：**想知道"某个外设在这块板上用哪根引脚"，最快的方法是去 SDK 的 `pin_mux.c` 里搜那个外设的名字。** NXP 已经把每块 EVK 的引脚分配做好了，比翻原理图快得多。
+
+---
+
 ## 四、测试程序长什么样
 
 源码：`build\tools\verify_uart_gpio_main.c`（安装到 `harpoon-apps/hello_world/freertos/main.c`）。
