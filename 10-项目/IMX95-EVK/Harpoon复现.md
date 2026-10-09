@@ -268,7 +268,7 @@ imx95-19x19-evk-harpoon-industrial.dtb
 **[板子]** 断电重启，在 U-Boot 提示符（**只有 2 秒**）执行：
 
 ```text
-u-boot=> setenv jh_root_dtb imx95-19x19-evk-harpoon.dtb
+u-boot=> setenv jh_root_droottb imx95-19x19-evk-harpoon.dtb
 u-boot=> run jh_mmcboot
 ```
 
