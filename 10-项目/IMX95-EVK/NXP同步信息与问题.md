@@ -138,7 +138,103 @@ updated: 2026-10-09
 
 ---
 
-## 三、发送前自己要记住的两点
+## 三、对方的回复（2026-10-09）
+
+王工回了三条，很短：
+
+```text
+王工: freertos 用的啥版本？
+王工: 你是想 freertos 跑 smp 吗？
+王工: Harpoon/Jailhouse 本身支持SMP，修改配置文件就行，
+      .cpus = {
+          0x6,    /* CPU1 + CPU2 */
+      }
+      需要FreeRTOS也得支持SMP
+```
+
+### 怎么读这三条
+
+| 他说的 | 什么意思 | 对我们的影响 |
+|---|---|---|
+| **"Harpoon/Jailhouse 本身支持SMP，修改配置文件就行"** | **jailhouse 侧不是障碍** —— `.cpus` 位图加上第二个核就行，官方就是这么做的 | 印证了我们查到的：`cell_start()` 会对 `cpu_set` 里每个核都 `arch_reset_cpu()`。**这一层不用做额外工作** |
+| `.cpus = { 0x6, /* CPU1 + CPU2 */ }` | 这是 **i.MX8M** 的例子（bit1+bit2）。说明位图就是"第 N 位 = 第 N 个核" | 我们板子上换成 **`0x30`**（bit4+bit5 = CPU4+CPU5）。现在的 cell 是 `0x20`（只有 CPU5） |
+| **"需要FreeRTOS也得支持SMP"** | **他把卡点指回了 FreeRTOS 侧** | 和我们的结论一致：**唯一的障碍就是 FreeRTOS 没有 AArch64 的 SMP port** |
+
+**结论：他确认了"jailhouse 侧改配置就行"，同时确认了"FreeRTOS 侧要支持 SMP"——
+而 FreeRTOS 侧现在不支持。所以问题收敛成一句话：从哪弄到 AArch64 的 SMP port。**
+
+> 顺带：他给的 `0x6` 是 i.MX8M 的（CPU1+CPU2），**不要照抄**。
+> i.MX95 上我们是 6 个 A55（CPU0–5），Linux 占 0–4，inmate 占 5；
+> 再加一个核就是 **CPU4**，所以 `.cpus = { 0x30, }`（bit4+bit5）。
+
+## 四、我们要回的内容（2026-10-09）
+
+要点：**先直接回答版本 → 确认要 SMP → 用硬证据说明卡点在 port → 问四个具体问题 → 顺带问 AMP 兜底**。
+
+### 回复正文
+
+---
+
+王工，回答你的问题：
+
+**1. FreeRTOS 版本**
+
+**V11.0.1**。来自 `harpoon-apps` 的 `west.yml` 里 pin 的 `nxp-mcuxpresso/FreeRTOS-Kernel`，
+commit `c747fc1595cfc914021a6534adba86d6b152aac8`。
+编译实际用到的是 `portable/GCC/ARM_AARCH64_SRE` 这个 port（构建日志里能看到）。
+
+补充一条：RTE 3.3 镜像的 manifest 里 `harpoon-apps` 是 **3.5-r0**，而 3.5 已经把 FreeRTOS 升到 **v11.1.x**
+（提交 `c3ca733 freertos: FreeRTOS_helper: update API arguments for upversion FreeRTOS v11.1.x`）。
+我目前是按 UG10170 Rev3.3 §6.2 拉的 **`harpoon_3.3.0`** tag 编译的。
+
+**2. 是，我们就是要 FreeRTOS 跑 SMP**
+
+一个 FreeRTOS 实例管两个 A55 核，任务能在两个核之间调度。
+
+**3. 卡点确认了，就在 FreeRTOS 这一侧**
+
+jailhouse 那边我按你说的改 `.cpus` 就行 —— 我们现在 cell 是 `0x20`（只有 CPU5），改成 `0x30`（CPU4+CPU5）。
+**但 FreeRTOS 这边一改编译就直接停**：
+
+```c
+/* FreeRTOS-Kernel/include/FreeRTOS.h:401-409 */
+#ifndef portYIELD_CORE
+    #if configNUMBER_OF_CORES == 1
+        #define portYIELD_CORE( x )    portYIELD()
+    #else
+        #error configNUMBER_OF_CORES is set to more than 1 then portYIELD_CORE must also be defined.
+    #endif
+#endif
+```
+
+把 `configNUMBER_OF_CORES` 设成 2 就会命中这个 `#error`。
+原因是 `portable/` 下**没有任何 AArch64 port 实现** `portGET_CORE_ID` / `portYIELD_CORE` / 自旋锁这几样
+（我 grep 过：`ARM_AARCH64`、`ARM_AARCH64_SRE`、`ARM_CA53_64_BIT`、`ARM_CA53_64_BIT_SRE` 四个都是单核）。
+上游 `FreeRTOS/FreeRTOS-Kernel` 的 main 分支我也查了，`portable/GCC/` 下的 AArch64 port 还是这四个，没有 SMP 版。
+
+**4. 想请你指个方向**
+
+1. **贵司内部有 AArch64 的 SMP port 吗？** 特别想确认：3.5 用的 **FreeRTOS v11.1.x** 里有没有配套的 AArch64 SMP port？如果有，能给我们吗？
+2. 如果没有现成的，**有没有任何一个 i.MX（哪怕 i.MX8M）的 FreeRTOS SMP 参考例程或补丁**可以参考？
+   （UG10170 §1.4 提到 i.MX8M 可以用 `.cpus = { 0b1100 }` 跑 multicore cell，
+   但我在这版 harpoon-apps 里只找到 Zephyr 侧的 SMP：`audio/zephyr/boards/evkmimx8mm/armgcc_aarch64/build_smp.sh`）
+3. 除了 port 本身，**A55 的启动代码和链接脚本是不是也要一起改？** 我看到两处：
+   - `common/freertos/core/armv8a/startup.S`（294 行）**没有读 `MPIDR_EL1`**，不区分核；
+     而 cell 的 `cpu_reset_address` 只有一个地址，两个核都会从 `0xf0000000` 进来
+   - 链接脚本 `MIMX9596xxxxx_ca55_ddr_ram.ld` 只有**一套**栈（`__el1_stack` / `__el0_stack` 各 4 KB）
+   这两处是不是也在 SMP 支持的范围里？
+4. 如果 SMP port 短期拿不到，**Harpoon 下跑 AMP（两个核各一个 FreeRTOS 实例）是受支持的做法吗？**
+   我评估 AMP 只需要改 cell 的 `.cpus` + 启动代码分流，不用动 port，可以作为过渡方案。
+
+**5. 顺带确认**
+
+inmate cell 的配置源码 `configs/arm64/imx95-harpoon-freertos.c` 现在是不是只在 meta-layer 的 patch 里？
+改 `.cpus` 是改那个 `.c` 重新编 jailhouse，还是可以直接改 `.cell` 二进制？
+（我目前是自己生成 `.cell` —— 按 jailhouse 的 `cell-config.h` 结构用 Python 改的，实测能建起 cell。）
+
+---
+
+## 五、发送前自己要记住的两点
 
 1. **不要把"我们猜的"和"我们查到的"混在一起说。** 正文里第 6 条是**问**，第 7 条是**我们查到的**，
    已经分开写了，别合并。
